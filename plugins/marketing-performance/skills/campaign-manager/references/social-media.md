@@ -125,21 +125,21 @@ Each social post directory includes a `post.json` file that binds the post's for
 - **Tracked links (`link_id`, `destination_url`, `utm`, `url`):**
   - When the post includes an outbound campaign link (in the post body, first comment, thread reply, story link sticker, or bio link), add a link entry in root `campaign.json` with `"platform": "<platform>"` and `"post": "<post-slug>"`, and set `link_id`, `destination_url`, `utm`, and optional `url` in `post.json` to match.
   - When a social post has no outbound link (pure in-feed engagement or brand content), omit `link_id`, `destination_url`, `utm`, and `url`.
-- `approved_copy_revision` and `approved_assets_revision`: point to the active `vNNN` directories inside this post's `copy/approved/` and `assets/approved/` trees. For text-only posts (`format: "text"` or `"thread"` without media), `approved_assets_revision` may be omitted.
+- `approved_copy_revision` and `approved_assets_revision`: point to the active `vNNN` directories inside this post's `copy/approved/` and `assets/approved/` trees. For text-only posts (`format: "text"` or `"thread"` without media), `approved_assets_revision` may be omitted. Whenever images, carousel slides, or videos/reels are created or imported for the post, ask [marketing-copywriter](../../marketing-copywriter/SKILL.md) to write accessibility alt text for each visual asset and store it in `copy/drafts/` and `copy/approved/vNNN/`.
 - **Cross-channel asset reuse (copying between `meta-ads/` and social media without regeneration):**
   - Do **not** regenerate images, carousels, videos, or audio for a social media post (`instagram/`, `linkedin/`, `twitter/`) when a suitable approved asset already exists in `meta-ads/` (or another social media directory), and vice versa (`meta-ads/` reusing an asset first created for a social post).
   - Instead, copy the approved deliverable file(s) from the source `assets/approved/vNNN/` directory into the target post's or ad's `assets/approved/v001/` directory so every post and ad maintains its own self-contained record, and record the source path (`copied_from`) and file hash in the target's `MANIFEST.md` or `assets.json`.
-  - When a post (or ad) copies its approved asset from another directory rather than producing a new asset from scratch, **it is completely fine to omit `assets/development/`** and create only `assets/approved/v001/`. Each platform still keeps its own tailored `copy/drafts/` and `copy/approved/vNNN/` for platform-specific captions, hooks, hashtags, or threads.
+  - When a post (or ad) copies its approved asset from another directory rather than producing a new asset from scratch, **it is completely fine to omit `assets/development/`** and create only `assets/approved/v001/`. Each platform still keeps its own tailored `copy/drafts/` and `copy/approved/vNNN/` for platform-specific captions, hooks, hashtags, threads, and accessibility alt text (written or adapted by [marketing-copywriter](../../marketing-copywriter/SKILL.md)).
 - Optional `schedule` (`publish_at`, `timezone`), `account_handle`, `remote_post_id`, and `notes`.
 
 ## Copy/caption and asset conventions per social platform
 
 - **Instagram (`instagram/posts/<post-slug>/`):**
-  - `copy/`: feed/reel caption (opening hook line before truncation, body, CTA, hashtag block), on-screen/overlay text per slide or beat, story sticker/link text, and accessibility alt text.
+  - `copy/`: feed/reel caption (opening hook line before truncation, body, CTA, hashtag block), on-screen/overlay text per slide or beat, story sticker/link text, and accessibility alt text (written by [marketing-copywriter](../../marketing-copywriter/SKILL.md) for single images, each carousel slide, or video/reel thumbnails).
   - `assets/`: `4:5` or `1:1` single images and ordered carousel slides (`slide-01.png`, `slide-02.png`, ...), `9:16` Reels and Stories video/images, and cover/thumbnail frames.
 - **LinkedIn (`linkedin/posts/<post-slug>/`):**
-  - `copy/`: opening lines before the "see more" fold, full post body, slide/document headlines when using a PDF/carousel post, first-comment link copy when links are placed in comments, and alt text.
+  - `copy/`: opening lines before the "see more" fold, full post body, slide/document headlines when using a PDF/carousel post, first-comment link copy when links are placed in comments, and accessibility alt text (written by [marketing-copywriter](../../marketing-copywriter/SKILL.md)).
   - `assets/`: `1:1`, `4:5`, or `16:9` images/videos, multi-slide carousel/document exports, and thumbnail frames.
 - **Twitter / X (`twitter/posts/<post-slug>/`):**
-  - `copy/`: single post copy (within current character limits) or numbered thread posts (`01/ ...`, `02/ ...`), follow-up reply with the tracked link when keeping links out of the root post, and image/video alt text.
+  - `copy/`: single post copy (within current character limits) or numbered thread posts (`01/ ...`, `02/ ...`), follow-up reply with the tracked link when keeping links out of the root post, and image/video accessibility alt text (written by [marketing-copywriter](../../marketing-copywriter/SKILL.md)).
   - `assets/`: `16:9`, `1:1`, or `9:16` images, multi-image sets (up to four images per post), and video/GIF clips.

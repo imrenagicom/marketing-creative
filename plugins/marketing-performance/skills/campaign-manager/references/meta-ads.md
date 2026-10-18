@@ -22,9 +22,9 @@ Under `<YYYY-MM-DD>-<campaign-name>/meta-ads/`, organize campaigns, ad sets, and
               <ad-slug>/
                 ad.json                  # ad format, CTA, destination_url, utm, url_tags, link_id, and active revisions
                 copy/
-                  drafts/                # working primary text, headline, description, and style explorations
+                  drafts/                # working primary text, headline, description, alt text, and style explorations
                   approved/
-                    v001/                # approved ad copy revision
+                    v001/                # approved ad copy and accessibility alt text revision
                     v002/                # subsequent approved ad copy revision
                 assets/
                   development/
@@ -138,6 +138,6 @@ Binds a single ad's destination URL and UTM parameters (`link_id` in root `campa
 - `ad_slug`: lowercase hyphenated slug matching the `<ad-slug>` folder name.
 - `link_id`: references the corresponding link entry in the campaign root's `campaign.json`. In root `campaign.json`, set `"platform": "meta-ads"`, `"platform_campaign": "<meta-campaign-slug>"`, `"adset": "<adset-slug>"`, and `"ad": "<ad-slug>"` on that link entry.
 - `destination_url` and `url_tags`: Meta Ads separates the base **Website URL** (`destination_url`) from **URL parameters** (`url_tags`). Keep `destination_url` free of UTM query keys and put the serialized UTM query string in `url_tags` so parameters are not duplicated.
-- `approved_copy_revision` and `approved_assets_revision`: point to the active `vNNN` directories inside this ad's `copy/approved/` and `assets/approved/` trees.
-- **Reusing assets across ads and social media without regeneration:** Do not regenerate images, videos, or audio for an ad when a matching or compatible approved asset already exists in another ad or in `instagram/`, `linkedin/`, or `twitter/` (and vice versa). Copy the approved deliverable into this ad's `assets/approved/v001/` directory so the ad retains a self-contained record, and note the source path (`copied_from`) and file hash in `MANIFEST.md` or `assets.json`. When an ad copies its approved asset from another directory, **it does not need an `assets/development/` directory**.
+- `approved_copy_revision` and `approved_assets_revision`: point to the active `vNNN` directories inside this ad's `copy/approved/` and `assets/approved/` trees. Whenever images, carousel cards, or videos are created or imported for the ad, ask [marketing-copywriter](../../marketing-copywriter/SKILL.md) to write accessibility alt text for each visual asset and store it in `copy/drafts/` and `copy/approved/vNNN/`.
+- **Reusing assets across ads and social media without regeneration:** Do not regenerate images, videos, or audio for an ad when a matching or compatible approved asset already exists in another ad or in `instagram/`, `linkedin/`, or `twitter/` (and vice versa). Copy the approved deliverable into this ad's `assets/approved/v001/` directory so the ad retains a self-contained record, and note the source path (`copied_from`) and file hash in `MANIFEST.md` or `assets.json`. When an ad copies its approved asset from another directory, **it does not need an `assets/development/` directory**, and its `copy/drafts/` and `copy/approved/vNNN/` should still include accessibility alt text (carried over or adapted by [marketing-copywriter](../../marketing-copywriter/SKILL.md)).
 - Optional `remote_ad_id`, `remote_creative_id`, `video_id`, and `image_hash` record live Meta object identifiers after upload or creation.
