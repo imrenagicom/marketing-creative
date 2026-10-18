@@ -2,7 +2,7 @@
 
 ## Purpose and layout
 
-Marketing Creative and Marketing Performance are shared Codex and Claude Code skill plugins. Read
+Marketing Creative and Marketing Performance are shared Codex, Claude Code and Google Antigravity skill plugins. Read
 README.md for the workflow, configuration and validation commands, then
 read the relevant skill entry point and its linked references before editing.
 
@@ -10,9 +10,10 @@ read the relevant skill entry point and its linked references before editing.
   own skill instructions, UI metadata,
   references, executable helpers and example assets. Install and package each
   complete tree because skills within a plugin share resources.
-- Each plugin's `.codex-plugin/plugin.json` and `.claude-plugin/plugin.json`
-  must agree on shared metadata and version. Root marketplace files own
-  discovery; update their descriptions when the suite changes.
+- Each plugin's `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json` and
+  `plugin.json` (Antigravity) must agree on shared metadata and version. Root
+  marketplace and `.agents/` workspace files own discovery; update their
+  descriptions when the suite changes.
 - `scripts/validate_package.py` defines the explicit distribution allowlist;
   `scripts/build_plugin.py` builds the deterministic archive.
 - `tests/` contains offline regressions. `docs/skill-evaluation.md` covers
@@ -81,13 +82,17 @@ git diff --check
 
 For skill entry-point changes, also run the installed skill-creator's
 `scripts/quick_validate.py` against each changed skill. For packaging or manifest
-changes, build an archive outside the repository and validate the Claude plugin
-and marketplace when the CLI is available:
+changes, build archives outside the repository and validate the Claude and
+Antigravity plugins and marketplace when the CLIs are available:
 
 ```sh
 python scripts/build_plugin.py --output /tmp/marketing-creative-plugin.zip
+python scripts/build_plugin.py --plugin marketing-performance --output /tmp/marketing-performance-plugin.zip
 claude plugin validate ./plugins/marketing-creative
+claude plugin validate ./plugins/marketing-performance
 claude plugin validate ./.claude-plugin/marketplace.json
+agy plugin validate ./plugins/marketing-creative
+agy plugin validate ./plugins/marketing-performance
 ```
 
 Test meaningful behavior and recovery, not exact generated prose. Do not count

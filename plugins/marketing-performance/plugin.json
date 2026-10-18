@@ -1,0 +1,12 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "marketing-performance",
+  "displayName": "Marketing Performance",
+  "version": "0.7.0",
+  "description": "Marketing briefs, copywriting, campaign operations and documented UTM planning in the current workspace.",
+  "suggestedPrompts": [
+    "Use marketing-brief to turn our product facts and goal into a campaign brief.",
+    "Use marketing-copywriter to draft channel-ready ad and social copy from our brief.",
+    "Use campaign-manager to set up a dated campaign workspace with Meta Ads, social media and UTM links."
+  ]
+}

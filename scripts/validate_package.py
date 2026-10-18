@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-"""Check this repository's dual-client packaging invariants (stdlib only)."""
+"""Check this repository's multi-client packaging invariants (stdlib only)."""
 import json
 from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "marketing-creative"
+MANIFESTS = (".codex-plugin/plugin.json", ".claude-plugin/plugin.json", "plugin.json")
+ANTIGRAVITY_FIELDS = {
+    "$schema", "name", "displayName", "version",
+    "description", "logo", "suggestedPrompts", "disabled",
+}
+SKILLS_CONFIG = ".agents/skills.json"
+PLUGINS_CONFIG = ".agents/plugins.json"
 PLUGINS = {
     "marketing-creative": {"marketing-video", "creative-ideation", "ad-video-director",
         "motion-video-producer", "motion-art-director", "motion-storyboard",
@@ -29,8 +36,7 @@ def require(condition, message):
 def package_files(plugin=None):
     """An explicit surface allowlist; never archive the repository root."""
     plugin = PLUGIN if plugin is None else plugin
-    files = [plugin / kind / "plugin.json"
-             for kind in (".codex-plugin", ".claude-plugin")]
+    files = [plugin / path for path in MANIFESTS]
     require(not plugin.is_symlink() and not (plugin / "skills").is_symlink(),
             "Plugin and skill roots must not be symlinks")
     for kind in (".codex-plugin", ".claude-plugin"):
@@ -68,17 +74,44 @@ def package_files(plugin=None):
 
 
 def validate_plugin(plugin):
-    codex = read_json(plugin / ".codex-plugin/plugin.json")
-    claude = read_json(plugin / ".claude-plugin/plugin.json")
-    for key in ("name", "version", "description", "author", "repository"):
-        require(codex.get(key) == claude.get(key) and bool(codex.get(key)),
+    codex, claude, antigravity = [read_json(plugin / path) for path in MANIFESTS]
+    for key in ("name", "version", "description"):
+        require(codex.get(key) == claude.get(key) == antigravity.get(key) and bool(codex.get(key)),
                 f"Client manifests disagree or omit {key}")
+    for key in ("author", "homepage", "repository"):
+        require(codex.get(key) == claude.get(key) and bool(codex.get(key)),
+                f"Codex and Claude manifests disagree or omit {key}")
     require(codex["name"] == plugin.name, "Unexpected plugin identity")
     require(re.fullmatch(r"\d+\.\d+\.\d+", codex["version"]), "Invalid release version")
+    require(antigravity.get("$schema") == "https://antigravity.google/schemas/v1/plugin.json",
+            "Antigravity manifest must declare the v1 plugin schema")
+    require(set(antigravity).issubset(ANTIGRAVITY_FIELDS),
+            "Unsupported top-level fields in Antigravity manifest")
     require(codex.get("skills") == "./skills/", "Codex skill path changed")
-    require(codex.get("interface", {}).get("displayName"), "Missing Codex display name")
-    require(codex.get("interface", {}).get("shortDescription"), "Missing Codex description")
+    interface = codex.get("interface", {})
+    require(interface.get("displayName"), "Missing Codex display name")
+    require(interface.get("shortDescription"), "Missing Codex description")
+    require(interface.get("longDescription"), "Missing Codex longDescription")
+    require(interface.get("developerName"), "Missing Codex developerName")
+    require(interface.get("category"), "Missing Codex category")
+    require(interface.get("capabilities"), "Missing Codex capabilities")
+    require(antigravity.get("displayName") == interface.get("displayName"),
+            "Antigravity displayName must match Codex")
+    prompts = antigravity.get("suggestedPrompts")
+    require(isinstance(prompts, list) and 1 <= len(prompts) <= 3
+            and all(isinstance(p, str) and p.strip() for p in prompts),
+            "Antigravity suggestedPrompts must contain 1 to 3 non-empty strings")
+    require(prompts == interface.get("defaultPrompt"),
+            "Antigravity suggestedPrompts must match Codex defaultPrompt")
     require(codex["author"].get("name"), "Missing publisher")
+
+    skills_config = read_json(ROOT / SKILLS_CONFIG)
+    expected_skill_entries = [{"path": f"plugins/{name}/skills"} for name in PLUGINS]
+    require(skills_config == {"entries": expected_skill_entries},
+            "Workspace skills.json must point to all plugin skill directories")
+    plugins_config = read_json(ROOT / PLUGINS_CONFIG)
+    require(plugins_config == {"entries": [{"path": "plugins"}]},
+            "Workspace plugins.json must point to ./plugins")
 
     marketplaces = [read_json(ROOT / p) for p in
                     (".agents/plugins/marketplace.json", ".claude-plugin/marketplace.json")]
@@ -138,9 +171,18 @@ def validate(plugin_name=None):
     for name in names:
         require(name in PLUGINS, f"Unknown plugin: {name}")
         files.extend(validate_plugin(ROOT / "plugins" / name))
-    versions = {read_json(ROOT / "plugins" / name / ".codex-plugin/plugin.json")["version"]
-                for name in PLUGINS}
-    require(len(versions) == 1, "Plugins must share the repository release version")
+    versions = {
+        read_json(ROOT / "plugins" / name / manifest)["version"]
+        for name in PLUGINS
+        for manifest in MANIFESTS
+    }
+    if (ROOT / "package.json").is_file():
+        versions.add(read_json(ROOT / "package.json")["version"])
+    if (ROOT / "package-lock.json").is_file():
+        lock = read_json(ROOT / "package-lock.json")
+        versions.add(lock["version"])
+        versions.add(lock.get("packages", {}).get("", {}).get("version"))
+    require(len(versions) == 1, "Plugins and release metadata must share the repository release version")
     return files
 
 

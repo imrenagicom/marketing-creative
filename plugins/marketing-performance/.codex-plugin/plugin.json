@@ -5,6 +5,7 @@
   "author": {
     "name": "Imre Nagi"
   },
+  "homepage": "https://github.com/imrenagicom/marketing-creative",
   "repository": "https://github.com/imrenagicom/marketing-creative",
   "keywords": [
     "marketing",
@@ -17,6 +18,18 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Marketing Performance",
-    "shortDescription": "Plan campaigns, write copy and maintain UTM links"
+    "shortDescription": "Plan campaigns, write copy and maintain UTM links",
+    "longDescription": "Draft evidence-backed marketing briefs, explore multi-voice ad and social copy, and organize dated campaign workspaces with Meta Ads hierarchies, social media trees and validated UTM tracking.",
+    "developerName": "Imre Nagi",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use marketing-brief to turn our product facts and goal into a campaign brief.",
+      "Use marketing-copywriter to draft channel-ready ad and social copy from our brief.",
+      "Use campaign-manager to set up a dated campaign workspace with Meta Ads, social media and UTM links."
+    ]
   }
 }

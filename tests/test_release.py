@@ -34,9 +34,10 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual({k: v for k, v in lock["packages"].items() if k},
                              {k: v for k, v in original_lock["packages"].items() if k})
             with zipfile.ZipFile(archive) as package:
-                for client in (".codex-plugin", ".claude-plugin"):
-                    self.assertEqual(json.loads(package.read(f"{client}/plugin.json"))["version"],
-                                     "0.2.3")
+                for manifest in ("plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json"):
+                    parsed = json.loads(package.read(manifest))
+                    self.assertEqual(parsed["version"], "0.2.3")
+                    self.assertEqual(parsed["name"], "marketing-creative")
                 self.assertIn("skills/creative-ideation/SKILL.md", package.namelist())
                 for resource in ("SKILL.md", "agents/openai.yaml"):
                     self.assertIn(f"skills/marketing-video/{resource}", package.namelist())
@@ -56,10 +57,10 @@ class ReleaseTests(unittest.TestCase):
                     self.assertIn(f"skills/marketing-copywriter/{resource}", package.namelist())
                 self.assertNotIn("skills/creative-ideation/SKILL.md", package.namelist())
                 self.assertNotIn("skills/marketing-video/SKILL.md", package.namelist())
-                for client in (".codex-plugin", ".claude-plugin"):
-                    manifest = json.loads(package.read(f"{client}/plugin.json"))
-                    self.assertEqual(manifest["version"], "0.2.3")
-                    self.assertEqual(manifest["name"], "marketing-performance")
+                for manifest in ("plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json"):
+                    parsed = json.loads(package.read(manifest))
+                    self.assertEqual(parsed["version"], "0.2.3")
+                    self.assertEqual(parsed["name"], "marketing-performance")
 
     def test_invalid_version_does_not_write(self):
         with tempfile.TemporaryDirectory() as directory:

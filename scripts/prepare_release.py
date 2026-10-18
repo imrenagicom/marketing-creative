@@ -13,8 +13,10 @@ VERSION_FILES = (
     "package-lock.json",
     "plugins/marketing-creative/.codex-plugin/plugin.json",
     "plugins/marketing-creative/.claude-plugin/plugin.json",
+    "plugins/marketing-creative/plugin.json",
     "plugins/marketing-performance/.codex-plugin/plugin.json",
     "plugins/marketing-performance/.claude-plugin/plugin.json",
+    "plugins/marketing-performance/plugin.json",
 )
 
 

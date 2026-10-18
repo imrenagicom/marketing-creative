@@ -1,6 +1,6 @@
 # Marketing Creative and Performance
 
-Two independently installable plugins cover campaign planning, copywriting and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter` and `campaign-manager`; Marketing Creative owns thirteen skills for ideas, images, scripts and videos. Codex and Claude Code use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
+Two independently installable plugins cover campaign planning, copywriting and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter` and `campaign-manager`; Marketing Creative owns thirteen skills for ideas, images, scripts and videos. Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
 
 ## Skills and handoffs
 
@@ -33,7 +33,7 @@ Start video work with [`marketing-video`](plugins/marketing-creative/skills/mark
 
 ## Install
 
-Plugins live in `plugins/marketing-creative/` and `plugins/marketing-performance/`. Install either or both complete trees; each plugin contains its own required resources. Creative production accepts supplied briefs without the Performance plugin.
+Plugins live in `plugins/marketing-creative/` and `plugins/marketing-performance/`. Install either or both complete trees; each plugin contains its own required resources and host manifests for Codex (`.codex-plugin/plugin.json`), Claude Code (`.claude-plugin/plugin.json`) and Google Antigravity (`plugin.json`). Creative production accepts supplied briefs without the Performance plugin.
 
 ### Codex
 
@@ -41,17 +41,34 @@ Plugins live in `plugins/marketing-creative/` and `plugins/marketing-performance
 codex plugin marketplace add /absolute/path/to/marketing-creative
 codex plugin add marketing-creative@marketing-creative
 codex plugin add marketing-performance@marketing-creative
+codex plugin list --marketplace marketing-creative --json
 ```
 
-Or register imrenagicom/marketing-creative after the relevant release is published. Reload the client if needed. Invoke $marketing-brief, $creative-ideation, or any skill in the table.
+Or register `imrenagicom/marketing-creative` after the relevant release is published (`codex plugin marketplace add imrenagicom/marketing-creative`). Reload the client if needed. Invoke `$marketing-brief`, `$creative-ideation`, or any skill in the table.
 
 ### Claude Code
 
 ```sh
-claude --plugin-dir ./plugins/marketing-creative --plugin-dir ./plugins/marketing-performance
+claude plugin marketplace add /absolute/path/to/marketing-creative
+claude plugin install marketing-creative@marketing-creative
+claude plugin install marketing-performance@marketing-creative
+claude plugin details marketing-creative
+claude plugin details marketing-performance
 ```
 
-Invoke /marketing-performance:marketing-brief or /marketing-creative:creative-ideation, for example. For installation, use /plugin marketplace add /absolute/path/to/marketing-creative, then /plugin install marketing-creative@marketing-creative and/or /plugin install marketing-performance@marketing-creative. `marketing-brief` has moved: its Claude namespace is now `marketing-performance`; its Codex invocation remains `$marketing-brief`.
+After publication, use `claude plugin marketplace add imrenagicom/marketing-creative` instead of the local path. Inside Claude Code, the equivalent commands begin with `/plugin marketplace add` and `/plugin install`. For temporary development without installation, use `claude --plugin-dir ./plugins/marketing-creative --plugin-dir ./plugins/marketing-performance`. Invoke `/marketing-performance:marketing-brief` or `/marketing-creative:creative-ideation`, for example. `marketing-brief` has moved: its Claude namespace is now `marketing-performance`; its Codex and Antigravity invocation remains `marketing-brief` / `$marketing-brief`.
+
+### Google Antigravity
+
+From a checkout or an extracted plugin archive (`marketing-creative-plugin.zip` / `marketing-performance-plugin.zip`):
+
+```sh
+agy plugin install /absolute/path/to/marketing-creative/plugins/marketing-creative
+agy plugin install /absolute/path/to/marketing-creative/plugins/marketing-performance
+agy plugin list --json
+```
+
+Inside an interactive Antigravity CLI session, run `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-creative` and `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-performance` (or select *Install from local directory* in the `/plugin` manager). Installed plugins are staged under `~/.gemini/config/plugins/marketing-creative/` and `~/.gemini/config/plugins/marketing-performance/` and synchronized across the Antigravity App, IDE, and CLI; restart if newly installed skills do not appear immediately. When opening the `marketing-creative` repository itself as a workspace in Antigravity, `.agents/plugins.json` and `.agents/skills.json` automatically register both plugins and all 16 skills without requiring global installation.
 
 For clients without plugin support, reference the complete skill tree from the client's instruction file, retaining all sibling skills and third-party/ notices. No global installation or client configuration is changed by this repository.
 
@@ -287,6 +304,8 @@ python3 scripts/validate_package.py
 claude plugin validate ./plugins/marketing-creative
 claude plugin validate ./plugins/marketing-performance
 claude plugin validate ./.claude-plugin/marketplace.json
+agy plugin validate ./plugins/marketing-creative
+agy plugin validate ./plugins/marketing-performance
 python3 scripts/build_plugin.py --output /tmp/marketing-creative-plugin.zip
 python3 scripts/build_plugin.py --plugin marketing-performance --output /tmp/marketing-performance-plugin.zip
 ```
@@ -305,7 +324,7 @@ The public release line starts at `v0.1.0`. Every push to `main` with new commit
 
 Commit messages determine the highest version bump since the last tag: `feat: ...` produces a minor release, `feat!: ...` or a `BREAKING CHANGE:` footer produces a major release, and all other changes produce a patch release, including skill documentation and ordinary commit messages. A rerun without new commits creates no release. Keep using conventional commits so the generated release notes identify changes clearly, including skill documentation.
 
-Releases synchronize both client manifests for each plugin and the private release-tooling package/lockfile, update `CHANGELOG.md`, and commit those files with `[skip ci]` before tagging. This keeps marketplace installations from Git and the attached `marketing-creative-plugin.zip` and `marketing-performance-plugin.zip` at the same version. The ZIP contains the complete allowlisted skill tree and notices, built outside the repository. Nothing is published to npm.
+Releases synchronize all three client manifests (`.codex-plugin/plugin.json`, `.claude-plugin/plugin.json` and `plugin.json`) for each plugin and the private release-tooling package/lockfile, update `CHANGELOG.md`, and commit those files with `[skip ci]` before tagging. This keeps marketplace/Git installations for Codex, Claude Code and Google Antigravity and the attached `marketing-creative-plugin.zip` and `marketing-performance-plugin.zip` at the same version. The ZIP contains the complete allowlisted skill tree and notices, built outside the repository. Nothing is published to npm.
 
 The workflow uses GitHub's automatic `GITHUB_TOKEN` with `contents: write`; no npm token or manually configured release secret is required. If branch rules later prevent release commits or tags, allow an appropriate GitHub App to perform those actions before expecting releases to succeed. Release runs are serialized and in-progress runs are not cancelled. The workflow also supports manual dispatch to retry a failed run; inspect any existing tag/release first if publication was interrupted.
 

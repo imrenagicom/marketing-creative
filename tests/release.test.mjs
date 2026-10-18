@@ -52,3 +52,21 @@ test("release notes include skill documentation changes", async () => {
   assert.match(notes, /Skills and documentation/);
   assert.match(notes, /clarify asset handoff/);
 });
+
+test("git release commit stages changelog, package metadata, and Claude/Codex/Antigravity manifests", () => {
+  const gitPlugin = config.plugins.find(
+    (entry) => Array.isArray(entry) && entry[0] === "@semantic-release/git",
+  );
+  assert.ok(gitPlugin, "Expected @semantic-release/git plugin");
+  assert.deepEqual(gitPlugin[1].assets, [
+    "CHANGELOG.md",
+    "package.json",
+    "package-lock.json",
+    "plugins/marketing-creative/.codex-plugin/plugin.json",
+    "plugins/marketing-creative/.claude-plugin/plugin.json",
+    "plugins/marketing-creative/plugin.json",
+    "plugins/marketing-performance/.codex-plugin/plugin.json",
+    "plugins/marketing-performance/.claude-plugin/plugin.json",
+    "plugins/marketing-performance/plugin.json",
+  ]);
+});

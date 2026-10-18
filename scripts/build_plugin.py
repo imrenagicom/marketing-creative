@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a deterministic skill/tool/resource ZIP for both supported clients."""
+"""Build a deterministic skill/tool/resource ZIP for Codex, Claude Code, and Antigravity."""
 import argparse
 from pathlib import Path
 import zipfile
