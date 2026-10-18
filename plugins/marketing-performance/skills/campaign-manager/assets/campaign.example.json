@@ -9,6 +9,10 @@
     {
       "link_id": "instagram-reels-demo-v1",
       "destination_url": "https://example.com/start?lang=id#demo",
+      "platform": "meta-ads",
+      "platform_campaign": "taskapp-activation-sales",
+      "adset": "id-18-45-design-teams",
+      "ad": "reels-demo-v1",
       "placement": "instagram-reels",
       "creative_id": "demo-v1",
       "status": "planned",
@@ -19,16 +23,18 @@
       }
     },
     {
-      "link_id": "newsletter-demo-v1",
+      "link_id": "linkedin-founder-workflow-v1",
       "destination_url": "https://example.com/start?lang=id#demo",
-      "placement": "newsletter-body",
-      "creative_id": "demo-v1",
+      "platform": "linkedin",
+      "post": "founder-workflow-breakdown",
+      "placement": "linkedin-feed",
+      "creative_id": "founder-workflow-v1",
       "status": "planned",
       "notes": "Fictional fixture; replace product, destination and taxonomy before use.",
       "utm": {
-        "utm_source": "newsletter",
-        "utm_medium": "email",
-        "utm_content": "demo-v1-body"
+        "utm_source": "linkedin",
+        "utm_medium": "organic_social",
+        "utm_content": "founder-workflow-carousel"
       }
     }
   ]
