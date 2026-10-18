@@ -12,10 +12,14 @@ from urllib.parse import parse_qsl, unquote, urlencode, urlsplit, urlunsplit
 UTM_KEYS = ("utm_source", "utm_medium", "utm_campaign", "utm_id",
             "utm_content", "utm_term", "utm_source_platform")
 REQUIRED = {"utm_source", "utm_medium", "utm_campaign"}
-HIERARCHY_KEYS = ("platform", "platform_campaign", "adset", "ad")
+AD_PLATFORMS = {"meta-ads"}
+SOCIAL_PLATFORMS = ("instagram", "linkedin", "twitter")
+HIERARCHY_KEYS = ("platform", "platform_campaign", "adset", "ad", "post")
 META_KEYS = (*HIERARCHY_KEYS, "placement", "creative_id", "status", "notes")
 COLUMNS = ("campaign_id", "link_id", *META_KEYS, "destination_url", *UTM_KEYS, "url_tags", "url")
 AD_STATUSES = {"planned", "paused", "active", "archived", "retired"}
+POST_STATUSES = {"planned", "paused", "active", "published", "archived", "retired"}
+POST_FORMATS = {"single_image", "carousel", "video", "reel", "story", "text", "thread", "document", "article"}
 
 
 def require(condition, message):
@@ -115,9 +119,18 @@ def build_plan(plan):
                     identifier(value, f"{label}.{key}")
                 else:
                     text(value, f"{label}.{key}")
-        if any(metadata[key] for key in HIERARCHY_KEYS):
-            require(all(metadata[key] for key in HIERARCHY_KEYS),
+        platform = metadata["platform"]
+        if platform in AD_PLATFORMS:
+            require(all(metadata[key] for key in ("platform_campaign", "adset", "ad")) and not metadata["post"],
                     f"{label} must specify platform, platform_campaign, adset and ad together")
+        elif platform in SOCIAL_PLATFORMS:
+            require(bool(metadata["post"]) and not any(metadata[key] for key in ("platform_campaign", "adset", "ad")),
+                    f"{label} with social platform '{platform}' must specify post (and not platform_campaign, adset or ad)")
+        elif platform:
+            raise ValueError(f"{label}.platform '{platform}' is unsupported")
+        else:
+            require(not any(metadata[key] for key in ("platform_campaign", "adset", "ad", "post")),
+                    f"{label} must specify platform when platform_campaign, adset, ad or post is set")
         require(metadata["status"] in {"planned", "published", "retired"}, f"{label}: invalid status")
         destination = link.get("destination_url")
         url = tagged_url(destination, values)
@@ -135,42 +148,42 @@ def validate_meta_tree(meta_root, plan_result):
     meta_root = Path(meta_root)
     campaigns_root = meta_root / "campaigns"
     require(campaigns_root.is_dir() and not campaigns_root.is_symlink(),
-            "meta/campaigns must be a real directory")
+            "meta-ads/campaigns must be a real directory")
     campaign_dirs = sorted(p for p in campaigns_root.iterdir() if p.is_dir())
-    require(bool(campaign_dirs), "meta/campaigns must contain at least one campaign directory")
+    require(bool(campaign_dirs), "meta-ads/campaigns must contain at least one campaign directory")
     links_by_id = {row["link_id"]: row for row in plan_result["links"]}
     matched_links = set()
     summary = []
     for campaign_dir in campaign_dirs:
         require(not campaign_dir.is_symlink(), f"Symlinked Meta campaign directory: {campaign_dir}")
-        campaign_slug = identifier(campaign_dir.name, "meta campaign directory")
+        campaign_slug = identifier(campaign_dir.name, "meta-ads campaign directory")
         campaign_spec = read_json_file(campaign_dir / "campaign.json")
         object_fields(campaign_spec, {
             "schema_version", "platform", "campaign_slug", "name", "objective",
             "buying_type", "special_ad_categories", "budget", "status",
             "remote_campaign_id", "notes"
-        }, f"meta/{campaign_slug}/campaign.json")
+        }, f"meta-ads/{campaign_slug}/campaign.json")
         require(type(campaign_spec.get("schema_version")) is int and campaign_spec["schema_version"] == 1,
-                f"meta/{campaign_slug}/campaign.json: schema_version must be 1")
-        require(campaign_spec.get("platform") == "meta",
-                f"meta/{campaign_slug}/campaign.json: platform must be 'meta'")
+                f"meta-ads/{campaign_slug}/campaign.json: schema_version must be 1")
+        require(campaign_spec.get("platform") == "meta-ads",
+                f"meta-ads/{campaign_slug}/campaign.json: platform must be 'meta-ads'")
         require(campaign_spec.get("campaign_slug") == campaign_slug,
-                f"meta/{campaign_slug}/campaign.json: campaign_slug must match directory name")
-        text(campaign_spec.get("name"), f"meta/{campaign_slug}.name")
-        text(campaign_spec.get("objective"), f"meta/{campaign_slug}.objective")
+                f"meta-ads/{campaign_slug}/campaign.json: campaign_slug must match directory name")
+        text(campaign_spec.get("name"), f"meta-ads/{campaign_slug}.name")
+        text(campaign_spec.get("objective"), f"meta-ads/{campaign_slug}.objective")
         budget = campaign_spec.get("budget")
         require(isinstance(budget, dict) and budget.get("mode") in {"cbo", "abo"},
-                f"meta/{campaign_slug}.budget must define mode 'cbo' or 'abo'")
-        require(campaign_spec.get("status") in AD_STATUSES, f"meta/{campaign_slug}: invalid status")
+                f"meta-ads/{campaign_slug}.budget must define mode 'cbo' or 'abo'")
+        require(campaign_spec.get("status") in AD_STATUSES, f"meta-ads/{campaign_slug}: invalid status")
         adsets_root = campaign_dir / "adsets"
         require(adsets_root.is_dir() and not adsets_root.is_symlink(),
-                f"meta/{campaign_slug}/adsets must be a real directory")
+                f"meta-ads/{campaign_slug}/adsets must be a real directory")
         adset_dirs = sorted(p for p in adsets_root.iterdir() if p.is_dir())
-        require(bool(adset_dirs), f"meta/{campaign_slug}/adsets must contain at least one adset directory")
+        require(bool(adset_dirs), f"meta-ads/{campaign_slug}/adsets must contain at least one adset directory")
         for adset_dir in adset_dirs:
             require(not adset_dir.is_symlink(), f"Symlinked Meta adset directory: {adset_dir}")
-            adset_slug = identifier(adset_dir.name, "meta adset directory")
-            adset_label = f"meta/{campaign_slug}/adsets/{adset_slug}"
+            adset_slug = identifier(adset_dir.name, "meta-ads adset directory")
+            adset_label = f"meta-ads/{campaign_slug}/adsets/{adset_slug}"
             adset_spec = read_json_file(adset_dir / "adset.json")
             object_fields(adset_spec, {
                 "schema_version", "adset_slug", "name", "optimization_goal",
@@ -197,7 +210,7 @@ def validate_meta_tree(meta_root, plan_result):
             require(bool(ad_dirs), f"{adset_label}/ads must contain at least one ad directory")
             for ad_dir in ad_dirs:
                 require(not ad_dir.is_symlink(), f"Symlinked Meta ad directory: {ad_dir}")
-                ad_slug = identifier(ad_dir.name, "meta ad directory")
+                ad_slug = identifier(ad_dir.name, "meta-ads ad directory")
                 ad_label = f"{adset_label}/ads/{ad_slug}"
                 ad_spec = read_json_file(ad_dir / "ad.json")
                 object_fields(ad_spec, {
@@ -221,7 +234,7 @@ def validate_meta_tree(meta_root, plan_result):
                 matched_links.add(link_id)
                 link_row = links_by_id[link_id]
                 require((link_row["platform"], link_row["platform_campaign"],
-                         link_row["adset"], link_row["ad"]) == ("meta", campaign_slug, adset_slug, ad_slug),
+                         link_row["adset"], link_row["ad"]) == ("meta-ads", campaign_slug, adset_slug, ad_slug),
                         f"{ad_label} hierarchy does not match campaign.json link '{link_id}'")
                 require(ad_spec.get("destination_url") == link_row["destination_url"],
                         f"{ad_label}.destination_url does not match campaign.json link '{link_id}'")
@@ -236,7 +249,7 @@ def validate_meta_tree(meta_root, plan_result):
                     if rev_key in ad_spec and ad_spec[rev_key]:
                         text(ad_spec[rev_key], f"{ad_label}.{rev_key}")
                 summary.append({
-                    "platform": "meta",
+                    "platform": "meta-ads",
                     "platform_campaign": campaign_slug,
                     "adset": adset_slug,
                     "ad": ad_slug,
@@ -246,9 +259,76 @@ def validate_meta_tree(meta_root, plan_result):
                     "format": ad_spec["format"]
                 })
     for row in plan_result["links"]:
-        if row["platform"] == "meta":
+        if row["platform"] == "meta-ads":
             require(row["link_id"] in matched_links,
-                    f"Meta link '{row['link_id']}' is missing its meta/campaigns/{row['platform_campaign']}/adsets/{row['adset']}/ads/{row['ad']}/ad.json spec")
+                    f"Meta link '{row['link_id']}' is missing its meta-ads/campaigns/{row['platform_campaign']}/adsets/{row['adset']}/ads/{row['ad']}/ad.json spec")
+    return summary
+
+
+def validate_social_platform_tree(platform, platform_root, plan_result):
+    platform_root = Path(platform_root)
+    posts_root = platform_root / "posts"
+    require(posts_root.is_dir() and not posts_root.is_symlink(),
+            f"{platform}/posts must be a real directory")
+    post_dirs = sorted(p for p in posts_root.iterdir() if p.is_dir())
+    require(bool(post_dirs), f"{platform}/posts must contain at least one post directory")
+    links_by_id = {row["link_id"]: row for row in plan_result["links"]}
+    matched_links = set()
+    summary = []
+    for post_dir in post_dirs:
+        require(not post_dir.is_symlink(), f"Symlinked {platform} post directory: {post_dir}")
+        post_slug = identifier(post_dir.name, f"{platform} post directory")
+        post_label = f"{platform}/posts/{post_slug}"
+        post_spec = read_json_file(post_dir / "post.json")
+        object_fields(post_spec, {
+            "schema_version", "platform", "post_slug", "name", "status", "format",
+            "link_id", "destination_url", "utm", "url", "approved_copy_revision",
+            "approved_assets_revision", "schedule", "account_handle", "remote_post_id", "notes"
+        }, f"{post_label}/post.json")
+        require(type(post_spec.get("schema_version")) is int and post_spec["schema_version"] == 1,
+                f"{post_label}/post.json: schema_version must be 1")
+        require(post_spec.get("platform") == platform,
+                f"{post_label}/post.json: platform must be '{platform}'")
+        require(post_spec.get("post_slug") == post_slug,
+                f"{post_label}/post.json: post_slug must match directory name")
+        text(post_spec.get("name"), f"{post_label}.name")
+        require(post_spec.get("status") in POST_STATUSES, f"{post_label}: invalid status")
+        require(post_spec.get("format") in POST_FORMATS, f"{post_label}: invalid format")
+        link_id = post_spec.get("link_id")
+        if link_id is not None:
+            link_id = identifier(link_id, f"{post_label}.link_id")
+            require(link_id in links_by_id, f"{post_label}.link_id '{link_id}' not found in campaign.json")
+            require(link_id not in matched_links, f"Duplicate social post binding for link_id '{link_id}'")
+            matched_links.add(link_id)
+            link_row = links_by_id[link_id]
+            require((link_row["platform"], link_row["post"]) == (platform, post_slug),
+                    f"{post_label} hierarchy does not match campaign.json link '{link_id}'")
+            require(post_spec.get("destination_url") == link_row["destination_url"],
+                    f"{post_label}.destination_url does not match campaign.json link '{link_id}'")
+            post_utm = utm_values(post_spec.get("utm"), f"{post_label}.utm")
+            expected_utm = {k: link_row[k] for k in UTM_KEYS if link_row[k]}
+            require(post_utm == expected_utm,
+                    f"{post_label}.utm does not match resolved UTM values for '{link_id}'")
+            if "url" in post_spec:
+                require(post_spec["url"] == link_row["url"],
+                        f"{post_label}.url does not match resolved url for '{link_id}'")
+        else:
+            require(not any(k in post_spec for k in ("destination_url", "utm", "url")),
+                    f"{post_label}/post.json must specify link_id when destination_url, utm or url is set")
+        for rev_key in ("approved_copy_revision", "approved_assets_revision"):
+            if rev_key in post_spec and post_spec[rev_key]:
+                text(post_spec[rev_key], f"{post_label}.{rev_key}")
+        summary.append({
+            "platform": platform,
+            "post": post_slug,
+            "link_id": link_id or "",
+            "format": post_spec["format"],
+            "status": post_spec["status"],
+        })
+    for row in plan_result["links"]:
+        if row["platform"] == platform:
+            require(row["link_id"] in matched_links,
+                    f"Social link '{row['link_id']}' is missing its {platform}/posts/{row['post']}/post.json spec")
     return summary
 
 
@@ -281,7 +361,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("plan", type=Path)
     parser.add_argument("--out", type=Path, help="New export revision directory")
-    parser.add_argument("--meta-dir", type=Path, help="Optional meta/ directory to validate against campaign.json")
+    parser.add_argument("--meta-ads-dir", "--meta-dir", dest="meta_ads_dir", type=Path,
+                        help="Optional meta-ads/ directory to validate against campaign.json")
     parser.add_argument("--dry-run", action="store_true", help="Preview validated links without writes or network")
     args = parser.parse_args()
     if not args.dry_run and args.out is None:
@@ -289,9 +370,16 @@ def main():
     try:
         source = args.plan.read_bytes()
         result = build_plan(json.loads(source.decode("utf-8"), object_pairs_hook=unique_keys))
-        meta_dir = args.meta_dir if args.meta_dir is not None else (args.plan.parent / "meta")
-        if args.meta_dir is not None or (meta_dir / "campaigns").exists():
+        meta_dir = args.meta_ads_dir if args.meta_ads_dir is not None else (args.plan.parent / "meta-ads")
+        if args.meta_ads_dir is not None or (meta_dir / "campaigns").exists():
             result["meta_ads"] = validate_meta_tree(meta_dir, result)
+        social_posts = []
+        for social_platform in SOCIAL_PLATFORMS:
+            social_root = args.plan.parent / social_platform
+            if (social_root / "posts").exists():
+                social_posts.extend(validate_social_platform_tree(social_platform, social_root, result))
+        if social_posts:
+            result["social_posts"] = social_posts
         if args.dry_run:
             print(json.dumps(result, indent=2, ensure_ascii=False))
         else:

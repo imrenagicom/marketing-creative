@@ -164,10 +164,12 @@ class CampaignManagerTests(unittest.TestCase):
         self.assertRegex(self.plan["campaign_id"], r"^\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$")
         result = UTM.build_plan(self.plan)
         self.assertEqual(result["campaign_id"], self.plan["campaign_id"])
-        self.assertEqual(result["links"][0]["platform"], "meta")
+        self.assertEqual(result["links"][0]["platform"], "meta-ads")
         self.assertEqual(result["links"][0]["platform_campaign"], "taskapp-activation-sales")
         self.assertEqual(result["links"][0]["adset"], "id-18-45-design-teams")
         self.assertEqual(result["links"][0]["ad"], "reels-demo-v1")
+        self.assertEqual(result["links"][1]["platform"], "linkedin")
+        self.assertEqual(result["links"][1]["post"], "founder-workflow-breakdown")
         self.assertEqual(
             dict(parse_qsl(result["links"][0]["url_tags"])),
             {
@@ -188,20 +190,28 @@ class CampaignManagerTests(unittest.TestCase):
         bad_slug["links"][0]["ad"] = "../bad-ad"
         with self.assertRaisesRegex(ValueError, "must be a lowercase slug"):
             UTM.build_plan(bad_slug)
+        missing_post = copy.deepcopy(self.plan)
+        missing_post["links"][1].pop("post")
+        with self.assertRaisesRegex(ValueError, "with social platform 'linkedin' must specify post"):
+            UTM.build_plan(missing_post)
+        unknown_platform = copy.deepcopy(self.plan)
+        unknown_platform["links"][1]["platform"] = "myspace"
+        with self.assertRaisesRegex(ValueError, "platform 'myspace' is unsupported"):
+            UTM.build_plan(unknown_platform)
 
     def _write_valid_meta_tree(self):
         ad_dir = (
             self.root
-            / "meta/campaigns/taskapp-activation-sales"
+            / "meta-ads/campaigns/taskapp-activation-sales"
             / "adsets/id-18-45-design-teams"
             / "ads/reels-demo-v1"
         )
         ad_dir.mkdir(parents=True, exist_ok=True)
-        campaign_dir = self.root / "meta/campaigns/taskapp-activation-sales"
+        campaign_dir = self.root / "meta-ads/campaigns/taskapp-activation-sales"
         adset_dir = campaign_dir / "adsets/id-18-45-design-teams"
         (campaign_dir / "campaign.json").write_text(json.dumps({
             "schema_version": 1,
-            "platform": "meta",
+            "platform": "meta-ads",
             "campaign_slug": "taskapp-activation-sales",
             "name": "TaskApp Activation - Sales",
             "objective": "OUTCOME_SALES",
@@ -258,10 +268,55 @@ class CampaignManagerTests(unittest.TestCase):
             "destination_url": built_row["destination_url"],
             "utm": expected_utm,
             "url_tags": built_row["url_tags"],
-            "approved_copy_revision": "v001",
-            "approved_assets_revision": "v001",
+            "approved_copy_revision": "copy/approved/v001",
+            "approved_assets_revision": "assets/approved/v001",
         }))
         return campaign_dir, adset_dir, ad_dir
+
+    def _write_valid_social_trees(self):
+        built_links = UTM.build_plan(self.plan)["links"]
+        linkedin_row = built_links[1]
+        linkedin_utm = {k: linkedin_row[k] for k in UTM.UTM_KEYS if linkedin_row[k]}
+        linkedin_post = self.root / "linkedin/posts/founder-workflow-breakdown"
+        linkedin_post.mkdir(parents=True, exist_ok=True)
+        (linkedin_post / "post.json").write_text(json.dumps({
+            "schema_version": 1,
+            "platform": "linkedin",
+            "post_slug": "founder-workflow-breakdown",
+            "name": "Founder Workflow Breakdown Carousel",
+            "status": "planned",
+            "format": "carousel",
+            "link_id": linkedin_row["link_id"],
+            "destination_url": linkedin_row["destination_url"],
+            "utm": linkedin_utm,
+            "url": linkedin_row["url"],
+            "approved_copy_revision": "copy/approved/v001",
+            "approved_assets_revision": "assets/approved/v001",
+        }))
+        twitter_post = self.root / "twitter/posts/launch-thread"
+        twitter_post.mkdir(parents=True, exist_ok=True)
+        (twitter_post / "post.json").write_text(json.dumps({
+            "schema_version": 1,
+            "platform": "twitter",
+            "post_slug": "launch-thread",
+            "name": "Product Launch Thread",
+            "status": "planned",
+            "format": "thread",
+            "approved_copy_revision": "copy/approved/v001",
+        }))
+        instagram_post = self.root / "instagram/posts/behind-the-scenes-reel"
+        instagram_post.mkdir(parents=True, exist_ok=True)
+        (instagram_post / "post.json").write_text(json.dumps({
+            "schema_version": 1,
+            "platform": "instagram",
+            "post_slug": "behind-the-scenes-reel",
+            "name": "Behind the Scenes Reel",
+            "status": "planned",
+            "format": "reel",
+            "approved_copy_revision": "copy/approved/v001",
+            "approved_assets_revision": "assets/approved/v001",
+        }))
+        return linkedin_post, twitter_post, instagram_post
 
     def test_validates_meta_campaign_adset_and_ad_hierarchy_against_plan(self):
         _, _, ad_dir = self._write_valid_meta_tree()
@@ -278,6 +333,27 @@ class CampaignManagerTests(unittest.TestCase):
         self.assertNotEqual(bad.returncode, 0)
         self.assertIn("url_tags does not match", bad.stderr)
 
+    def test_validates_social_media_campaign_trees_for_instagram_linkedin_and_twitter(self):
+        linkedin_post, _, _ = self._write_valid_social_trees()
+        result = self.cli("--dry-run")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(
+            [(item["platform"], item["post"]) for item in payload["social_posts"]],
+            [
+                ("instagram", "behind-the-scenes-reel"),
+                ("linkedin", "founder-workflow-breakdown"),
+                ("twitter", "launch-thread"),
+            ],
+        )
+
+        post_spec = json.loads((linkedin_post / "post.json").read_text())
+        post_spec["url"] = "https://example.com/wrong"
+        (linkedin_post / "post.json").write_text(json.dumps(post_spec))
+        bad = self.cli("--dry-run")
+        self.assertNotEqual(bad.returncode, 0)
+        self.assertIn("url does not match", bad.stderr)
+
     def test_meta_tree_missing_referenced_ad_folder_fails(self):
         self._write_valid_meta_tree()
         second = copy.deepcopy(self.plan["links"][0])
@@ -288,7 +364,7 @@ class CampaignManagerTests(unittest.TestCase):
         self.source.write_text(json.dumps(self.plan))
         result = self.cli("--dry-run")
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("is missing its meta/campaigns/", result.stderr)
+        self.assertIn("is missing its meta-ads/campaigns/", result.stderr)
 
     def test_packaged_helper_runs_without_creative_plugin_and_build_is_deterministic(self):
         first, second = self.root / "one.zip", self.root / "two.zip"

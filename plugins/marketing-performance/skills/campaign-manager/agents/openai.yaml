@@ -1,4 +1,4 @@
 interface:
   display_name: "Campaign Manager"
-  short_description: "Manage platform campaigns/adsets/ads, creative revisions and UTMs"
-  default_prompt: "Use $campaign-manager to organize the YYYY-MM-DD-campaign-name workspace, structure Meta campaigns/adsets/ads with approved copy and asset revisions, and generate campaign UTM links."
+  short_description: "Manage meta-ads & social campaigns, revisions and UTMs"
+  default_prompt: "Use $campaign-manager to organize the YYYY-MM-DD-campaign-name workspace, structure meta-ads (campaigns, adsets, ads) and social media (instagram, linkedin, twitter) folders with approved copy and asset revisions, and generate campaign UTM links."

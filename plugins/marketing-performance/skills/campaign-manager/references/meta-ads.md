@@ -1,6 +1,6 @@
 # Meta Ads campaign, ad set, and ad hierarchy
 
-Under `<YYYY-MM-DD>-<campaign-name>/meta/`, organize campaigns, ad sets, and ads to mirror Meta Ads' three-tier hierarchy (`Campaign → Ad Set → Ad`). Each level owns the decisions that belong to that Meta object, and each ad directory owns its destination link/UTM mapping, copy revisions, and creative asset development/approved revisions:
+Under `<YYYY-MM-DD>-<campaign-name>/meta-ads/`, organize campaigns, ad sets, and ads to mirror Meta Ads' three-tier hierarchy (`Campaign → Ad Set → Ad`). Each level owns the decisions that belong to that Meta object, and each ad directory owns its destination link/UTM mapping, copy revisions, and creative asset development/approved revisions:
 
 ```text
 <YYYY-MM-DD>-<campaign-name>/
@@ -10,7 +10,7 @@ Under `<YYYY-MM-DD>-<campaign-name>/meta/`, organize campaigns, ad sets, and ads
       campaign.json
       utm-links.csv
       UTM_PLAN.md
-  meta/
+  meta-ads/
     README.md                            # optional Meta account, pixel, and page notes
     campaigns/
       <meta-campaign-slug>/
@@ -41,16 +41,16 @@ Under `<YYYY-MM-DD>-<campaign-name>/meta/`, organize campaigns, ad sets, and ads
                     v002/                # subsequent approved asset revision
 ```
 
-Other ad platforms (such as future `google/` or `tiktok/` trees) sit alongside `meta/` under `<YYYY-MM-DD>-<campaign-name>/` using their own native hierarchy while sharing the root `campaign.json` and `tracking/vNNN/` registry.
+Social media campaign directories (`instagram/`, `linkedin/`, `twitter/`; see [social-media.md](social-media.md)) and future paid ad platforms sit alongside `meta-ads/` under `<YYYY-MM-DD>-<campaign-name>/` while sharing the root `campaign.json` and `tracking/vNNN/` registry.
 
-## 1. Meta Campaign level (`meta/campaigns/<meta-campaign-slug>/campaign.json`)
+## 1. Meta Campaign level (`meta-ads/campaigns/<meta-campaign-slug>/campaign.json`)
 
 Captures the campaign goal (objective), budget mode and limits, bid strategy, special ad categories, and lifecycle status:
 
 ```json
 {
   "schema_version": 1,
-  "platform": "meta",
+  "platform": "meta-ads",
   "campaign_slug": "taskapp-activation-sales",
   "name": "TaskApp | ID Activation | Sales | 2026-10-18",
   "objective": "OUTCOME_SALES",
@@ -136,7 +136,7 @@ Binds a single ad's destination URL and UTM parameters (`link_id` in root `campa
 ```
 
 - `ad_slug`: lowercase hyphenated slug matching the `<ad-slug>` folder name.
-- `link_id`: references the corresponding link entry in the campaign root's `campaign.json`. In root `campaign.json`, set `"platform": "meta"`, `"platform_campaign": "<meta-campaign-slug>"`, `"adset": "<adset-slug>"`, and `"ad": "<ad-slug>"` on that link entry.
+- `link_id`: references the corresponding link entry in the campaign root's `campaign.json`. In root `campaign.json`, set `"platform": "meta-ads"`, `"platform_campaign": "<meta-campaign-slug>"`, `"adset": "<adset-slug>"`, and `"ad": "<ad-slug>"` on that link entry.
 - `destination_url` and `url_tags`: Meta Ads separates the base **Website URL** (`destination_url`) from **URL parameters** (`url_tags`). Keep `destination_url` free of UTM query keys and put the serialized UTM query string in `url_tags` so parameters are not duplicated.
 - `approved_copy_revision` and `approved_assets_revision`: point to the active `vNNN` directories inside this ad's `copy/approved/` and `assets/approved/` trees. When two ads in an ad set intentionally test different destinations or copy with the exact same creative deliverable, `approved_assets_revision` may reference the sibling ad's `assets/approved/vNNN` directory rather than duplicating paid renders.
 - Optional `remote_ad_id`, `remote_creative_id`, `video_id`, and `image_hash` record live Meta object identifiers after upload or creation.
