@@ -9,6 +9,10 @@
     {
       "link_id": "instagram-reels-demo-v1",
       "destination_url": "https://example.com/start?lang=id#demo",
+      "platform": "meta",
+      "platform_campaign": "taskapp-activation-sales",
+      "adset": "id-18-45-design-teams",
+      "ad": "reels-demo-v1",
       "placement": "instagram-reels",
       "creative_id": "demo-v1",
       "status": "planned",

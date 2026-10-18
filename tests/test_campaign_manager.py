@@ -164,6 +164,131 @@ class CampaignManagerTests(unittest.TestCase):
         self.assertRegex(self.plan["campaign_id"], r"^\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$")
         result = UTM.build_plan(self.plan)
         self.assertEqual(result["campaign_id"], self.plan["campaign_id"])
+        self.assertEqual(result["links"][0]["platform"], "meta")
+        self.assertEqual(result["links"][0]["platform_campaign"], "taskapp-activation-sales")
+        self.assertEqual(result["links"][0]["adset"], "id-18-45-design-teams")
+        self.assertEqual(result["links"][0]["ad"], "reels-demo-v1")
+        self.assertEqual(
+            dict(parse_qsl(result["links"][0]["url_tags"])),
+            {
+                "utm_source": "instagram",
+                "utm_medium": "paid_social",
+                "utm_campaign": "taskapp-activation-id-2026q4",
+                "utm_content": "demo-v1-reels",
+                "utm_id": "2026-10-18-example-taskapp-activation",
+            },
+        )
+
+    def test_partial_or_invalid_platform_hierarchy_fails(self):
+        partial = copy.deepcopy(self.plan)
+        partial["links"][0].pop("adset")
+        with self.assertRaisesRegex(ValueError, "must specify platform, platform_campaign, adset and ad together"):
+            UTM.build_plan(partial)
+        bad_slug = copy.deepcopy(self.plan)
+        bad_slug["links"][0]["ad"] = "../bad-ad"
+        with self.assertRaisesRegex(ValueError, "must be a lowercase slug"):
+            UTM.build_plan(bad_slug)
+
+    def _write_valid_meta_tree(self):
+        ad_dir = (
+            self.root
+            / "meta/campaigns/taskapp-activation-sales"
+            / "adsets/id-18-45-design-teams"
+            / "ads/reels-demo-v1"
+        )
+        ad_dir.mkdir(parents=True, exist_ok=True)
+        campaign_dir = self.root / "meta/campaigns/taskapp-activation-sales"
+        adset_dir = campaign_dir / "adsets/id-18-45-design-teams"
+        (campaign_dir / "campaign.json").write_text(json.dumps({
+            "schema_version": 1,
+            "platform": "meta",
+            "campaign_slug": "taskapp-activation-sales",
+            "name": "TaskApp Activation - Sales",
+            "objective": "OUTCOME_SALES",
+            "buying_type": "AUCTION",
+            "budget": {
+                "mode": "cbo",
+                "currency": "USD",
+                "daily_budget": 150.0,
+                "lifetime_budget": None,
+                "spend_cap": 4500.0,
+                "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            },
+            "special_ad_categories": [],
+            "status": "paused",
+        }))
+        (adset_dir / "adset.json").write_text(json.dumps({
+            "schema_version": 1,
+            "adset_slug": "id-18-45-design-teams",
+            "name": "ID 18-45 Design Teams - Reels 9x16",
+            "optimization_goal": "OFFSITE_CONVERSIONS",
+            "billing_event": "IMPRESSIONS",
+            "conversion": {"dataset_or_pixel_id": "123456789012345", "custom_event_type": "START_TRIAL"},
+            "budget": {"daily_budget": None, "lifetime_budget": None},
+            "schedule": {"start_time": "2026-10-18T00:00:00+07:00", "end_time": None},
+            "targeting": {
+                "geo_locations": {"countries": ["ID"]},
+                "age_min": 18,
+                "age_max": 45,
+                "genders": ["all"],
+                "locales": ["id_ID", "en_US"],
+                "interests": ["Design", "Productivity"],
+                "custom_audiences": [],
+                "excluded_custom_audiences": ["existing_active_subscribers_180d"],
+            },
+            "placements": {
+                "mode": "manual",
+                "publisher_platforms": ["instagram", "facebook"],
+                "instagram_positions": ["reels", "story"],
+                "facebook_positions": ["facebook_reels"],
+                "aspect_ratios": ["9:16"],
+            },
+            "status": "paused",
+        }))
+        built_row = UTM.build_plan(self.plan)["links"][0]
+        expected_utm = {k: built_row[k] for k in UTM.UTM_KEYS if built_row[k]}
+        (ad_dir / "ad.json").write_text(json.dumps({
+            "schema_version": 1,
+            "ad_slug": "reels-demo-v1",
+            "name": "Reels Demo v1 - 9x16",
+            "status": "paused",
+            "format": "video",
+            "call_to_action": "LEARN_MORE",
+            "link_id": built_row["link_id"],
+            "destination_url": built_row["destination_url"],
+            "utm": expected_utm,
+            "url_tags": built_row["url_tags"],
+            "approved_copy_revision": "v001",
+            "approved_assets_revision": "v001",
+        }))
+        return campaign_dir, adset_dir, ad_dir
+
+    def test_validates_meta_campaign_adset_and_ad_hierarchy_against_plan(self):
+        _, _, ad_dir = self._write_valid_meta_tree()
+        result = self.cli("--dry-run")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(len(payload["meta_ads"]), 1)
+        self.assertEqual(payload["meta_ads"][0]["ad"], "reels-demo-v1")
+
+        ad_spec = json.loads((ad_dir / "ad.json").read_text())
+        ad_spec["url_tags"] = "utm_source=wrong"
+        (ad_dir / "ad.json").write_text(json.dumps(ad_spec))
+        bad = self.cli("--dry-run")
+        self.assertNotEqual(bad.returncode, 0)
+        self.assertIn("url_tags does not match", bad.stderr)
+
+    def test_meta_tree_missing_referenced_ad_folder_fails(self):
+        self._write_valid_meta_tree()
+        second = copy.deepcopy(self.plan["links"][0])
+        second["link_id"] = "ig-reels-second-ad"
+        second["ad"] = "missing-ad-folder"
+        second["utm"]["utm_content"] = "second-hook-9x16"
+        self.plan["links"].append(second)
+        self.source.write_text(json.dumps(self.plan))
+        result = self.cli("--dry-run")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("is missing its meta/campaigns/", result.stderr)
 
     def test_packaged_helper_runs_without_creative_plugin_and_build_is_deterministic(self):
         first, second = self.root / "one.zip", self.root / "two.zip"
