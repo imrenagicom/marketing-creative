@@ -1,3 +1,9 @@
+## [0.8.1](https://github.com/imrenagicom/marketing-creative/compare/v0.8.0...v0.8.1) (2026-10-18)
+
+### Fixes
+
+* **plugins:** remove duplicate .agents/skills.json workspace registration ([127ed0f](https://github.com/imrenagicom/marketing-creative/commit/127ed0f65cfe75826364829f97aeca744497f5fd))
+
 ## [0.8.0](https://github.com/imrenagicom/marketing-creative/compare/v0.7.0...v0.8.0) (2026-10-18)
 
 ### Features
