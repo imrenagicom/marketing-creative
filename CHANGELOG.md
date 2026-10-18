@@ -1,3 +1,14 @@
+## [0.7.0](https://github.com/imrenagicom/marketing-creative/compare/v0.6.0...v0.7.0) (2026-10-18)
+
+### Features
+
+* **campaign-manager:** rename meta to meta-ads and add social media campaign trees ([08b7f89](https://github.com/imrenagicom/marketing-creative/commit/08b7f892b20fa74022ecd0834286a82576e3f678))
+* **campaign-manager:** support multi-platform ad hierarchies starting with meta ([4d36998](https://github.com/imrenagicom/marketing-creative/commit/4d36998f958bc3bc85ca781fff5e1c40cbdaa9c4))
+
+### Skills and documentation
+
+* **campaign-manager:** document cross-channel asset copying without development folders ([c3c655b](https://github.com/imrenagicom/marketing-creative/commit/c3c655bc7e06f144751a9ba42aaaf86c7ebfa1c1))
+
 ## [0.6.0](https://github.com/imrenagicom/marketing-creative/compare/v0.5.0...v0.6.0) (2026-10-18)
 
 ### Features
