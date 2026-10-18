@@ -21,6 +21,6 @@ Record actual placement names, not just “desktop” or “phone.” Verify cur
 
 ## Deliver and hand off
 
-Write `MARKETING_BRIEF.md` in the user's chosen project when saving is requested or part of authorized production; otherwise deliver the brief in chat. Include evidence and open decisions. Reuse an existing campaign directory; when working with `campaign-manager`, save the brief alongside its `campaign.json` and preserve its tracking records. For alternative approaches, hand the saved brief to `$creative-ideation` from the optional marketing-creative plugin when available, or provide it as the creative handoff. This plugin works without creative tooling. Do not generate a full video script or start production unless requested.
+Write `MARKETING_BRIEF.md` in the user's chosen project when saving is requested or part of authorized production; otherwise deliver the brief in chat. Include evidence and open decisions. Reuse an existing campaign directory; when working with `campaign-manager`, save the brief at `docs/MARKETING_BRIEF.md` alongside the campaign's `campaign.json` and preserve its tracking records. For alternative approaches, hand the saved brief to `$creative-ideation` from the optional marketing-creative plugin when available, or provide it as the creative handoff. This plugin works without creative tooling. Do not generate a full video script or start production unless requested.
 
 A strategic revision updates the brief and identifies which concept, script or placement assumptions need reconsideration. Preserve unrelated approved decisions.

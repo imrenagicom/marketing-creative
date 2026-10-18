@@ -10,6 +10,8 @@ For social posts, match the reader's context and the requested format. A carouse
 
 Short-form video hooks, overlay lines and post captions fit this skill. Timing the whole script, dialogue, shots and edit cues belongs to ad-video-director. Preserve a supplied concept when refining its lines.
 
+Whenever images, carousel slides, videos or other visual assets are created or attached for an ad or social post, also write concise accessibility alt text for each visual asset (per image, per carousel slide in sequence, or describing the video's visual action and key on-screen text). Describe what is actually shown and any essential text rendered in the artwork without keyword stuffing or inventing unshown details.
+
 For test variants, retain a shared baseline and identify the changed variable, audience and primary success measure from the brief. An objection-led opener and a mechanism-led opener test different arguments; punctuation changes rarely establish a distinct hypothesis. Choose business outcomes appropriate to the campaign, and treat click-through or engagement as diagnostic when they do not establish that outcome. A hypothesis is not a measured performance result.
 
 ## Landing pages

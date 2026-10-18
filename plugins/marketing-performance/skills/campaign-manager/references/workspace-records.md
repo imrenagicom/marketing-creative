@@ -7,11 +7,14 @@ marketing/campaigns/
   INDEX.md
   UTM_CONVENTIONS.md
   <YYYY-MM-DD>-<campaign-name>/
-    README.md
-    MARKETING_BRIEF.md                 # when created or supplied as a file
+    README.md                          # single campaign entrypoint & index linking to docs/, tracking/, and channels
     campaign.json                      # canonical campaign-wide link plan & platform mapping
-    MEASUREMENT.md
-    CHANGELOG.md
+    docs/                              # campaign-level markdowns, briefs, plans, and reviews
+      MARKETING_BRIEF.md               # strategic brief, product facts, audience, and channel requirements
+      MEASUREMENT.md                   # conversion definitions, attribution scope, and validation status
+      CHANGELOG.md                     # dated revision log across copy, assets, links, and launches
+      plans/                           # campaign-wide or cross-channel plans (CREATIVE_IDEAS.md, CROSS_PLATFORM.md, carousel/content plans, shooting plans)
+      reviews/                         # feature evidence registers, QA/review reports, delivery/repository handoffs, audit summaries
     tracking/
       v001/
         campaign.json                  # immutable generation snapshot
@@ -29,9 +32,9 @@ marketing/campaigns/
                 <ad-slug>/
                   ad.json              # format, CTA, destination_url, utm, url_tags, link_id, and active revisions
                   copy/
-                    drafts/            # working primary text, headline, description, and style explorations
+                    drafts/            # working primary text, headline, description, alt text, and style explorations
                     approved/
-                      v001/            # approved ad copy revision
+                      v001/            # approved ad copy and accessibility alt text revision
                       v002/            # subsequent approved ad copy revision
                   assets/
                     development/       # storyboard and work-in-progress creative production for this ad
@@ -54,7 +57,7 @@ marketing/campaigns/
           copy/
             drafts/                    # working captions, hooks, hashtags, story/reel text, alt text
             approved/
-              v001/                    # approved caption/copy revision
+              v001/                    # approved caption/copy and accessibility alt text revision
               v002/
           assets/
             development/
@@ -84,26 +87,32 @@ Reuse an existing campaign record for follow-up work; do not create a duplicate 
 
 - **INDEX.md:** campaign ID (`<YYYY-MM-DD>-<campaign-name>`), product, objective, active platforms (such as `meta-ads`, `instagram`, `linkedin`, `twitter`), lifecycle status, record path, and current tracking revision (`tracking/vNNN`). Update only the affected rows. A campaign's lifecycle status is separate from its links', ads', or posts' publication status.
 - **UTM_CONVENTIONS.md:** exact source/medium vocabulary, campaign/creative/placement naming, optional field meanings, existing aliases, analytics/channel assumptions, owner and dated changes. Preserve established casing; suggest normalization for new values without rewriting historical tags.
-- **Campaign README.md:** product and objective, audience/market/language when known, destination/CTA, active platforms and hierarchy (`meta-ads/campaigns/<meta-campaign-slug>/adsets/<adset-slug>/ads/<ad-slug>/` and/or `{instagram,linkedin,twitter}/posts/<post-slug>/`), supplied brief path, facts/evidence, assumptions, open decisions and owner, active tracking/copy/asset revision paths, and exact publishing handoff. Do not invent budgets, schedules or campaign results. Link to source documents rather than duplicating a supplied brief.
+- **Campaign README.md:** single root entrypoint summarizing product and objective, audience/market/language when known, destination/CTA, active platforms and hierarchy (`meta-ads/campaigns/<meta-campaign-slug>/adsets/<adset-slug>/ads/<ad-slug>/` and/or `{instagram,linkedin,twitter}/posts/<post-slug>/`), links to `docs/` (`docs/MARKETING_BRIEF.md`, `docs/MEASUREMENT.md`, `docs/CHANGELOG.md`, `docs/plans/`, `docs/reviews/`), assumptions, open decisions and owner, active tracking/copy/asset revision paths, and exact publishing handoff. Do not invent budgets, schedules or campaign results. Link to source documents in `docs/` rather than cluttering the campaign root with loose markdown files.
+- **docs/ (Campaign documents, markdowns, and document plans):**
+  - Keep campaign-level markdown documents organized inside `docs/` rather than scattering loose `.md` files in the campaign root:
+    - **`docs/MARKETING_BRIEF.md`:** strategic brief, target audience, positioning, verified product facts, offer, and placement requirements.
+    - **`docs/MEASUREMENT.md`:** primary conversion and its definition, analytics destination/property if known, attribution scope, relevant auto-tagging, validation status/evidence/date, and unresolved implementation work. Keep measurement unknowns explicit.
+    - **`docs/CHANGELOG.md`:** dated decisions, campaign/adset/ad/post additions or changes, link replacements, approved copy/asset revision promotions (`copy/approved/vNNN`, `assets/approved/vNNN`), status transitions, reason and affected IDs. Distinguish planned, approved, actually published and retired items; generating an export or approving an asset does not publish it.
+    - **`docs/plans/`:** campaign-wide or cross-channel execution plans, creative concept explorations (`CREATIVE_IDEAS.md`), cross-platform distribution plans (`CROSS_PLATFORM.md`), carousel/content plans, and filming/shooting plans.
+    - **`docs/reviews/`:** product feature evidence registers (`FEATURE_EVIDENCE.md`), visual/technical QA reviews (`REVIEW.md`), delivery and repository handoffs (`DELIVERY.md`, `REPOSITORY.md`), and performance audit summaries.
+  - When a script (`SCRIPT.md`), beat sheet, visual direction (`VISUAL_DIRECTION.md`), shooting plan (`SHOOTING_PLAN.md`), or visual review (`REVIEW.md`) belongs specifically to a single ad's or post's creative development, store it in that ad's or post's `assets/development/storyboard/` (or `<ad-or-post>/docs/`).
 - **Root campaign.json:** current complete link plan across all channels, paid ads, and social posts; retain published and retired IDs. For Meta ads, set `"platform": "meta-ads"`, `"platform_campaign": "<meta-campaign-slug>"`, `"adset": "<adset-slug>"`, and `"ad": "<ad-slug>"` on the link entry. For social media posts that include a tracked link, set `"platform": "instagram" | "linkedin" | "twitter"` and `"post": "<post-slug>"`. Align `creative_id` and `utm_content` with that ad's or post's approved copy and asset revisions. Snapshots under `tracking/vNNN/` preserve earlier inputs and exports.
 - **meta-ads/campaigns/<meta-campaign-slug>/campaign.json:** Meta campaign goal (`objective`), `buying_type`, `special_ad_categories`, campaign budget mode and limits (`budget`: `mode`, `currency`, `daily_budget` / `lifetime_budget`, `spend_cap`, `bid_strategy`), `status`, and optional `remote_campaign_id` (see [meta-ads.md](meta-ads.md)).
 - **meta-ads/.../adsets/<adset-slug>/adset.json:** `optimization_goal`, `billing_event`, optional `conversion` (pixel/event), `schedule`, ad-set `budget` (when ABO), **user targeting** (`targeting`: geo locations, age range, gender, locales, interests/behaviors, custom/lookalike audiences, exclusions), `placements` (platforms, positions, and required creative aspect ratios), `status`, and optional `remote_adset_id`.
 - **meta-ads/.../ads/<ad-slug>/ad.json, copy/, and assets/:**
   - `ad.json` binds the ad (`ad_slug`, `name`, `status`, `format`, `call_to_action`) to its `link_id` in root `campaign.json`, clean `destination_url` (Meta Website URL), `utm` object, serialized `url_tags` (Meta URL parameters), and active revision paths (`approved_copy_revision`, `approved_assets_revision`).
-  - `copy/drafts/` and `copy/approved/vNNN/`: keep working ad copy, voice/style explorations, localization drafts and editorial notes in `copy/drafts/`. When approved, save the clean ad copy and field mapping in a fresh `copy/approved/v001/` directory (then `v002/`, `v003/`, etc. for later approved revisions).
+  - `copy/drafts/` and `copy/approved/vNNN/`: keep working ad copy, voice/style explorations, localization drafts, accessibility alt text (written by [marketing-copywriter](../../marketing-copywriter/SKILL.md) whenever images, carousel slides, or videos are created), and editorial notes in `copy/drafts/`. When approved, save the clean ad copy, accessibility alt text, and field mapping in a fresh `copy/approved/v001/` directory (then `v002/`, `v003/`, etc. for later approved revisions).
   - `assets/development/` and `assets/approved/vNNN/`: keep exploratory and in-progress creative work for the ad under `assets/development/storyboard/`, `assets/development/images/`, `assets/development/video/`, and `assets/development/audio/`. When creative deliverables are reviewed and approved, place them in a fresh `assets/approved/v001/` directory (and `v002/`, `v003/`, etc. for subsequent approved revisions) under `images/`, `video/` and/or `audio/`, alongside `MANIFEST.md` or `assets.json` mapping `creative_id`, placement ratios, file hashes and source development runs.
 - **{instagram,linkedin,twitter}/posts/<post-slug>/post.json, copy/, and assets/:**
   - `post.json` records `platform` (`"instagram"`, `"linkedin"`, or `"twitter"`), `post_slug`, `name`, `status`, `format`, optional `schedule`, optional tracked link mapping (`link_id`, `destination_url`, `utm`, `url`), and active revision paths (`approved_copy_revision`, `approved_assets_revision`; see [social-media.md](social-media.md)).
-  - `copy/drafts/` and `copy/approved/vNNN/`: keep working social captions, opening hooks, thread posts, hashtags, first-comment copy, and alt text in `copy/drafts/`; promote user-approved captions/threads into `copy/approved/v001/`, `v002/`, etc.
+  - `copy/drafts/` and `copy/approved/vNNN/`: keep working social captions, opening hooks, thread posts, hashtags, first-comment copy, and accessibility alt text (written by [marketing-copywriter](../../marketing-copywriter/SKILL.md) whenever images, carousel slides, or videos/reels are created) in `copy/drafts/`; promote user-approved captions/threads and accessibility alt text into `copy/approved/v001/`, `v002/`, etc.
   - `assets/development/` and `assets/approved/vNNN/`: keep storyboard/media development under `assets/development/{storyboard,images,video,audio}/` when new creative is produced for this post, and place approved social media images, carousels, videos/reels, or audio under `assets/approved/v001/`, `v002/`, etc.
 - **Cross-channel asset reuse (copying between `meta-ads/` and social media without regeneration):**
   - Do **not** regenerate images, videos, or audio for social media (`instagram/`, `linkedin/`, `twitter/`) if a suitable approved asset already exists in `meta-ads/` (or another social directory), and vice versa (`meta-ads/` reusing an asset already created for social media).
   - Instead, copy the approved deliverable from the source `assets/approved/vNNN/` directory into the target ad's or post's `assets/approved/v001/` directory so each directory keeps a complete local record, and record `copied_from` and the file hash in the target's `MANIFEST.md` or `assets.json`.
-  - When an ad or social post copies an approved asset from another directory rather than generating new media, **it is okay to omit `assets/development/`** altogether.
-- **MEASUREMENT.md:** primary conversion and its definition, analytics destination/property if known, attribution scope, relevant auto-tagging, validation status/evidence/date, and unresolved implementation work. Keep measurement unknowns explicit.
-- **CHANGELOG.md:** dated decisions, campaign/adset/ad/post additions or changes, link replacements, approved copy/asset revision promotions (`copy/approved/vNNN`, `assets/approved/vNNN`), status transitions, reason and affected IDs. Distinguish planned, approved, actually published and retired items; generating an export or approving an asset does not publish it.
+  - When an ad or social post copies an approved asset from another directory rather than generating new media, **it is okay to omit `assets/development/`** altogether, and ask [marketing-copywriter](../../marketing-copywriter/SKILL.md) to carry over or adapt the accessibility alt text in the target's `copy/drafts/` and `copy/approved/vNNN/`.
 
-For a small URL-only tagging request these files can be brief, and `meta-ads/`, `instagram/`, `linkedin/`, and `twitter/` subdirectories can be omitted until platform planning, copy or creative work exists. Do not manufacture a research report or force a full marketing interview. If the user requests no filesystem changes, deliver the records in chat and respect that override.
+For a small URL-only tagging request these files can be brief, and `docs/plans/`, `docs/reviews/`, `meta-ads/`, `instagram/`, `linkedin/`, and `twitter/` subdirectories can be omitted until platform planning, copy or creative work exists. Do not manufacture a research report or force a full marketing interview. If the user requests no filesystem changes, deliver the records in chat and respect that override.
 
 ## Revision and publication rules
 
