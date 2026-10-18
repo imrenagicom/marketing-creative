@@ -1,3 +1,9 @@
+## [0.9.0](https://github.com/imrenagicom/marketing-creative/compare/v0.8.1...v0.9.0) (2026-10-18)
+
+### Features
+
+* **campaign-manager:** organize campaign docs/ and require alt text via marketing-copywriter ([1800d51](https://github.com/imrenagicom/marketing-creative/commit/1800d511172f3f7343c3131ebe5035bd62746bdb))
+
 ## [0.8.1](https://github.com/imrenagicom/marketing-creative/compare/v0.8.0...v0.8.1) (2026-10-18)
 
 ### Fixes
