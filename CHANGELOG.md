@@ -1,3 +1,9 @@
+## [0.6.0](https://github.com/imrenagicom/marketing-creative/compare/v0.5.0...v0.6.0) (2026-10-18)
+
+### Features
+
+* **campaign-manager:** define dated campaign directories and asset/copy revision trees ([6145996](https://github.com/imrenagicom/marketing-creative/commit/6145996c7de95fc900762e2c5f0e0eb3bf7d6474))
+
 ## [0.5.0](https://github.com/imrenagicom/marketing-creative/compare/v0.4.0...v0.5.0) (2026-10-16)
 
 ### Features
