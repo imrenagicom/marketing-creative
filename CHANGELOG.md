@@ -1,3 +1,9 @@
+## [0.8.0](https://github.com/imrenagicom/marketing-creative/compare/v0.7.0...v0.8.0) (2026-10-18)
+
+### Features
+
+* **plugins:** support claude, codex, and antigravity plugins with synced release versions ([355b415](https://github.com/imrenagicom/marketing-creative/commit/355b415f41897c86417ade360c6c14e0680105fb))
+
 ## [0.7.0](https://github.com/imrenagicom/marketing-creative/compare/v0.6.0...v0.7.0) (2026-10-18)
 
 ### Features
