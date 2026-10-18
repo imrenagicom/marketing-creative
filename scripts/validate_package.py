@@ -11,7 +11,6 @@ ANTIGRAVITY_FIELDS = {
     "$schema", "name", "displayName", "version",
     "description", "logo", "suggestedPrompts", "disabled",
 }
-SKILLS_CONFIG = ".agents/skills.json"
 PLUGINS_CONFIG = ".agents/plugins.json"
 PLUGINS = {
     "marketing-creative": {"marketing-video", "creative-ideation", "ad-video-director",
@@ -105,13 +104,11 @@ def validate_plugin(plugin):
             "Antigravity suggestedPrompts must match Codex defaultPrompt")
     require(codex["author"].get("name"), "Missing publisher")
 
-    skills_config = read_json(ROOT / SKILLS_CONFIG)
-    expected_skill_entries = [{"path": f"plugins/{name}/skills"} for name in PLUGINS]
-    require(skills_config == {"entries": expected_skill_entries},
-            "Workspace skills.json must point to all plugin skill directories")
     plugins_config = read_json(ROOT / PLUGINS_CONFIG)
     require(plugins_config == {"entries": [{"path": "plugins"}]},
             "Workspace plugins.json must point to ./plugins")
+    require(not (ROOT / ".agents/skills.json").exists(),
+            "Do not combine .agents/skills.json with .agents/plugins.json; it duplicates plugin skills")
 
     marketplaces = [read_json(ROOT / p) for p in
                     (".agents/plugins/marketplace.json", ".claude-plugin/marketplace.json")]
