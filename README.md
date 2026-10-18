@@ -7,7 +7,7 @@ Two independently installable plugins cover campaign planning, copywriting and c
 | Skill | Input → output |
 | --- | --- |
 | `marketing-video` | Topic, brief, script or existing video → appropriate workflow stages and requested video deliverables |
-| `campaign-manager` (marketing-performance) | Product campaign → shared UTM conventions, tagged links and versioned workspace records |
+| `campaign-manager` (marketing-performance) | Product campaign → `<YYYY-MM-DD>-<campaign-name>` workspace, storyboard/media development & versioned approved asset/copy directories, shared UTM conventions, and tagged links |
 | `marketing-brief` (marketing-performance) | Product facts, research and goal → strategic brief, evidence, placement requirements |
 | `marketing-copywriter` (marketing-performance) | Brief or draft → exact ad, landing-page, email or social copy, voice/style variants and localization |
 | `creative-ideation` | Marketing brief → distinct concepts and selected creative brief |
@@ -89,20 +89,20 @@ Use `$marketing-copywriter` (Claude: `/marketing-performance:marketing-copywrite
 
 ## Campaign records and UTMs
 
-Use `$campaign-manager` (Claude: `/marketing-performance:campaign-manager`) to combine marketing operations naming rules with campaign-specific links. It reuses the current workspace's campaign directory, or defaults to `marketing/campaigns/`, with a shared index/convention and a directory per stable campaign ID. Plans, measurement notes, change history and versioned CSV/Markdown exports stay in the product workspace for review and Git commits. The skill does not automatically commit or publish campaigns.
+Use `$campaign-manager` (Claude: `/marketing-performance:campaign-manager`) to combine marketing operations naming rules with campaign-specific links and creative/copy revision tracking. It reuses the current workspace's campaign directory, or defaults to `marketing/campaigns/`, with a shared index/convention and a `<YYYY-MM-DD>-<campaign-name>` directory per new campaign. Inside each campaign directory, it separates working copy (`copy/drafts/`) from versioned approved copy (`copy/approved/v001/`, `v002/`, ...), and separates storyboard/media development (`assets/development/` with `storyboard/`, `images/`, `video/`, `audio/`) from versioned approved deliverables (`assets/approved/v001/`, `v002/`, ...). Plans, measurement notes, change history and versioned CSV/Markdown tracking exports (`tracking/v001/`) stay in the product workspace for review and Git commits. The skill does not automatically commit or publish campaigns.
 
-> Use $campaign-manager for our product activation campaign across Instagram Reels and our newsletter. Reuse the existing brief and tagging conventions. Generate the destination URLs and save the campaign plan, measurement checks and UTM registry in this workspace.
+> Use $campaign-manager for our product activation campaign across Instagram Reels and our newsletter. Reuse the existing brief and tagging conventions. Create the `<date>-campaign-name` workspace structure for copy, storyboard/media development and approved revisions, generate the destination URLs, and save the campaign plan, measurement checks and UTM registry in this workspace.
 
 The bundled static URL helper needs Python 3.10+ and no API keys or external packages:
 
 ```sh
 UTM_TOOL="$PWD/plugins/marketing-performance/skills/campaign-manager/scripts/build_utm.py"
 # Replace with your saved plan; the bundled example is fictional.
-python3 "$UTM_TOOL" /path/to/product/marketing/campaigns/campaign-id/campaign.json --dry-run
-python3 "$UTM_TOOL" /path/to/product/marketing/campaigns/campaign-id/campaign.json --out /path/to/product/marketing/campaigns/campaign-id/tracking/v001
+python3 "$UTM_TOOL" /path/to/product/marketing/campaigns/2026-10-18-campaign-name/campaign.json --dry-run
+python3 "$UTM_TOOL" /path/to/product/marketing/campaigns/2026-10-18-campaign-name/campaign.json --out /path/to/product/marketing/campaigns/2026-10-18-campaign-name/tracking/v001
 ```
 
-Use the next unused revision for changes. Existing exports and published link identities are preserved; conflicts with destination UTMs need explicit resolution. The helper preserves other query parameters/fragments and encodes values once. Local validation does not prove redirect preservation or analytics collection; record those checks separately. The [workspace record contract](plugins/marketing-performance/skills/campaign-manager/references/workspace-records.md), [link schema](plugins/marketing-performance/skills/campaign-manager/references/link-plan.md) and [naming/source register](plugins/marketing-performance/skills/campaign-manager/references/utm-conventions.md) describe the handoff and limits.
+Use the next unused revision (`v001`, `v002`, ...) for changes to tracking exports, approved copy or approved assets. Existing exports and published link identities are preserved; conflicts with destination UTMs need explicit resolution. The helper preserves other query parameters/fragments and encodes values once. Local validation does not prove redirect preservation or analytics collection; record those checks separately. The [workspace record contract](plugins/marketing-performance/skills/campaign-manager/references/workspace-records.md), [link schema](plugins/marketing-performance/skills/campaign-manager/references/link-plan.md) and [naming/source register](plugins/marketing-performance/skills/campaign-manager/references/utm-conventions.md) describe the handoff and limits.
 
 ## Production tools
 

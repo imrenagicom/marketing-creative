@@ -87,9 +87,11 @@ tests/test_generated_video.py uses fake providers, synthetic media and actual lo
 
 | Scenario | Observable acceptance criteria |
 | --- | --- |
-| Existing brief, two channels and a destination | Starts from supplied facts, creates/reuses a campaign directory and taxonomy, generates distinct links and saves a reproducible revision without a full intake restart |
+| New campaign with brief, two channels and a destination | Creates a `<YYYY-MM-DD>-<campaign-name>` campaign directory and matching `campaign_id`, reuses existing workspace taxonomy, generates distinct links and saves a reproducible `tracking/v001` revision without a full intake restart |
+| Storyboard, media development and copy drafts followed by user approval | Keeps work-in-progress material in `copy/drafts/` and `assets/development/` (`storyboard/`, `images/`, `video/`, `audio/`); places approved copy and deliverables in `copy/approved/v001/` and `assets/approved/v001/` with stable `creative_id` mapping |
+| Approved copy or creative assets are revised and re-approved | Preserves `v001` approved directories intact; creates `copy/approved/v002/` and/or `assets/approved/v002/`, updates campaign notes/index, and assigns new `creative_id`/`link_id` values when published variant tracking changes |
 | Existing workspace taxonomy with mixed-case legacy tags | Preserves exact legacy values and IDs; documents any proposed convention for new tags without rewriting published values |
-| Revisit an existing campaign in a later chat | Finds the index/current revision, preserves notes and exports, records changes under the existing campaign and uses the next unused revision |
+| Revisit an existing campaign in a later chat or on a later date | Finds the index/current revision, reuses the existing campaign directory without creating a new dated duplicate, preserves notes and exports, and uses the next unused revision |
 | Published creative gets a new destination or tracking tuple | Keeps old link identity and snapshot; introduces a new link ID and records replacement/retirement instead of silently rewriting history |
 | Destination contains query, click ID, fragment or existing UTMs | Preserves unrelated query bytes/fragment; existing UTM conflicts block generation until ownership is resolved |
 | User requests Meta macros or app install attribution | Verifies official provider integration requirements and labels unresolved templates; does not treat encoded macros or static website UTMs as verified install tracking |

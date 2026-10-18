@@ -1,4 +1,4 @@
 interface:
   display_name: "Campaign Manager"
-  short_description: "Plan campaign UTMs and keep workspace records"
-  default_prompt: "Use $campaign-manager to generate campaign UTM links and save the plan and tracking records in this workspace."
+  short_description: "Organize campaign directories, assets, copy revisions and UTMs"
+  default_prompt: "Use $campaign-manager to organize the YYYY-MM-DD-campaign-name workspace, track approved copy and asset revisions, and generate campaign UTM links."

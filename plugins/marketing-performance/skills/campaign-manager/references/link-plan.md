@@ -1,10 +1,10 @@
 # Static link plan and helper
 
-`campaign.json` uses `schema_version: 1`, a stable local `campaign_id`, shared `defaults`, and a nonempty `links` list. See the [fictional example](../assets/campaign.example.json). The helper does not create broader strategy or infer missing values.
+`campaign.json` uses `schema_version: 1`, a stable local `campaign_id` (matching the `<YYYY-MM-DD>-<campaign-name>` directory slug for new campaigns), shared `defaults`, and a nonempty `links` list. See the [fictional example](../assets/campaign.example.json). The helper does not create broader strategy or infer missing values.
 
 - `defaults`: UTM values inherited by each link. Must contain `utm_campaign`; may contain any supported UTM key. `utm_id`, when used, has the same value across the campaign. The local `campaign_id` is not automatically sent as a platform ID.
 - Link required fields: unique `link_id`, absolute public `destination_url`, and `utm` (an object, possibly empty when all fields are inherited).
-- Link optional fields: `placement`, `creative_id`, `notes` (strings), and `status` (`planned`, `published`, `retired`; defaults to `planned`). These metadata fields are not automatically added to the URL. Put a documented variant value in `utm_content` when needed.
+- Link optional fields: `placement`, `creative_id`, `notes` (strings), and `status` (`planned`, `published`, `retired`; defaults to `planned`). These metadata fields are not automatically added to the URL. Align `creative_id` with the approved copy/asset variant IDs in `copy/approved/vNNN/` and `assets/approved/vNNN/`, and put a documented variant value in `utm_content` when needed.
 - Supported UTM keys: `utm_source`, `utm_medium`, `utm_campaign`, `utm_id`, `utm_content`, `utm_term`, `utm_source_platform`. Source, medium and campaign are required after merging defaults. Omit unused optional keys; supplied empty values are errors. Per-link overrides cannot change the shared campaign name or ID.
 
 Local campaign/link IDs use lowercase letters, digits and hyphens and begin with a letter or digit. UTM values preserve supplied case, Unicode and spacing; no normalization occurs. Non-string values, control characters, unknown fields, duplicate JSON keys, unsupported schemes, embedded URL credentials, existing UTM query keys and unresolved macros fail validation before any output is written. Use public nonsensitive destinations: the helper cannot detect every signed URL or personal value.

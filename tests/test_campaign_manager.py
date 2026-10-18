@@ -160,6 +160,11 @@ class CampaignManagerTests(unittest.TestCase):
         self.assertIn("Duplicate JSON", result.stderr)
         self.assertFalse((self.root / "v001").exists())
 
+    def test_example_plan_uses_dated_campaign_directory_slug(self):
+        self.assertRegex(self.plan["campaign_id"], r"^\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$")
+        result = UTM.build_plan(self.plan)
+        self.assertEqual(result["campaign_id"], self.plan["campaign_id"])
+
     def test_packaged_helper_runs_without_creative_plugin_and_build_is_deterministic(self):
         first, second = self.root / "one.zip", self.root / "two.zip"
         build(first, "marketing-performance")
