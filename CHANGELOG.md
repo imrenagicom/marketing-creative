@@ -1,3 +1,9 @@
+## [0.10.0](https://github.com/imrenagicom/marketing-creative/compare/v0.9.0...v0.10.0) (2026-10-19)
+
+### Features
+
+* **performance:** add google-analytics-analyst and campaign performance reports ([3540db1](https://github.com/imrenagicom/marketing-creative/commit/3540db1605b57f257ec7c6338fd4f33367586765))
+
 ## [0.9.0](https://github.com/imrenagicom/marketing-creative/compare/v0.8.1...v0.9.0) (2026-10-18)
 
 ### Features
