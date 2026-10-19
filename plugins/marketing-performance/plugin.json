@@ -3,10 +3,10 @@
   "name": "marketing-performance",
   "displayName": "Marketing Performance",
   "version": "0.9.0",
-  "description": "Marketing briefs, copywriting, campaign operations and documented UTM planning in the current workspace.",
+  "description": "Marketing briefs, copywriting, campaign operations, Google Analytics 4 funnel analysis and documented UTM planning in the current workspace.",
   "suggestedPrompts": [
     "Use marketing-brief to turn our product facts and goal into a campaign brief.",
-    "Use marketing-copywriter to draft channel-ready ad and social copy from our brief.",
-    "Use campaign-manager to set up a dated campaign workspace with Meta Ads, social media and UTM links."
+    "Use campaign-manager to set up a dated campaign workspace with Meta Ads, social media, UTM links and performance reports.",
+    "Use google-analytics-analyst to analyze our GA4 campaign funnel, UTM sessions and post-click conversions."
   ]
 }

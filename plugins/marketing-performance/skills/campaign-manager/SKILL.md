@@ -1,11 +1,11 @@
 ---
 name: campaign-manager
-description: Define campaign workspace structure, paid ad hierarchies (meta-ads campaign, ad set, and ad folders), social media campaign trees (instagram, linkedin, twitter), campaign documents and plans (docs/), UTM conventions, and tagged product campaign links; organize storyboard and media development, versioned approved assets and copy/caption revisions, and tracking records in YYYY-MM-DD-campaign-name directories. Use for new campaign setup, Meta Ads and social media campaign planning, creative/copy revision tracking, or revisions to existing UTMs.
+description: Define campaign workspace structure, paid ad hierarchies (meta-ads campaign, ad set, and ad folders), social media campaign trees (instagram, linkedin, twitter), campaign documents and plans (docs/), timestamped campaign performance reports (reports/), UTM conventions, and tagged product campaign links; organize storyboard and media development, versioned approved assets and copy/caption revisions, tracking records, and cross-channel performance reviews in YYYY-MM-DD-campaign-name directories. Use for new campaign setup, Meta Ads and social media campaign planning, creative/copy revision tracking, UTM revisions, or generating campaign performance reports using adsctl and google-analytics-analyst.
 ---
 
 # Campaign Manager
 
-Own both marketing operations (shared workspace layout, paid-ad and social-media platform hierarchies, campaign documentation/plans, taxonomy and traceability) and campaign management (campaign goals/budgets, ad-set targeting, per-ad and per-post copy/caption and asset revision tracking, and usable links). Save the work in the user's current workspace so it can be reviewed and committed. Managing campaign records or generating UTMs does not authorize campaign publication, ad-account changes or analytics implementation.
+Own both marketing operations (shared workspace layout, paid-ad and social-media platform hierarchies, campaign documentation/plans, timestamped performance reports, taxonomy and traceability) and campaign management (campaign goals/budgets, ad-set targeting, per-ad and per-post copy/caption and asset revision tracking, usable links, and cross-channel performance analysis). Save the work in the user's current workspace so it can be reviewed and committed. Managing campaign records or generating UTMs does not authorize campaign publication, ad-account changes or analytics implementation.
 
 ## Find or initialize the campaign directory
 
@@ -13,17 +13,18 @@ Read workspace guidance, existing campaign directories, briefs and tagging conve
 
 For a new campaign, create its directory in `<YYYY-MM-DD>-<campaign-name>` format (for example `2026-10-18-taskapp-activation`), using the campaign creation or planned start date in ISO `YYYY-MM-DD` format followed by a lowercase hyphenated campaign slug, and use that same slug as the local `campaign_id`. When resuming an existing campaign in a later session or on a later date, reuse its existing directory and `campaign_id`—do not duplicate or rename an active campaign directory just because the calendar date changed.
 
-Start from the supplied product, campaign, brief, copy or assets. Keep the campaign root clean with `README.md` (the single campaign entrypoint) and `campaign.json` (the canonical link plan), and store campaign-level markdown documents, briefs, and plans under `docs/` (`docs/MARKETING_BRIEF.md`, `docs/MEASUREMENT.md`, `docs/CHANGELOG.md`, `docs/plans/`, and `docs/reviews/`). For a URL-only request, establish just the destination, distribution sources/media, campaign identity and variants, and create only the directories needed for that task. Ask only about missing facts that change the links or structure; draft unresolved decisions without inventing destinations, platform IDs, offers, budgets or a launch date. Use [marketing-brief](../marketing-brief/SKILL.md) when broader strategy is requested or materially missing, and save `docs/MARKETING_BRIEF.md` in this campaign's directory. Do not restart intake for an existing brief.
+Start from the supplied product, campaign, brief, copy or assets. Keep the campaign root clean with `README.md` (the single campaign entrypoint) and `campaign.json` (the canonical link plan), store campaign-level markdown documents, briefs, and plans under `docs/` (`docs/MARKETING_BRIEF.md`, `docs/MEASUREMENT.md`, `docs/CHANGELOG.md`, `docs/plans/`, and `docs/reviews/`), and store chronological campaign performance analyses under `reports/<datetime>.md`. For a URL-only request, establish just the destination, distribution sources/media, campaign identity and variants, and create only the directories needed for that task. Ask only about missing facts that change the links or structure; draft unresolved decisions without inventing destinations, platform IDs, offers, budgets or a launch date. Use [marketing-brief](../marketing-brief/SKILL.md) when broader strategy is requested or materially missing, and save `docs/MARKETING_BRIEF.md` in this campaign's directory. Do not restart intake for an existing brief.
 
-## Structure campaign documents (`docs/`), paid ad platforms (`meta-ads`), and social media channels (`instagram`, `linkedin`, `twitter`)
+## Structure campaign documents (`docs/`), reports (`reports/`), paid ad platforms (`meta-ads`), and social media channels (`instagram`, `linkedin`, `twitter`)
 
-Under `<YYYY-MM-DD>-<campaign-name>/`, organize campaign documents/plans, paid ads, and social media campaigns in sibling top-level directories (see [workspace-records.md](references/workspace-records.md), [meta-ads.md](references/meta-ads.md), and [social-media.md](references/social-media.md)):
+Under `<YYYY-MM-DD>-<campaign-name>/`, organize campaign documents/plans, performance reports, paid ads, and social media campaigns in sibling top-level directories (see [workspace-records.md](references/workspace-records.md), [reporting.md](references/reporting.md), [meta-ads.md](references/meta-ads.md), and [social-media.md](references/social-media.md)):
 
-0. **Campaign Documents & Plans (`docs/`):**
-   - Keep `README.md` and `campaign.json` at the root of `<YYYY-MM-DD>-<campaign-name>/` and place all campaign-level markdowns, briefs, and document plans inside `docs/`:
+0. **Campaign Documents (`docs/`) & Performance Reports (`reports/`):**
+   - Keep `README.md` and `campaign.json` at the root of `<YYYY-MM-DD>-<campaign-name>/` and place all campaign-level strategy markdowns and plans inside `docs/`:
      - `docs/MARKETING_BRIEF.md`, `docs/MEASUREMENT.md`, and `docs/CHANGELOG.md` for core campaign strategy, attribution/measurement, and dated revision history.
      - `docs/plans/` for campaign-wide or cross-channel plans, creative ideation docs (`CREATIVE_IDEAS.md`), cross-platform distribution plans (`CROSS_PLATFORM.md`), carousel/content plans, and shooting plans.
-     - `docs/reviews/` for product feature evidence registers, QA/review reports, delivery/repository handoffs, and performance audit summaries.
+     - `docs/reviews/` for product feature evidence registers, QA/review reports, and delivery/repository handoffs.
+   - Place chronological campaign performance and funnel analysis reports inside top-level **`reports/<datetime>.md`** (for example `reports/2026-10-19-2200.md` or `reports/2026-10-19T22-00-00+07-00.md`; see [reporting.md](references/reporting.md)).
    - Ad-specific or post-specific scripts, beat sheets, visual direction, and creative QA reviews live inside that ad's or post's `assets/development/storyboard/` (or `<ad-or-post>/docs/`).
 1. **Meta Ads (`meta-ads/campaigns/<meta-campaign-slug>/adsets/<adset-slug>/ads/<ad-slug>/`):**
    - **Meta Campaign (`meta-ads/campaigns/<meta-campaign-slug>/campaign.json`):** Record the campaign goal (`objective`, such as `OUTCOME_SALES` or `OUTCOME_TRAFFIC`), buying type, budget mode and budget limits (`budget` with `mode: "cbo" | "abo"`, `currency`, `daily_budget` / `lifetime_budget`, `spend_cap`, `bid_strategy`), special ad categories, and status.
@@ -43,7 +44,7 @@ Under `<YYYY-MM-DD>-<campaign-name>/`, organize campaign documents/plans, paid a
    - Instead of calling paid image/video generators again, copy the approved deliverable from the source `assets/approved/vNNN/` directory into the target ad's or post's `assets/approved/v001/` directory so each ad or social post keeps a complete, self-contained record, and note the source path and hash in its `MANIFEST.md` / `assets.json`.
    - When an ad or social post reuses/copies an approved asset from another directory, **it does not need an `assets/development/` directory**—omit `assets/development/` rather than creating empty or duplicate development folders, and ensure `copy/drafts/` and `copy/approved/vNNN/` still include accessibility alt text for the reused visual asset (reusing or adapting the alt text via [marketing-copywriter](../marketing-copywriter/SKILL.md)).
 
-Create only the platform (`meta-ads/`, `instagram/`, `linkedin/`, `twitter/`), campaign/adset/ad/post, copy and asset directories that the current workflow actually uses or that the user asks to scaffold. Never overwrite prior `vNNN` directories in `copy/approved/`, `assets/approved/` or `tracking/`.
+Create only the platform (`meta-ads/`, `instagram/`, `linkedin/`, `twitter/`), `reports/`, campaign/adset/ad/post, copy and asset directories that the current workflow actually uses or that the user asks to scaffold. Never overwrite prior `vNNN` directories in `copy/approved/`, `assets/approved/`, `tracking/`, or existing `reports/<datetime>.md` files.
 
 ## Define and apply the UTM convention
 
@@ -64,8 +65,22 @@ Replace the placeholders with resolved paths; choose the next unused revision. D
 
 Compare revisions before delivery. Never change a published link's meaning under the same ID: preserve it and add a new ID for a changed destination, tracking tuple or materially different creative/copy revision when separate measurement is needed. Record replacements, retirement and the reason. Update campaign notes, `ad.json` / `post.json` and the shared index with the current tracking, approved copy and approved asset revision paths.
 
+## Analyze campaign performance and write `reports/<datetime>.md`
+
+When the user asks to evaluate how a campaign is performing, audit funnel drop-offs, or record a campaign performance report, follow [reporting.md](references/reporting.md):
+
+1. **Gather multi-source evidence using companion skills:**
+   - Use `$adsctl` and `$adsctl-meta-analyst` to pull Meta Ads delivery, creative hook/hold rates, outbound clicks, placement breakdowns, and ad-level status.
+   - Use [google-analytics-analyst](../google-analytics-analyst/SKILL.md) (`$google-analytics-analyst`) and its `scripts/ga4_report.py` helper to pull GA4 / Firebase Analytics sessions, new users, click-to-session connect rates, engagement rates, session durations, and step-by-step product/checkout funnel events by `utm_campaign` (`sessionCampaignName`) and `utm_content` (`sessionManualAdContent`).
+   - When first-party backend/database access is in scope, cross-check consent records, user registrations, and initiated/completed transactions.
+2. **Write `<campaign-dir>/reports/<datetime>.md`:**
+   - Create a new timestamped markdown file under `reports/` (such as `reports/2026-10-19-2200.md` or `reports/2026-10-19T22-00-00+07-00.md`; never overwrite previous reports).
+   - Structure the report with all required sections from [reporting.md](references/reporting.md): **Executive Verdict**, **Multi-Source Funnel Scorecard**, **Creative Variant & Placement Breakdown**, **What Went Well**, **What Went Wrong**, **What Can Be Improved & Recommendations**, **Actions Taken** (recording any live ad pauses, budget changes, code/tracking deployments, or config updates executed), **Lessons Learned**, **Action Items & Next Checkpoints**, and **Scope & Provenance Footer**.
+3. **Synchronize campaign metadata:**
+   - If live actions were taken (for example pausing an underperforming ad variant or updating tracking parameters), update the corresponding `ad.json` / `post.json`, `docs/MEASUREMENT.md`, `docs/CHANGELOG.md`, and link the new report in root `README.md`.
+
 ## Verify and hand off
 
-Check the generated values against the taxonomy, campaign brief, `meta-ads` campaign/adset/ad specs, social media `post.json` specs, and current approved copy/asset revisions (`copy/approved/vNNN/`, `assets/approved/vNNN/`), including creative IDs, accessibility alt text for created/approved images and videos, and destination ownership. Record local checks separately from live checks. Follow [workspace-records.md](references/workspace-records.md) for redirect, consent/analytics and conversion checks when available within scope; unperformed checks stay pending. A valid URL does not prove attribution or performance.
+Check the generated values against the taxonomy, campaign brief, `meta-ads` campaign/adset/ad specs, social media `post.json` specs, and current approved copy/asset revisions (`copy/approved/vNNN/`, `assets/approved/vNNN/`), including creative IDs, accessibility alt text for created/approved images and videos, and destination ownership. Record local checks separately from live checks. Follow [workspace-records.md](references/workspace-records.md) and [reporting.md](references/reporting.md) for redirect, consent/analytics, conversion and performance-report checks when available within scope; unperformed checks stay pending. A valid URL does not prove attribution or performance.
 
-Return the campaign directory path, active platform hierarchies (`meta-ads/campaigns/.../adsets/.../ads/...` and/or `{instagram,linkedin,twitter}/posts/...`), active approved copy/asset revisions, current tracking revision, usable links, `url_tags` and field mapping for the publishing owner, and remaining checks. Keep text records suitable for Git; follow workspace commit rules, but do not stage, commit or push merely because this skill ran.
+Return the campaign directory path, active platform hierarchies (`meta-ads/campaigns/.../adsets/.../ads/...` and/or `{instagram,linkedin,twitter}/posts/...`), active approved copy/asset revisions, current tracking revision, any generated `reports/<datetime>.md` path, usable links, `url_tags` and field mapping for the publishing owner, and remaining checks. Keep text records suitable for Git; follow workspace commit rules, but do not stage, commit or push merely because this skill ran.

@@ -380,7 +380,76 @@ class CampaignManagerTests(unittest.TestCase):
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(len(json.loads(result.stdout)["links"]), 2)
+        ga4_skill = extracted / "skills/google-analytics-analyst"
+        ga4_dry = subprocess.run(
+            [
+                sys.executable,
+                str(ga4_skill / "scripts/ga4_report.py"),
+                "preset",
+                "--property",
+                "properties/521389584",
+                "--preset",
+                "funnel",
+                "--campaign",
+                "gochi_web_subscriptions_20261018",
+                "--start-date",
+                "2026-10-16",
+                "--end-date",
+                "today",
+                "--dry-run",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(ga4_dry.returncode, 0, ga4_dry.stderr)
+        ga4_payload = json.loads(ga4_dry.stdout)
+        self.assertTrue(ga4_payload["dry_run"])
+        self.assertEqual(ga4_payload["property_id"], "521389584")
+        self.assertEqual(ga4_payload["method"], "runReport")
         self.assertFalse((extracted / "skills/creative-ideation").exists())
+
+    def test_ga4_report_helper_presets_custom_queries_and_formatting(self):
+        ga4_tool = ROOT / "plugins/marketing-performance/skills/google-analytics-analyst/scripts/ga4_report.py"
+        ga4_spec = importlib.util.spec_from_file_location("ga4_report", ga4_tool)
+        ga4_mod = importlib.util.module_from_spec(ga4_spec)
+        ga4_spec.loader.exec_module(ga4_mod)
+
+        self.assertEqual(ga4_mod.normalize_property_id("properties/521389584"), "521389584")
+        with self.assertRaises(ValueError):
+            ga4_mod.normalize_property_id("not-a-number")
+
+        for preset in ga4_mod.PRESETS:
+            method, body = ga4_mod.build_preset_spec(
+                preset,
+                start_date="2026-10-16",
+                end_date="2026-10-19",
+                campaign="test_campaign",
+                ad_content="variant_a",
+            )
+            self.assertIn(method, {"runReport", "runRealtimeReport"})
+            self.assertTrue(len(body["dimensions"]) >= 1)
+            self.assertTrue(len(body["metrics"]) >= 1)
+
+        formatted = ga4_mod.format_report_response(
+            {
+                "dimensionHeaders": [{"name": "sessionManualAdContent"}, {"name": "eventName"}],
+                "metricHeaders": [{"name": "eventCount"}, {"name": "engagementRate"}],
+                "rowCount": 1,
+                "rows": [
+                    {
+                        "dimensionValues": [{"value": "ipad_demo_exciting_v2_lp_app"}, {"value": "learning_session_started"}],
+                        "metricValues": [{"value": "32"}, {"value": "0.596491"}],
+                    }
+                ],
+                "metadata": {"currencyCode": "IDR", "timeZone": "Asia/Jakarta"},
+            },
+            "521389584",
+            "runReport",
+        )
+        self.assertTrue(formatted["ok"])
+        self.assertEqual(formatted["rows"][0]["sessionManualAdContent"], "ipad_demo_exciting_v2_lp_app")
+        self.assertEqual(formatted["rows"][0]["eventCount"], 32)
+        self.assertAlmostEqual(formatted["rows"][0]["engagementRate"], 0.5965)
 
 
 if __name__ == "__main__":

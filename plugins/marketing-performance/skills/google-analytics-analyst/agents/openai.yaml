@@ -1,0 +1,4 @@
+interface:
+  display_name: "Google Analytics Analyst"
+  short_description: "Analyze GA4 & Firebase campaign funnels, UTMs and conversions"
+  default_prompt: "Use $google-analytics-analyst to connect to our Google Analytics 4 / Firebase project, query campaign and UTM performance via the GA4 Data API, reconcile ad clicks against sessions and backend conversions, and diagnose funnel drop-offs."

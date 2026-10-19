@@ -45,6 +45,7 @@ class ReleaseTests(unittest.TestCase):
                 self.assertIn("skills/motion-voice/references/loudness-and-pauses.md", package.namelist())
                 self.assertNotIn("skills/marketing-brief/SKILL.md", package.namelist())
                 self.assertNotIn("skills/marketing-copywriter/SKILL.md", package.namelist())
+                self.assertNotIn("skills/google-analytics-analyst/SKILL.md", package.namelist())
                 self.assertFalse(any("node_modules" in name for name in package.namelist()))
 
             with zipfile.ZipFile(Path(directory) / "marketing-performance-plugin.zip") as package:
@@ -52,6 +53,16 @@ class ReleaseTests(unittest.TestCase):
                 self.assertIn("skills/campaign-manager/scripts/build_utm.py", package.namelist())
                 self.assertIn("skills/campaign-manager/references/meta-ads.md", package.namelist())
                 self.assertIn("skills/campaign-manager/references/social-media.md", package.namelist())
+                self.assertIn("skills/campaign-manager/references/reporting.md", package.namelist())
+                for resource in (
+                    "SKILL.md",
+                    "agents/openai.yaml",
+                    "scripts/ga4_report.py",
+                    "references/setup-and-auth.md",
+                    "references/metrics-and-dimensions.md",
+                    "references/diagnostic-playbook.md",
+                ):
+                    self.assertIn(f"skills/google-analytics-analyst/{resource}", package.namelist())
                 for resource in ("SKILL.md", "agents/openai.yaml", "references/channel-copy.md",
                                  "references/voice-and-style.md"):
                     self.assertIn(f"skills/marketing-copywriter/{resource}", package.namelist())

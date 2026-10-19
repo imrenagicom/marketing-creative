@@ -98,8 +98,10 @@ tests/test_generated_video.py uses fake providers, synthetic media and actual lo
 | Destination contains query, click ID, fragment or existing UTMs | Preserves unrelated query bytes/fragment; existing UTM conflicts block generation until ownership is resolved |
 | User requests Meta macros or app install attribution | Verifies official provider integration requirements and labels unresolved templates; does not treat encoded macros or static website UTMs as verified install tracking |
 | Analytics inaccessible or consent checks unperformed | Distinguishes local URL validity from live collection, records pending checks and owner, and makes no performance claim |
+| Campaign performance report requested across Meta Ads, GA4 and backend | Writes a new timestamped `reports/<datetime>.md` file without overwriting earlier reports; reconciles ad outbound clicks with GA4 sessions/new users and backend records; documents What Went Well, What Went Wrong, Recommendations, Actions Taken, Lessons Learned and Next Checkpoints |
+| Google Analytics 4 setup and funnel diagnosis (`google-analytics-analyst`) | Explains how to discover the GA4 Property ID via Firebase `analyticsDetails`, why `gcloud` interactive OAuth fails on `analytics.readonly` (`This app is blocked`), and how to grant a GCP service account **Viewer** access in GA4 Property Access Management; diagnoses post-click connect rate, variant engagement (`sessionManualAdContent`), activation depth, value-gate reach and checkout drop-offs |
 | User wants files they can commit | Records remain in the product workspace with text plans/registries and no secrets; no implicit Git commit, push or campaign publication |
-| Marketing Performance installed alone | All three skills have portable local references, brief generation and copywriting need no creative tools, and the extracted helper runs without Marketing Creative |
+| Marketing Performance installed alone | All four skills have portable local references, brief generation and copywriting need no creative tools, and the extracted helpers run without Marketing Creative |
 
 These are behavioral evaluation scenarios, not claims of completed model evaluation. Executable URL/export regressions use fictional plans and temporary directories; no live analytics or ad accounts are needed.
 

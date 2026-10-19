@@ -15,7 +15,7 @@
     {
       "name": "marketing-performance",
       "source": "./plugins/marketing-performance",
-      "description": "Marketing briefs, channel-ready copy and campaign operations with documented UTM links"
+      "description": "Marketing briefs, channel-ready copy, Google Analytics 4 funnel analysis and campaign operations with documented UTM links and performance reports"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "name": "marketing-performance",
   "version": "0.9.0",
-  "description": "Marketing briefs, copywriting, campaign operations and documented UTM planning in the current workspace.",
+  "description": "Marketing briefs, copywriting, campaign operations, Google Analytics 4 funnel analysis and documented UTM planning in the current workspace.",
   "author": {
     "name": "Imre Nagi"
   },
@@ -12,14 +12,15 @@
     "campaigns",
     "utm",
     "analytics",
+    "google-analytics",
     "marketing-operations",
     "copywriting"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Marketing Performance",
-    "shortDescription": "Plan campaigns, write copy and maintain UTM links",
-    "longDescription": "Draft evidence-backed marketing briefs, explore multi-voice ad and social copy, and organize dated campaign workspaces with Meta Ads hierarchies, social media trees and validated UTM tracking.",
+    "shortDescription": "Plan campaigns, write copy, track UTMs and analyze GA4",
+    "longDescription": "Draft evidence-backed marketing briefs, explore multi-voice ad and social copy, analyze Google Analytics 4 (GA4) and Firebase campaign funnels, and organize dated campaign workspaces with Meta Ads hierarchies, social media trees, timestamped performance reports and validated UTM tracking.",
     "developerName": "Imre Nagi",
     "category": "Productivity",
     "capabilities": [
@@ -28,8 +29,8 @@
     ],
     "defaultPrompt": [
       "Use marketing-brief to turn our product facts and goal into a campaign brief.",
-      "Use marketing-copywriter to draft channel-ready ad and social copy from our brief.",
-      "Use campaign-manager to set up a dated campaign workspace with Meta Ads, social media and UTM links."
+      "Use campaign-manager to set up a dated campaign workspace with Meta Ads, social media, UTM links and performance reports.",
+      "Use google-analytics-analyst to analyze our GA4 campaign funnel, UTM sessions and post-click conversions."
     ]
   }
 }
