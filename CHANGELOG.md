@@ -1,3 +1,9 @@
+## [0.10.1](https://github.com/imrenagicom/marketing-creative/compare/v0.10.0...v0.10.1) (2026-10-19)
+
+### Skills and documentation
+
+* **marketing-copywriter:** add meta ads format-specific copywriting and multi-text guidance ([9549995](https://github.com/imrenagicom/marketing-creative/commit/95499950714c74194ec71af2843b0bcf1be709b2))
+
 ## [0.10.0](https://github.com/imrenagicom/marketing-creative/compare/v0.9.0...v0.10.0) (2026-10-19)
 
 ### Features
