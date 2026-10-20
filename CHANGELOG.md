@@ -1,3 +1,9 @@
+## [0.11.0](https://github.com/imrenagicom/marketing-creative/compare/v0.10.1...v0.11.0) (2026-10-20)
+
+### Features
+
+* **campaign-manager:** default meta ads to advantage+ budget and placements ([3c620d4](https://github.com/imrenagicom/marketing-creative/commit/3c620d4c00554d9268e2407ca16befe25c06898a))
+
 ## [0.10.1](https://github.com/imrenagicom/marketing-creative/compare/v0.10.0...v0.10.1) (2026-10-19)
 
 ### Skills and documentation
