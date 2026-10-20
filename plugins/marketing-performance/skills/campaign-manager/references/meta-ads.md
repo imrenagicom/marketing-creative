@@ -45,7 +45,7 @@ Social media campaign directories (`instagram/`, `linkedin/`, `twitter/`; see [s
 
 ## 1. Meta Campaign level (`meta-ads/campaigns/<meta-campaign-slug>/campaign.json`)
 
-Captures the campaign goal (objective), budget mode and limits, bid strategy, special ad categories, and lifecycle status:
+Captures the campaign goal (objective), **Advantage+ campaign budget** configuration (default), bid strategy, special ad categories, and lifecycle status:
 
 ```json
 {
@@ -57,10 +57,11 @@ Captures the campaign goal (objective), budget mode and limits, bid strategy, sp
   "buying_type": "AUCTION",
   "special_ad_categories": ["NONE"],
   "budget": {
-    "mode": "cbo",
+    "mode": "advantage_plus",
     "currency": "IDR",
     "daily_budget": 100000,
-    "bid_strategy": "LOWEST_COST_WITHOUT_CAP"
+    "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+    "is_adset_budget_sharing_enabled": false
   },
   "status": "planned"
 }
@@ -68,23 +69,31 @@ Captures the campaign goal (objective), budget mode and limits, bid strategy, sp
 
 - `campaign_slug`: lowercase hyphenated slug matching the `<meta-campaign-slug>` folder name.
 - `objective`: Meta campaign goal, such as `OUTCOME_SALES`, `OUTCOME_TRAFFIC`, `OUTCOME_LEADS`, `OUTCOME_ENGAGEMENT`, `OUTCOME_APP_PROMOTION`, or `OUTCOME_AWARENESS`.
-- `budget`: `mode` is `"cbo"` (campaign-level budget) or `"abo"` (ad-set budgets). Include `currency`, `daily_budget` or `lifetime_budget`, optional `spend_cap`, and `bid_strategy`. Do not invent budgets or currency values when unsupplied.
+- `budget`:
+  - **Default — Advantage+ campaign budget (`"mode": "advantage_plus"`)**: Meta dynamically distributes the campaign budget across ad sets in real time (`"cbo"` is also accepted as a backward-compatible alias). Include `currency`, either `daily_budget` or `lifetime_budget` (not both), `bid_strategy` (defaults to `"LOWEST_COST_WITHOUT_CAP"`), optional `spend_cap`, and `"is_adset_budget_sharing_enabled": false`. In native Meta Graph API / `adsctl` payloads, Advantage+ campaign budget sets `daily_budget` or `lifetime_budget` and `bid_strategy` on the Campaign object (`adsctl meta campaigns create --advantage-budget --daily-budget-minor ...`) while omitting budget fields on child ad sets.
+  - **Ad-set budget override (`"mode": "abo"`)**: Use only when explicit per-ad-set budgets are required. Omit `daily_budget` and `lifetime_budget` on the campaign (or set them to `null`), and optionally set `"is_adset_budget_sharing_enabled": true | false`.
+  - Do not invent budgets or currency values when unsupplied.
 - `status`: `"planned"`, `"paused"`, `"active"`, `"archived"`, or `"retired"`. Optional `remote_campaign_id` records the live Meta Campaign ID once created.
 
 ## 2. Meta Ad Set level (`.../adsets/<adset-slug>/adset.json`)
 
-Captures user targeting, placements (and required aspect ratios for creative production), conversion event/pixel optimization, schedule, and ad-set budget when `budget.mode` is `"abo"`:
+Captures user targeting, **Advantage+ placements** (default) and required aspect ratios for creative production, conversion event/pixel optimization, schedule, and inherited Advantage+ campaign budget (or ad-set budget when `budget.mode` is `"abo"`):
 
 ```json
 {
   "schema_version": 1,
   "adset_slug": "id-18-45-design-teams",
-  "name": "ID 18-45 | Design Teams | IG Reels & Stories",
+  "name": "ID 18-45 | Design Teams | Advantage+ Placements",
   "optimization_goal": "OFFSITE_CONVERSIONS",
   "billing_event": "IMPRESSIONS",
   "conversion": {
     "destination_type": "WEBSITE",
+    "pixel_id": "1855259662305866",
     "custom_event_type": "PURCHASE"
+  },
+  "budget": {
+    "mode": "advantage_plus",
+    "inherited_from_campaign": true
   },
   "targeting": {
     "geo_locations": {
@@ -92,21 +101,30 @@ Captures user targeting, placements (and required aspect ratios for creative pro
     },
     "age_min": 18,
     "age_max": 45,
-    "interests": ["Design", "Project management"]
+    "interests": ["Design", "Project management"],
+    "advantage_audience": false
   },
   "placements": {
-    "publisher_platforms": ["instagram"],
-    "instagram_positions": ["reels", "story"],
-    "required_ratios": ["9:16"]
+    "mode": "advantage_plus",
+    "placement_soft_opt_out": false,
+    "required_ratios": ["9:16", "4:5", "1:1"]
   },
   "status": "planned"
 }
 ```
 
 - `adset_slug`: lowercase hyphenated slug matching the `<adset-slug>` folder name.
-- `targeting`: nonempty object recording the audience hypothesis and targeting parameters (locations, age range, genders, locales, detailed targeting interests/behaviors, custom/lookalike audiences, and exclusions).
-- `placements`: target publisher platforms, positions, and `required_ratios` (`16:9`, `9:16`, `4:5`, `1:1`) so downstream image and video skills produce the exact variants needed by this ad set.
-- Optional `schedule` (`start_time`, `end_time`, `timezone`), `budget` (when ABO), and `remote_adset_id`.
+- `budget`:
+  - When the parent campaign uses **Advantage+ campaign budget** (`"mode": "advantage_plus"` or `"cbo"`), set `"budget": {"mode": "advantage_plus", "inherited_from_campaign": true}` (or omit `daily_budget` / `lifetime_budget`). Never set a positive `daily_budget` or `lifetime_budget` on the ad set when the campaign owns the budget; optional `daily_min_spend_target`, `daily_spend_cap`, `lifetime_min_spend_target`, or `lifetime_spend_cap` may be recorded if ad-set spend limits are used.
+  - When the parent campaign uses `"mode": "abo"`, record `currency` and `daily_budget` or `lifetime_budget` on the ad set.
+- `targeting`: nonempty object recording the audience hypothesis and targeting parameters (locations, age range, genders, locales, detailed targeting interests/behaviors, custom/lookalike audiences, `advantage_audience`, and exclusions). Do **not** embed `publisher_platforms` or `*_positions` inside `targeting` when `placements.mode` is `"advantage_plus"`.
+- `placements`:
+  - **Default — Advantage+ placements (`"mode": "advantage_plus"`)**: Allows Meta's delivery system to dynamically allocate impressions across all eligible placements (Instagram Reels/Stories/Feed/Explore, Facebook Reels/Feed/Stories/In-Stream/Search, WhatsApp Status, Messenger, Threads, and Audience Network) to find the lowest-cost conversions.
+    - When `"mode": "advantage_plus"`, **omit `publisher_platforms`, `facebook_positions`, `instagram_positions`, `messenger_positions`, `audience_network_positions`, and `threads_positions`** (or leave them empty `[]`), and do not set them in `targeting`. `build_utm.py` rejects non-empty platform/position restriction lists when `"mode": "advantage_plus"` so local `adset.json` files never drift from live Advantage+ placement behavior.
+    - Include `required_ratios` (`16:9`, `9:16`, `4:5`, `1:1`; or `aspect_ratios`) so downstream image and video skills produce the creative aspect ratios needed across vertical and feed placements, plus optional `placement_soft_opt_out` (`true` or `false`) and optional `device_platforms` (`["mobile", "desktop"]`).
+    - In `adsctl`, create or update Advantage+ placement ad sets with `--advantage-placements` (`adsctl meta adsets create --file adset.json --advantage-placements`), `adsctl meta adsets placements set ID --advantage-plus`, or `advantage_placements: true` on the adset node in a `launch.yaml` manifest.
+  - **Manual placements override (`"mode": "manual"`)**: Use only when the user explicitly requests restricted placements. Set `"mode": "manual"`, a non-empty `"publisher_platforms"` array (such as `["instagram", "facebook"]`), the corresponding `*_positions` arrays (`instagram_positions`, `facebook_positions`, etc.), and `required_ratios`.
+- Optional `schedule` (`start_time`, `end_time`, `timezone`) and `remote_adset_id`.
 
 ## 3. Meta Ad level (`.../ads/<ad-slug>/ad.json`)
 

@@ -217,12 +217,13 @@ class CampaignManagerTests(unittest.TestCase):
             "objective": "OUTCOME_SALES",
             "buying_type": "AUCTION",
             "budget": {
-                "mode": "cbo",
+                "mode": "advantage_plus",
                 "currency": "USD",
                 "daily_budget": 150.0,
                 "lifetime_budget": None,
                 "spend_cap": 4500.0,
                 "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+                "is_adset_budget_sharing_enabled": False,
             },
             "special_ad_categories": [],
             "status": "paused",
@@ -230,11 +231,11 @@ class CampaignManagerTests(unittest.TestCase):
         (adset_dir / "adset.json").write_text(json.dumps({
             "schema_version": 1,
             "adset_slug": "id-18-45-design-teams",
-            "name": "ID 18-45 Design Teams - Reels 9x16",
+            "name": "ID 18-45 Design Teams - Advantage+ Placements",
             "optimization_goal": "OFFSITE_CONVERSIONS",
             "billing_event": "IMPRESSIONS",
             "conversion": {"dataset_or_pixel_id": "123456789012345", "custom_event_type": "START_TRIAL"},
-            "budget": {"daily_budget": None, "lifetime_budget": None},
+            "budget": {"mode": "advantage_plus", "inherited_from_campaign": True, "daily_budget": None, "lifetime_budget": None},
             "schedule": {"start_time": "2026-10-18T00:00:00+07:00", "end_time": None},
             "targeting": {
                 "geo_locations": {"countries": ["ID"]},
@@ -247,11 +248,9 @@ class CampaignManagerTests(unittest.TestCase):
                 "excluded_custom_audiences": ["existing_active_subscribers_180d"],
             },
             "placements": {
-                "mode": "manual",
-                "publisher_platforms": ["instagram", "facebook"],
-                "instagram_positions": ["reels", "story"],
-                "facebook_positions": ["facebook_reels"],
-                "aspect_ratios": ["9:16"],
+                "mode": "advantage_plus",
+                "placement_soft_opt_out": False,
+                "required_ratios": ["9:16", "4:5", "1:1"],
             },
             "status": "paused",
         }))
@@ -319,12 +318,32 @@ class CampaignManagerTests(unittest.TestCase):
         return linkedin_post, twitter_post, instagram_post
 
     def test_validates_meta_campaign_adset_and_ad_hierarchy_against_plan(self):
-        _, _, ad_dir = self._write_valid_meta_tree()
+        campaign_dir, adset_dir, ad_dir = self._write_valid_meta_tree()
         result = self.cli("--dry-run")
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
         self.assertEqual(len(payload["meta_ads"]), 1)
         self.assertEqual(payload["meta_ads"][0]["ad"], "reels-demo-v1")
+        self.assertEqual(payload["meta_ads"][0]["budget_mode"], "advantage_plus")
+        self.assertEqual(payload["meta_ads"][0]["placements_mode"], "advantage_plus")
+
+        # Reject manual publisher_platforms when placements.mode is advantage_plus
+        adset_spec = json.loads((adset_dir / "adset.json").read_text())
+        adset_spec["placements"]["publisher_platforms"] = ["instagram"]
+        (adset_dir / "adset.json").write_text(json.dumps(adset_spec))
+        bad_placements = self.cli("--dry-run")
+        self.assertNotEqual(bad_placements.returncode, 0)
+        self.assertIn("publisher_platforms must be omitted or empty when placements.mode is 'advantage_plus'", bad_placements.stderr)
+
+        # Reject adset daily_budget when campaign budget mode is advantage_plus
+        adset_spec["placements"].pop("publisher_platforms")
+        adset_spec["budget"]["daily_budget"] = 50.0
+        (adset_dir / "adset.json").write_text(json.dumps(adset_spec))
+        bad_budget = self.cli("--dry-run")
+        self.assertNotEqual(bad_budget.returncode, 0)
+        self.assertIn("cannot set daily_budget or lifetime_budget when campaign budget mode is 'advantage_plus'", bad_budget.stderr)
+        adset_spec["budget"]["daily_budget"] = None
+        (adset_dir / "adset.json").write_text(json.dumps(adset_spec))
 
         ad_spec = json.loads((ad_dir / "ad.json").read_text())
         ad_spec["url_tags"] = "utm_source=wrong"

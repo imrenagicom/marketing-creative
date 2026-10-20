@@ -18,6 +18,17 @@ HIERARCHY_KEYS = ("platform", "platform_campaign", "adset", "ad", "post")
 META_KEYS = (*HIERARCHY_KEYS, "placement", "creative_id", "status", "notes")
 COLUMNS = ("campaign_id", "link_id", *META_KEYS, "destination_url", *UTM_KEYS, "url_tags", "url")
 AD_STATUSES = {"planned", "paused", "active", "archived", "retired"}
+BUDGET_MODES = {"advantage_plus", "cbo", "abo"}
+CAMPAIGN_BUDGET_MODES = {"advantage_plus", "cbo"}
+PLACEMENT_MODES = {"advantage_plus", "manual"}
+MANUAL_PLACEMENT_KEYS = (
+    "publisher_platforms",
+    "facebook_positions",
+    "instagram_positions",
+    "messenger_positions",
+    "audience_network_positions",
+    "threads_positions",
+)
 POST_STATUSES = {"planned", "paused", "active", "published", "archived", "retired"}
 POST_FORMATS = {"single_image", "carousel", "video", "reel", "story", "text", "thread", "document", "article"}
 
@@ -172,8 +183,19 @@ def validate_meta_tree(meta_root, plan_result):
         text(campaign_spec.get("name"), f"meta-ads/{campaign_slug}.name")
         text(campaign_spec.get("objective"), f"meta-ads/{campaign_slug}.objective")
         budget = campaign_spec.get("budget")
-        require(isinstance(budget, dict) and budget.get("mode") in {"cbo", "abo"},
-                f"meta-ads/{campaign_slug}.budget must define mode 'cbo' or 'abo'")
+        require(isinstance(budget, dict) and budget.get("mode") in BUDGET_MODES,
+                f"meta-ads/{campaign_slug}.budget must define mode 'advantage_plus', 'cbo' or 'abo'")
+        budget_mode = budget["mode"]
+        daily_budget = budget.get("daily_budget", budget.get("daily_amount"))
+        lifetime_budget = budget.get("lifetime_budget", budget.get("lifetime_amount"))
+        require(daily_budget is None or lifetime_budget is None,
+                f"meta-ads/{campaign_slug}.budget cannot set both daily_budget and lifetime_budget")
+        if budget_mode in CAMPAIGN_BUDGET_MODES:
+            require(budget.get("is_adset_budget_sharing_enabled") is not True,
+                    f"meta-ads/{campaign_slug}.budget with mode '{budget_mode}' cannot enable is_adset_budget_sharing_enabled")
+        else:
+            require(daily_budget is None and lifetime_budget is None,
+                    f"meta-ads/{campaign_slug}.budget with mode 'abo' must not set campaign daily_budget or lifetime_budget")
         require(campaign_spec.get("status") in AD_STATUSES, f"meta-ads/{campaign_slug}: invalid status")
         adsets_root = campaign_dir / "adsets"
         require(adsets_root.is_dir() and not adsets_root.is_symlink(),
@@ -196,12 +218,40 @@ def validate_meta_tree(meta_root, plan_result):
                     f"{adset_label}/adset.json: adset_slug must match directory name")
             text(adset_spec.get("name"), f"{adset_label}.name")
             text(adset_spec.get("optimization_goal"), f"{adset_label}.optimization_goal")
+            adset_budget = adset_spec.get("budget")
+            if adset_budget is not None:
+                require(isinstance(adset_budget, dict), f"{adset_label}.budget must be an object")
+                adset_daily = adset_budget.get("daily_budget", adset_budget.get("daily_amount"))
+                adset_lifetime = adset_budget.get("lifetime_budget", adset_budget.get("lifetime_amount"))
+                require(adset_daily is None or adset_lifetime is None,
+                        f"{adset_label}.budget cannot set both daily_budget and lifetime_budget")
+                if budget_mode in CAMPAIGN_BUDGET_MODES:
+                    require(adset_daily is None and adset_lifetime is None,
+                            f"{adset_label}.budget cannot set daily_budget or lifetime_budget when campaign budget mode is '{budget_mode}'")
             targeting = adset_spec.get("targeting")
             require(isinstance(targeting, dict) and bool(targeting),
                     f"{adset_label}.targeting must be a nonempty object")
             placements = adset_spec.get("placements")
             require(isinstance(placements, (dict, list)) and bool(placements),
                     f"{adset_label}.placements must be a nonempty object or list")
+            placements_mode = "manual"
+            if isinstance(placements, dict):
+                if "mode" in placements:
+                    require(placements["mode"] in PLACEMENT_MODES,
+                            f"{adset_label}.placements.mode must be 'advantage_plus' or 'manual'")
+                    placements_mode = placements["mode"]
+                elif placements.get("advantage_plus") is True or placements.get("advantage_plus_placements") is True:
+                    placements_mode = "advantage_plus"
+                if placements_mode == "advantage_plus":
+                    for key in MANUAL_PLACEMENT_KEYS:
+                        require(not placements.get(key),
+                                f"{adset_label}.placements.{key} must be omitted or empty when placements.mode is 'advantage_plus'")
+                        require(not targeting.get(key),
+                                f"{adset_label}.targeting.{key} must be omitted when placements.mode is 'advantage_plus'")
+                else:
+                    pubs = placements.get("publisher_platforms")
+                    require(isinstance(pubs, list) and bool(pubs),
+                            f"{adset_label}.placements.publisher_platforms must be a nonempty list when placements.mode is 'manual'")
             require(adset_spec.get("status") in AD_STATUSES, f"{adset_label}: invalid status")
             ads_root = adset_dir / "ads"
             require(ads_root.is_dir() and not ads_root.is_symlink(),
@@ -255,7 +305,9 @@ def validate_meta_tree(meta_root, plan_result):
                     "ad": ad_slug,
                     "link_id": link_id,
                     "objective": campaign_spec["objective"],
+                    "budget_mode": budget_mode,
                     "optimization_goal": adset_spec["optimization_goal"],
+                    "placements_mode": placements_mode,
                     "format": ad_spec["format"]
                 })
     for row in plan_result["links"]:
