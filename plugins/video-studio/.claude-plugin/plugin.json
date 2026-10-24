@@ -1,0 +1,19 @@
+{
+  "name": "video-studio",
+  "version": "0.11.0",
+  "description": "End-to-end AI cinema, multi-angle presenter explainers, diegetic handheld vlogs, spatial tracking and 2.5D programmatic motion graphics.",
+  "author": {
+    "name": "Imre Nagi"
+  },
+  "homepage": "https://github.com/imrenagicom/marketing-creative",
+  "repository": "https://github.com/imrenagicom/marketing-creative",
+  "keywords": [
+    "video-production",
+    "ai-cinema",
+    "motion-graphics",
+    "hyperframes",
+    "seedance",
+    "rotoscoping",
+    "storyboarding"
+  ]
+}

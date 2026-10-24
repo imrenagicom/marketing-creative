@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video Studio"
+  short_description: "Route and orchestrate AI cinema, vlogs and 2.5D motion"
+  default_prompt: "Use $video-studio to plan and produce a video using the 7-stage Spine and Craft Cartridge workflow."

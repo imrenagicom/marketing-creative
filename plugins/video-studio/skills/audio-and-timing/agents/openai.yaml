@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audio & Timing"
+  short_description: "Voiceover-first timing, word cues and SFX soundscapes"
+  default_prompt: "Use $audio-and-timing to build a voiceover-first timing map or synchronized SFX soundscape for our video."

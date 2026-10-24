@@ -20,6 +20,9 @@ PLUGINS = {
         "marketing-omni-video"},
     "marketing-performance": {"marketing-brief", "campaign-manager",
         "marketing-copywriter", "google-analytics-analyst"},
+    "video-studio": {"video-studio", "director-and-script", "audio-and-timing",
+        "visual-bible-and-refs", "generative-shot-director", "video-scene-tracker",
+        "motion-and-compositor", "continuity-and-qa"},
 }
 
 

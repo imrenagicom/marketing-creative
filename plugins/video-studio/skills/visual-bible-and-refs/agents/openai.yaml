@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visual Bible & Refs"
+  short_description: "Lock @Image references, practical lighting and 4-pillar continuity"
+  default_prompt: "Use $visual-bible-and-refs to define our color contrast, practical lighting anchors, and @Image reference locks."

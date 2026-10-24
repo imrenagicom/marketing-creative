@@ -1,0 +1,36 @@
+{
+  "name": "video-studio",
+  "version": "0.11.0",
+  "description": "End-to-end AI cinema, multi-angle presenter explainers, diegetic handheld vlogs, spatial tracking and 2.5D programmatic motion graphics.",
+  "author": {
+    "name": "Imre Nagi"
+  },
+  "homepage": "https://github.com/imrenagicom/marketing-creative",
+  "repository": "https://github.com/imrenagicom/marketing-creative",
+  "keywords": [
+    "video-production",
+    "ai-cinema",
+    "motion-graphics",
+    "hyperframes",
+    "seedance",
+    "rotoscoping",
+    "storyboarding"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Video Studio",
+    "shortDescription": "Direct AI cinema, vlogs, spatial tracking and 2.5D motion",
+    "longDescription": "End-to-end video production pipeline combining a 7-stage spine with modular craft cartridges for generative cinema, multi-angle studio presenters, diegetic handheld vlogs, spatial rotoscope/planar tracking, and programmatic 2.5D motion graphics.",
+    "developerName": "Imre Nagi",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use video-studio to plan and produce a multi-angle AI presenter tutorial with 2.5D rotoscoped motion graphics.",
+      "Use director-and-script and generative-shot-director to write a 30-second multi-reference cinematic action sequence.",
+      "Use motion-and-compositor to layer 3D perspective UI cards, HUD callout nodes and shutter wipes onto our video."
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Director & Script"
+  short_description: "Lock concept, script, acting rules and multi-angle camera map"
+  default_prompt: "Use $director-and-script to turn my video idea into a script, base character acting profile, and multi-angle camera beat sheet."
