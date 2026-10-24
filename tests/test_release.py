@@ -73,6 +73,19 @@ class ReleaseTests(unittest.TestCase):
                     self.assertEqual(parsed["version"], "0.2.3")
                     self.assertEqual(parsed["name"], "marketing-performance")
 
+            with zipfile.ZipFile(Path(directory) / "video-studio-plugin.zip") as package:
+                self.assertIn("skills/video-studio/SKILL.md", package.namelist())
+                self.assertIn("skills/director-and-script/SKILL.md", package.namelist())
+                self.assertIn("skills/generative-shot-director/references/cartridge-multi-angle-presenter.md",
+                              package.namelist())
+                self.assertIn("skills/motion-and-compositor/references/cartridge-25d-rotoscope-type.md",
+                              package.namelist())
+                self.assertNotIn("skills/marketing-brief/SKILL.md", package.namelist())
+                for manifest in ("plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json"):
+                    parsed = json.loads(package.read(manifest))
+                    self.assertEqual(parsed["version"], "0.2.3")
+                    self.assertEqual(parsed["name"], "video-studio")
+
     def test_invalid_version_does_not_write(self):
         with tempfile.TemporaryDirectory() as directory:
             for version in ("v0.1.0", "01.2.3", "1.2.3-beta.1", "1.2.3; touch bad"):

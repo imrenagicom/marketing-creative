@@ -16,6 +16,11 @@
       "name": "marketing-performance",
       "source": "./plugins/marketing-performance",
       "description": "Marketing briefs, channel-ready copy, Google Analytics 4 funnel analysis and campaign operations with documented UTM links and performance reports"
+    },
+    {
+      "name": "video-studio",
+      "source": "./plugins/video-studio",
+      "description": "End-to-end AI cinema, multi-angle presenter explainers, diegetic handheld vlogs, spatial tracking and 2.5D programmatic motion graphics"
     }
   ]
 }

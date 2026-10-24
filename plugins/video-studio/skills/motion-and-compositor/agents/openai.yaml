@@ -1,0 +1,4 @@
+interface:
+  display_name: "Motion & Compositor"
+  short_description: "Build 2.5D rotoscoped type, 3D UI cards and HUD overlays"
+  default_prompt: "Use $motion-and-compositor to build 2.5D rotoscoped typography, 3D perspective monitor UI cards, and HUD callouts."

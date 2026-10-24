@@ -1,0 +1,4 @@
+interface:
+  display_name: "Generative Shot Director"
+  short_description: "Compile multi-beat AI video prompts with @Image locks"
+  default_prompt: "Use $generative-shot-director to compile a multi-beat generative video prompt with @Image reference locks and camera choreography."

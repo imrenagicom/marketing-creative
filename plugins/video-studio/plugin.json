@@ -1,0 +1,12 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "video-studio",
+  "displayName": "Video Studio",
+  "version": "0.11.0",
+  "description": "End-to-end AI cinema, multi-angle presenter explainers, diegetic handheld vlogs, spatial tracking and 2.5D programmatic motion graphics.",
+  "suggestedPrompts": [
+    "Use video-studio to plan and produce a multi-angle AI presenter tutorial with 2.5D rotoscoped motion graphics.",
+    "Use director-and-script and generative-shot-director to write a 30-second multi-reference cinematic action sequence.",
+    "Use motion-and-compositor to layer 3D perspective UI cards, HUD callout nodes and shutter wipes onto our video."
+  ]
+}

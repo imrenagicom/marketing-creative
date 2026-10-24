@@ -2,11 +2,12 @@
 
 ## Purpose and layout
 
-Marketing Creative and Marketing Performance are shared Codex, Claude Code and Google Antigravity skill plugins. Read
+Marketing Creative, Marketing Performance and Video Studio are shared Codex, Claude Code and Google Antigravity skill plugins. Read
 README.md for the workflow, configuration and validation commands, then
 read the relevant skill entry point and its linked references before editing.
 
-- `plugins/marketing-creative/skills/` and `plugins/marketing-performance/skills/`
+- `plugins/marketing-creative/skills/`, `plugins/marketing-performance/skills/`
+  and `plugins/video-studio/skills/`
   own skill instructions, UI metadata,
   references, executable helpers and example assets. Install and package each
   complete tree because skills within a plugin share resources.
@@ -88,11 +89,14 @@ Antigravity plugins and marketplace when the CLIs are available:
 ```sh
 python scripts/build_plugin.py --output /tmp/marketing-creative-plugin.zip
 python scripts/build_plugin.py --plugin marketing-performance --output /tmp/marketing-performance-plugin.zip
+python scripts/build_plugin.py --plugin video-studio --output /tmp/video-studio-plugin.zip
 claude plugin validate ./plugins/marketing-creative
 claude plugin validate ./plugins/marketing-performance
+claude plugin validate ./plugins/video-studio
 claude plugin validate ./.claude-plugin/marketplace.json
 agy plugin validate ./plugins/marketing-creative
 agy plugin validate ./plugins/marketing-performance
+agy plugin validate ./plugins/video-studio
 ```
 
 Test meaningful behavior and recovery, not exact generated prose. Do not count

@@ -1,11 +1,19 @@
-# Marketing Creative and Performance
+# Marketing Creative, Performance and Video Studio
 
-Two independently installable plugins cover campaign planning, copywriting, analytics and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Creative owns thirteen skills for ideas, images, scripts and videos. Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
+Three independently installable plugins cover campaign planning, copywriting, analytics, creative production and end-to-end AI cinema/motion video production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Creative owns thirteen skills for ideas, images, scripts and videos; Video Studio (`video-studio`) owns an eight-skill Spine + Craft Cartridge pipeline for multi-angle AI presenters, generative cinema/3D action, diegetic handheld vlogs, spatial rotoscope/planar tracking and 2.5D programmatic motion graphics. Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
 
 ## Skills and handoffs
 
 | Skill | Input → output |
 | --- | --- |
+| `video-studio` (video-studio) | Video idea, script or base footage → 7-stage Spine routing with Human-in-the-Loop checkpoints across AI cinema, vlogs, multi-angle presenters and 2.5D motion |
+| `director-and-script` (video-studio) | Rough idea or voice dump → `direction-brief.md` with spoken script / 3s action beats, Base Acting Profile and 6-camera setup map (`Arah Gerak` + `Framing` + `Aksi Spesifik`) |
+| `audio-and-timing` (video-studio) | Script or beat sheet → `timing-map.json` with voiceover-first timing (ElevenLabs v4), diegetic street audio or SFX-only bullet-time dilation |
+| `visual-bible-and-refs` (video-studio) | Direction brief → `visual-bible.md` with complementary 2-tone contrast, practical lighting anchors in location plates, `@Image1..N` role locks and the 4 Pillars of Continuity |
+| `generative-shot-director` (video-studio) | Brief, timing and `@Image` refs → 9-block multi-beat generative prompts using specialized Craft Cartridges (`multi-angle-presenter`, `action-and-bullettime`, `diegetic-handheld-vlog`) |
+| `video-scene-tracker` (video-studio) | Base video clips → `spatial-track.json` with subject/hand rotoscope alpha masks, 3D planar monitor corner-pin quads and 2D HUD point trackers |
+| `motion-and-compositor` (video-studio) | Timing, visual bible and spatial track → deterministic 2.5D compositions (`25d-rotoscope-type`, `3d-planar-ui-cards`, `hud-and-shutter-seams`) |
+| `continuity-and-qa` (video-studio) | Rendered frames and seams → `qa-report.md` auditing the 4 Pillars of Continuity (`Wajah`, `Outfit`, `Lokasi`, `Gerakan`), rotoscope edges and multi-ratio exports |
 | `marketing-video` | Topic, brief, script or existing video → appropriate workflow stages and requested video deliverables |
 | `campaign-manager` (marketing-performance) | Product campaign → `<YYYY-MM-DD>-<campaign-name>` workspace, paid ad hierarchy (`meta-ads/campaigns/.../adsets/.../ads/...`), social media trees (`instagram/`, `linkedin/`, `twitter/`), timestamped performance reports (`reports/<datetime>.md`), storyboard/media development & approved copy/asset revisions, and UTM links |
 | `google-analytics-analyst` (marketing-performance) | GA4 / Firebase project & campaign UTMs → GA4 Data API funnel reports, ad-click-to-session reconciliation, drop-off diagnosis and recommendations |

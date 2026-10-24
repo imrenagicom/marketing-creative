@@ -1,0 +1,4 @@
+interface:
+  display_name: "Continuity & QA"
+  short_description: "Audit 4-pillar continuity, rotoscope depth, seams and sync"
+  default_prompt: "Use $continuity-and-qa to inspect extracted frames, transition seams, rotoscope occlusion, and 4-pillar continuity."

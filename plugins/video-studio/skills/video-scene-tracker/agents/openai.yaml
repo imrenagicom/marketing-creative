@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video Scene Tracker"
+  short_description: "Extract rotoscope masks, 3D planar corners and HUD nodes"
+  default_prompt: "Use $video-scene-tracker to extract subject rotoscope masks, monitor corner-pin coordinates, and HUD tracker nodes from our video."
