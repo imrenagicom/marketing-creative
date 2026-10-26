@@ -1,0 +1,12 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "video-studio",
+  "displayName": "Video Studio",
+  "version": "0.11.0",
+  "description": "Explainer and motion-graphics video production in English or Indonesian: direction options, native scripts, ElevenLabs narration with word timing, timed shot plans, HyperFrames compositions, delivery and QC.",
+  "suggestedPrompts": [
+    "Use studio-producer to start a 45-second explainer video for our product in Indonesian.",
+    "Use director to draft three direction options for an explainer about our onboarding flow.",
+    "Use studio-producer to check what stage my video project is at and continue it."
+  ]
+}

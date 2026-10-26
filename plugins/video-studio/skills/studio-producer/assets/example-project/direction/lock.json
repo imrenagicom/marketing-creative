@@ -1,0 +1,53 @@
+{
+  "schema": "video-studio/direction-lock@1",
+  "version": 1,
+  "logline": "A fictional notes app shows a three-step habit that stops ideas getting lost.",
+  "hook": {
+    "pattern": "pain-question",
+    "opening": "Scattered chat bubbles fly in while the narrator asks whether you keep losing your best ideas."
+  },
+  "beats": [
+    {
+      "id": "B1",
+      "purpose": "hook",
+      "summary": "Name the pain: ideas lost in random chats.",
+      "seconds": 3
+    },
+    {
+      "id": "B2",
+      "purpose": "promise",
+      "summary": "Promise a three-step habit.",
+      "seconds": 3
+    },
+    {
+      "id": "B3",
+      "purpose": "steps",
+      "summary": "Capture, tag, review.",
+      "seconds": 9
+    },
+    {
+      "id": "B4",
+      "purpose": "cta",
+      "summary": "Save and try it for a week.",
+      "seconds": 3
+    }
+  ],
+  "characters": [
+    {
+      "id": "narrator",
+      "role": "friendly productivity coach",
+      "acting_baseline": "Warm, quick, slightly amused; leans on the numbers; never salesy.",
+      "register": "conversational"
+    }
+  ],
+  "visual_plan": "Dark surface, one warm accent. Each spoken keyword lands on screen as it is said; steps build as a checklist; end card repeats the CTA.",
+  "audio_policy": {
+    "voice": "single narrator, eleven_v4",
+    "music": "none in this example",
+    "sfx": "none"
+  },
+  "approved": {
+    "by": "user",
+    "at": "2026-10-27T00:00:00+00:00"
+  }
+}

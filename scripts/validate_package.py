@@ -20,6 +20,7 @@ PLUGINS = {
         "marketing-omni-video"},
     "marketing-performance": {"marketing-brief", "campaign-manager",
         "marketing-copywriter", "google-analytics-analyst"},
+    "video-studio": {"studio-producer"},
 }
 
 
@@ -162,7 +163,7 @@ def validate_plugin(plugin):
 
 
 def validate(plugin_name=None):
-    """Validate both plugins, or select one archive's independently usable tree."""
+    """Validate every plugin, or select one archive's independently usable tree."""
     names = [plugin_name] if plugin_name else PLUGINS
     files = []
     for name in names:
@@ -185,4 +186,4 @@ def validate(plugin_name=None):
 
 if __name__ == "__main__":
     files = validate()
-    print(f"Validated both plugins, resources and marketplaces: {len(files)} package files")
+    print(f"Validated all plugins, resources and marketplaces: {len(files)} package files")

@@ -1,0 +1,76 @@
+{
+  "schema": "video-studio/shots@1",
+  "shots": [
+    {
+      "id": "S01",
+      "kind": "graphic",
+      "beat": "B1",
+      "lines": [
+        "L01"
+      ],
+      "motivation": "Make the pain visible the moment it is named.",
+      "transition": "cut",
+      "visual": {
+        "mode": "kinetic"
+      }
+    },
+    {
+      "id": "S02",
+      "kind": "graphic",
+      "beat": "B2",
+      "lines": [
+        "L02"
+      ],
+      "motivation": "Turn the promise into a countable title.",
+      "transition": "wipe",
+      "visual": {
+        "mode": "title",
+        "title": "3-step capture habit"
+      }
+    },
+    {
+      "id": "S03",
+      "kind": "graphic",
+      "beat": "B3",
+      "lines": [
+        "L03",
+        "L04",
+        "L05"
+      ],
+      "motivation": "Build the checklist one step per spoken step.",
+      "transition": "wipe",
+      "visual": {
+        "mode": "steps",
+        "items": [
+          {
+            "line": "L03",
+            "text": "Capture in one inbox"
+          },
+          {
+            "line": "L04",
+            "text": "Tag before closing"
+          },
+          {
+            "line": "L05",
+            "text": "Review every Friday"
+          }
+        ]
+      }
+    },
+    {
+      "id": "S04",
+      "kind": "graphic",
+      "beat": "B4",
+      "lines": [
+        "L06"
+      ],
+      "motivation": "Repeat the CTA as a readable end card.",
+      "transition": "fade",
+      "visual": {
+        "mode": "end-card",
+        "title": "Save this",
+        "subtitle": "Try it for one week"
+      }
+    }
+  ]
+}

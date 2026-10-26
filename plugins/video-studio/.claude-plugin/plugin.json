@@ -1,0 +1,19 @@
+{
+  "name": "video-studio",
+  "version": "0.11.0",
+  "description": "Explainer and motion-graphics video production in English or Indonesian: direction options, native scripts, ElevenLabs narration with word timing, timed shot plans, HyperFrames compositions, delivery and QC.",
+  "author": {
+    "name": "Imre Nagi"
+  },
+  "homepage": "https://github.com/imrenagicom/marketing-creative",
+  "repository": "https://github.com/imrenagicom/marketing-creative",
+  "keywords": [
+    "video",
+    "explainer",
+    "motion-graphics",
+    "narration",
+    "elevenlabs",
+    "hyperframes",
+    "indonesian"
+  ]
+}

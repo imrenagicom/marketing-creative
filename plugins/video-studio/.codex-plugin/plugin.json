@@ -1,0 +1,36 @@
+{
+  "name": "video-studio",
+  "version": "0.11.0",
+  "description": "Explainer and motion-graphics video production in English or Indonesian: direction options, native scripts, ElevenLabs narration with word timing, timed shot plans, HyperFrames compositions, delivery and QC.",
+  "author": {
+    "name": "Imre Nagi"
+  },
+  "homepage": "https://github.com/imrenagicom/marketing-creative",
+  "repository": "https://github.com/imrenagicom/marketing-creative",
+  "keywords": [
+    "video",
+    "explainer",
+    "motion-graphics",
+    "narration",
+    "elevenlabs",
+    "hyperframes",
+    "indonesian"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Video Studio",
+    "shortDescription": "Direct, voice, compose and deliver explainer videos",
+    "longDescription": "Produce explainer and motion-graphics videos from idea to delivery: the director drafts direction options you pick and edit, scripts are written natively in English or Indonesian, ElevenLabs narration supplies word timestamps, shots are linted and timed to the voice, HyperFrames compositions are built per canvas, and renders are finished and quality-checked. Paid calls run under budgets you approve.",
+    "developerName": "Imre Nagi",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use studio-producer to start a 45-second explainer video for our product in Indonesian.",
+      "Use director to draft three direction options for an explainer about our onboarding flow.",
+      "Use studio-producer to check what stage my video project is at and continue it."
+    ]
+  }
+}

@@ -4,7 +4,7 @@
     "name": "Imre Nagi"
   },
   "metadata": {
-    "description": "Campaign planning, copywriting and UTM operations alongside image production and a complete video workflow"
+    "description": "Campaign planning, copywriting and UTM operations alongside image production, a complete marketing video workflow and an explainer video studio"
   },
   "plugins": [
     {
@@ -16,6 +16,11 @@
       "name": "marketing-performance",
       "source": "./plugins/marketing-performance",
       "description": "Marketing briefs, channel-ready copy, Google Analytics 4 funnel analysis and campaign operations with documented UTM links and performance reports"
+    },
+    {
+      "name": "video-studio",
+      "source": "./plugins/video-studio",
+      "description": "Explainer video production: direction options, native English or Indonesian scripts, ElevenLabs narration with word timing, timed shots, HyperFrames compositions, delivery and QC"
     }
   ]
 }

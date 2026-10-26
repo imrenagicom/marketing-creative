@@ -1,7 +1,7 @@
 {
   "name": "marketing-creative",
   "interface": {
-    "displayName": "Marketing Creative and Performance"
+    "displayName": "Marketing Creative, Performance and Video Studio"
   },
   "plugins": [
     {
@@ -21,6 +21,18 @@
       "source": {
         "source": "local",
         "path": "./plugins/marketing-performance"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "video-studio",
+      "source": {
+        "source": "local",
+        "path": "./plugins/video-studio"
       },
       "policy": {
         "installation": "AVAILABLE",

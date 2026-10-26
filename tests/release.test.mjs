@@ -68,5 +68,8 @@ test("git release commit stages changelog, package metadata, and Claude/Codex/An
     "plugins/marketing-performance/.codex-plugin/plugin.json",
     "plugins/marketing-performance/.claude-plugin/plugin.json",
     "plugins/marketing-performance/plugin.json",
+    "plugins/video-studio/.codex-plugin/plugin.json",
+    "plugins/video-studio/.claude-plugin/plugin.json",
+    "plugins/video-studio/plugin.json",
   ]);
 });

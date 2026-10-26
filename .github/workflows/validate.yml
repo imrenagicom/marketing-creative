@@ -32,6 +32,7 @@ jobs:
       - run: python3 scripts/validate_package.py
       - run: python3 scripts/build_plugin.py --output "$RUNNER_TEMP/marketing-creative-validation.zip"
       - run: python3 scripts/build_plugin.py --plugin marketing-performance --output "$RUNNER_TEMP/marketing-performance-validation.zip"
+      - run: python3 scripts/build_plugin.py --plugin video-studio --output "$RUNNER_TEMP/video-studio-validation.zip"
   release:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: package

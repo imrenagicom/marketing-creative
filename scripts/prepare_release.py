@@ -17,6 +17,9 @@ VERSION_FILES = (
     "plugins/marketing-performance/.codex-plugin/plugin.json",
     "plugins/marketing-performance/.claude-plugin/plugin.json",
     "plugins/marketing-performance/plugin.json",
+    "plugins/video-studio/.codex-plugin/plugin.json",
+    "plugins/video-studio/.claude-plugin/plugin.json",
+    "plugins/video-studio/plugin.json",
 )
 
 
@@ -44,8 +47,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if Path(args.output).resolve().is_relative_to(ROOT):
         parser.error("Release archives must be outside the repository")
-    if Path(args.output).name == "marketing-performance-plugin.zip":
-        parser.error("The creative and performance archive paths must differ")
+    if Path(args.output).name in {"marketing-performance-plugin.zip", "video-studio-plugin.zip"}:
+        parser.error("The creative, performance and video studio archive paths must differ")
     update_versions(ROOT, args.version)
     build(args.output)
     build(Path(args.output).with_name("marketing-performance-plugin.zip"), "marketing-performance")
+    build(Path(args.output).with_name("video-studio-plugin.zip"), "video-studio")
