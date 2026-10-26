@@ -1,6 +1,7 @@
 # Video Studio plugin design
 
-Status: design agreed in discussion, not yet implemented (2026-10-27).
+Status: design agreed in discussion, not yet implemented (2026-10-27). All
+earlier open questions are resolved below.
 
 `video-studio` is a new skill plugin, designed from scratch and independent of
 the existing Marketing Creative skills. It covers cinematic films, explainers,
@@ -240,7 +241,16 @@ does not return timestamps.
   estimate. Approval is bound to a fingerprint of the exact request; any change
   needs re-approval. Batches can be reviewed together but each take is approved
   individually.
-- **Higgsfield image, reframe, upscale:** per-request until decided otherwise.
+- **Higgsfield images: per-project image cap, approved once.** Keyframes,
+  stills, background removal and outpaints are cheap individually but need
+  many iterations, so per-request approval would stall look development. The
+  producer estimates the cap from shots × keyframes per shot × allowed
+  variants, using `get_cost` for each model. Each batch logs its count,
+  estimate and actual credits; warn at ~80%; stop and ask before exceeding.
+  Images that feed a video take are still shown in that take's per-request
+  approval.
+- **Higgsfield reframe and upscale: per-request.** They process video and
+  cost about as much as video generation.
 - General production permission never enables paid generation.
 
 ## Credentials and outputs
@@ -265,12 +275,79 @@ does not return timestamps.
 | Higgsfield prompt edited after approval | Fingerprint mismatch blocks submission until re-approved |
 | Transport timeout on a paid take | Job ID kept, status checked, no automatic resubmission |
 | 16:9 master, 9:16 needed | Variant composed independently; reframe offered only as a labelled fallback |
+| Brief does not name a language | Producer asks once (English or Indonesian) before scripting; no translation of an existing script |
+| Indonesian script with English product names | Register recorded in acting baseline; pronunciation dictionary covers the English terms |
+| Existing English video needs an Indonesian version | Project branches at script; lip-synced takes queued for regeneration, non-speaking takes re-timed |
+| Text-behind-subject requested, local segmentation missing | Falls back to layering without occlusion and reports the missing dependency |
 
-## Open questions
+## Depth layering and segmentation
 
-1. Can subject segmentation be assumed for text-behind-subject depth layering,
-   and from which tool?
-2. Should Indonesian be first-class for hook libraries and delivery notes?
-3. Should Higgsfield keyframe images move under a per-project cap?
-4. Repository and packaging: a new plugin directory in this repository or a
-   separate repository?
+Text behind the subject is a supported technique. `motion-designer` owns it;
+it needs a per-frame alpha matte of the subject for each selected shot.
+
+| Input | Tool | Why |
+| --- | --- | --- |
+| Video shot (any subject) | **SAM 2.1**, run locally: point or box prompt on one frame, mask carried through the shot | Free, works for people, products and characters, masks stay consistent across frames, Apache-2.0 |
+| Still image / keyframe | **BiRefNet**, run locally | Free, high-quality edges including hair, MIT |
+| Local models unavailable | Higgsfield `remove_background` on stills only, under the image cap | Paid fallback; no per-frame video matting |
+
+- Mattes are generated only for **selected** takes, after dailies QC, and
+  stored as assets keyed by shot ID (`S03.matte`), separate from the colour
+  footage.
+- A helper script wraps both models with a dry run, a device choice
+  (Apple Silicon MPS, CUDA or CPU) and a preview contact sheet. Python
+  dependencies are optional extras; skills fall back to front/back layering
+  without occlusion when they are missing, and say so.
+- `qc-reviewer` checks mattes for edge flicker, missing limbs or hair, and
+  frames where the mask is lost.
+- Not chosen: Robust Video Matting (GPL-3.0, people only) and MediaPipe
+  selfie segmentation (rough edges; acceptable for previews only).
+- Model licences, sizes and Apple Silicon support must be re-verified when
+  implementing.
+
+## Languages
+
+English and Indonesian are both first-class. The language for a video is
+chosen when the user asks to produce it; the producer asks once if the brief
+does not say.
+
+- `project.yaml` records `language` (`en` or `id`). The direction lock stays
+  language-neutral (beats, acting, camera); language starts at the script.
+- **Write natively, never translate.** `scriptwriter` keeps separate hook
+  libraries, CTA patterns and examples for each language.
+- **Indonesian register is an explicit choice:** casual Jakarta (`gua/lo`),
+  friendly (`aku/kamu`) or formal (`saya/Anda`), with code-switching rules for
+  English product and tech terms. It belongs to each character's acting
+  baseline.
+- **Timing differs.** Words-per-second defaults are set per language (Indonesian
+  words are longer, so fewer fit in each second), and are always replaced by
+  real word timestamps after voicing.
+- **Voice:** `eleven_v4` with `language_code` set; pronunciation dictionaries
+  cover English brand terms spoken in Indonesian; Scribe `keyterms` cover
+  both languages.
+- **On-screen text:** kinetic keywords, captions and UI cards follow the
+  script language; caption line length and line breaks are set per language.
+- **Making the other language later** branches the project at the script.
+  New voice, timestamps and shot durations follow. Takes without visible
+  speech can be reused if they are re-timed; lip-synced takes must be
+  regenerated in the new language.
+
+## Repository and packaging
+
+`video-studio` is a new plugin directory inside this repository,
+`plugins/video-studio/`, alongside the existing plugins and packaged the same
+way. Adding it touches:
+
+- `plugins/video-studio/.codex-plugin/plugin.json`,
+  `.claude-plugin/plugin.json` and `plugin.json` (Antigravity), with matching
+  metadata and version;
+- `scripts/validate_package.py` (`PLUGINS` allowlist) and
+  `scripts/build_plugin.py --plugin video-studio`;
+- `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json` and
+  `.agents/plugins.json`;
+- release wiring (`release.config.mjs`, `scripts/prepare_release.py`) and the
+  validate workflow;
+- tests and the README.
+
+Skills are created with the `skill-creator` skill and validated as the
+repository guidance describes.
