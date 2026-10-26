@@ -157,5 +157,90 @@ class LedgerTests(ProjectFixture):
         self.assertNotEqual(ledger.request_sha256({"a": 1}), ledger.request_sha256({"a": 2}))
 
 
+DIRECTOR = SKILLS / "director/scripts/direction.py"
+SCRIPT_TOOL = SKILLS / "scriptwriter/scripts/script_tool.py"
+
+
+def option(option_id, pattern, structure):
+    return {
+        "id": option_id, "title": f"Option {option_id}", "logline": "A coach shows a habit that stops ideas getting lost.",
+        "hook": {"pattern": pattern, "opening": "Chat bubbles pile up while the narrator asks a question."},
+        "structure": structure,
+        "beats": [{"id": "B1", "purpose": "hook", "summary": "Name the pain.", "seconds": 3},
+                  {"id": "B2", "purpose": "cta", "summary": "Save it.", "seconds": 3}],
+        "characters": [{"id": "narrator", "role": "coach", "acting_baseline": "Warm, quick, never salesy."}],
+        "visual_plan": "Keywords land on the spoken word; one accent colour.",
+        "audio_policy": {"voice": "narrator", "music": "none", "sfx": "none"},
+        "risks": ["Generic pain question."],
+    }
+
+
+class DirectorTests(ProjectFixture):
+    def write_options(self, options):
+        path = self.root / "direction/options.json"
+        path.write_text(json.dumps({"schema": "video-studio/direction-options@1", "options": options}))
+
+    def test_options_must_be_genuinely_different(self):
+        self.write_options([option("A", "pain-question", "steps"), option("B", "pain-question", "steps")])
+        result = self.run_script(DIRECTOR, "check", self.root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("genuinely different", result.stdout)
+
+    def test_check_flags_vague_words_and_missing_baselines(self):
+        vague = option("A", "pain-question", "steps")
+        vague["visual_plan"] = "A cinematic, engaging look."
+        vague["characters"][0]["acting_baseline"] = ""
+        self.write_options([vague, option("B", "result-first", "before-after")])
+        report = json.loads(self.run_script(DIRECTOR, "check", self.root).stdout)
+        self.assertTrue(any("acting_baseline" in error for error in report["errors"]))
+        self.assertTrue(any("cinematic" in warning and "engaging" in warning for warning in report["warnings"]))
+
+    def test_lock_records_user_approval_and_bumps_version(self):
+        self.write_options([option("A", "pain-question", "steps"), option("B", "result-first", "before-after")])
+        result = self.run_script(DIRECTOR, "lock", self.root, "--option", "B")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        lock = self.read("lock")
+        self.assertEqual((lock["version"], lock["source_option"], lock["hook"]["pattern"]), (2, "B", "result-first"))
+        self.assertEqual(lock["approved"]["by"], "user")
+        self.assertTrue((self.root / ".history").is_dir())
+        missing = self.run_script(DIRECTOR, "lock", self.root, "--option", "Z")
+        self.assertEqual(missing.returncode, 1)
+
+
+class ScriptwriterTests(ProjectFixture):
+    def estimate(self):
+        result = self.run_script(SCRIPT_TOOL, "estimate", self.root)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_example_script_estimates_cleanly_without_counting_audio_tags(self):
+        report = self.estimate()
+        self.assertEqual(report["warnings"], [])
+        self.assertAlmostEqual(report["beats"]["B1"]["planned"], round(8 / 2.6, 1))
+
+    def test_flags_long_hook_vague_words_and_beat_order(self):
+        script = self.read("script")
+        script["lines"][0]["text"] = "Still losing your best ideas in random chats every single day while you scroll through endless amazing threads?"
+        script["lines"][1], script["lines"][2] = script["lines"][2], script["lines"][1]
+        self.put("script", script)
+        warnings = " | ".join(self.estimate()["warnings"])
+        self.assertIn("hook line", warnings)
+        self.assertIn("amazing", warnings)
+        self.assertIn("beat order", warnings)
+
+    def test_indonesian_uses_slower_planning_pace(self):
+        project = self.read("project")
+        project["language"] = "id"
+        self.put("project", project)
+        script = self.read("script")
+        script["language"], script["register"] = "id", "casual"
+        script["lines"] = [{"id": "L01", "beat": "B1", "speaker": "narrator",
+                            "text": "Masih sering lupa ide bagus yang nyelip di chat?", "keywords": ["ide bagus"]}]
+        self.put("script", script)
+        report = self.estimate()
+        self.assertAlmostEqual(report["beats"]["B1"]["planned"], round(9 / 2.2, 1))
+        self.assertTrue(any("Beats without lines" in warning for warning in report["warnings"]))
+
+
 if __name__ == "__main__":
     unittest.main()

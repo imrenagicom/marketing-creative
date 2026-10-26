@@ -7,11 +7,11 @@
       "id": "L01",
       "beat": "B1",
       "speaker": "narrator",
-      "text": "Still losing your best ideas in random chats?",
+      "text": "[curious] Still losing your best ideas in random chats?",
       "keywords": [
         "best ideas"
       ],
-      "delivery": "[curious] light, teasing"
+      "delivery": "light, teasing"
     },
     {
       "id": "L02",
@@ -57,11 +57,11 @@
       "id": "L06",
       "beat": "B4",
       "speaker": "narrator",
-      "text": "Save this, and try it for one week.",
+      "text": "[warm] Save this, and try it for one week.",
       "keywords": [
         "Save this"
       ],
-      "delivery": "[warm] direct to camera"
+      "delivery": "direct, unhurried"
     }
   ]
 }

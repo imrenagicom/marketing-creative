@@ -1,0 +1,4 @@
+interface:
+  display_name: "Scriptwriter"
+  short_description: "Write native English or Indonesian narration per beat"
+  default_prompt: "Use $scriptwriter to write the narration for my locked direction in Indonesian, with on-screen keywords per line."

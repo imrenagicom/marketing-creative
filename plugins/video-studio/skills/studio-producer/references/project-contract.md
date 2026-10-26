@@ -39,6 +39,7 @@ IDs are short slugs (`B1`, `L03`, `S04`) and never change once downstream files 
 | `version` | integer, bumped on every approved change |
 | `logline` | one sentence |
 | `hook` | `{pattern, opening}` — pattern from the director's hook library, opening = what happens in the first 2 s |
+| `structure` | the story shape, for example problem → promise → steps → CTA |
 | `beats[]` | `{id, purpose, summary, seconds?}` in story order |
 | `characters[]` | `{id, role, acting_baseline, register?}`; the narrator is a character |
 | `visual_plan` | how the picture carries the argument (layouts, motion vocabulary, contrast rule) |
@@ -53,7 +54,7 @@ IDs are short slugs (`B1`, `L03`, `S04`) and never change once downstream files 
 | `register` | en: `casual`/`conversational`/`formal`; id: `casual`/`friendly`/`formal` |
 | `lines[]` | `{id, beat, speaker, text, delivery?, keywords[], on_screen?}` |
 
-`keywords` are the words that appear on screen as they are spoken; each must occur in `text`. `delivery` carries acting notes and may include ElevenLabs v4 audio tags such as `[excited]`; tags are spoken direction, not on-screen text.
+`keywords` are the words that appear on screen as they are spoken; each must occur in `text`. `delivery` carries acting notes for humans. ElevenLabs v4 audio tags such as `[excited]` may lead `text`; they are sent to speech generation as direction, are never spoken or shown, and are dropped from word timings.
 
 ## voice/words.json — `video-studio/words@1`
 

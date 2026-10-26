@@ -6,6 +6,7 @@
     "pattern": "pain-question",
     "opening": "Scattered chat bubbles fly in while the narrator asks whether you keep losing your best ideas."
   },
+  "structure": "problem → promise → three numbered steps → CTA",
   "beats": [
     {
       "id": "B1",
