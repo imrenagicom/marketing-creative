@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shot Designer"
+  short_description: "Plan, lint and time shots to the narration"
+  default_prompt: "Use $shot-designer to build the shot list for my script, lint it, and time it to the narration."

@@ -378,5 +378,79 @@ class VoiceDirectorTests(ProjectFixture):
         self.assertGreater(words["duration"], words["words"][-1]["end"] - 0.1)
 
 
+SHOTS = SKILLS / "shot-designer/scripts/shots.py"
+
+
+class ShotDesignerTests(ProjectFixture):
+    def lint(self):
+        result = self.run_script(SHOTS, "lint", self.root)
+        return result.returncode, json.loads(result.stdout)
+
+    def test_time_cuts_before_first_word_and_holds_the_end(self):
+        result = self.run_script(SHOTS, "time", self.root)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        shots, words = self.read("shots")["shots"], self.read("words")
+        self.assertEqual(shots[0]["start"], 0.0)
+        first_l02 = next(w["start"] for w in words["words"] if w["line"] == "L02")
+        self.assertAlmostEqual(shots[1]["start"], round(first_l02 - 0.15, 3))
+        self.assertAlmostEqual(shots[-1]["end"], round(words["duration"] + 0.8, 3))
+        for before, after in zip(shots, shots[1:]):
+            self.assertEqual(before["end"], after["start"])
+        code, report = self.lint()
+        self.assertEqual((code, report["errors"]), (0, []))
+        self.assertEqual(report["warnings"], [])
+
+    def test_lint_requires_a_picture_for_every_line_and_motivation(self):
+        shots = self.read("shots")
+        shots["shots"][2]["lines"] = ["L03", "L04"]
+        shots["shots"][2]["visual"]["items"] = shots["shots"][2]["visual"]["items"][:2]
+        shots["shots"][0]["motivation"] = ""
+        self.put("shots", shots)
+        code, report = self.lint()
+        self.assertEqual(code, 1)
+        joined = " | ".join(report["errors"])
+        self.assertIn("L05", joined)
+        self.assertIn("S01 needs a motivation", joined)
+
+    def test_lint_flags_vague_camera_shots_and_mode_fields(self):
+        shots = self.read("shots")
+        shots["shots"][0] = {"id": "S01", "kind": "camera", "beat": "B1", "lines": ["L01"],
+                             "motivation": "Make it cinematic", "framing": "MCU", "movement": "smooth and epic",
+                             "action": "", "light_source": "window left", "sound": "room tone"}
+        shots["shots"][1]["visual"] = {"mode": "stat", "label": "faster"}
+        self.put("shots", shots)
+        code, report = self.lint()
+        self.assertEqual(code, 1)
+        self.assertTrue(any("needs action" in e for e in report["errors"]))
+        self.assertTrue(any("needs value" in e for e in report["errors"]))
+        self.assertTrue(any("cinematic" in w for w in report["warnings"]))
+        self.assertTrue(any("no direction" in w for w in report["warnings"]))
+
+    def test_steps_must_reveal_on_their_own_lines(self):
+        shots = self.read("shots")
+        shots["shots"][2]["visual"]["items"][0]["line"] = "L01"
+        self.put("shots", shots)
+        code, report = self.lint()
+        self.assertTrue(any("own lines" in e for e in report["errors"]))
+
+    def test_long_shot_without_visible_changes_warns(self):
+        self.run_script(SHOTS, "time", self.root)
+        shots = self.read("shots")
+        merged = shots["shots"][0]
+        merged["lines"] = ["L01", "L02", "L03", "L04", "L05"]
+        merged["visual"] = {"mode": "title", "title": "One long title", "keywords": False}
+        merged["end"] = shots["shots"][3]["start"]
+        shots["shots"] = [merged, shots["shots"][3]]
+        self.put("shots", shots)
+        code, report = self.lint()
+        self.assertTrue(any("visible change" in w for w in report["warnings"]))
+
+    def test_time_needs_narration(self):
+        studio.path_of(self.root, "words").unlink()
+        result = self.run_script(SHOTS, "time", self.root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("voice/words.json", result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
