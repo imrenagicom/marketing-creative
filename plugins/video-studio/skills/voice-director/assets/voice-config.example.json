@@ -1,0 +1,17 @@
+{
+  "schema": "video-studio/voice-config@1",
+  "model_id": "eleven_v4",
+  "output_format": "mp3_44100_128",
+  "mode": "single",
+  "line_gap": 0.35,
+  "credits_per_char": 1.0,
+  "rate_checked": "Replace with the rate and date you verified, for example '2026-10-27, ElevenLabs pricing page'",
+  "voices": {
+    "narrator": {
+      "voice_id": "REPLACE_WITH_VOICE_ID",
+      "name": "Chosen narrator",
+      "voice_settings": {"stability": 0.45, "similarity_boost": 0.75},
+      "seed": 4242
+    }
+  }
+}

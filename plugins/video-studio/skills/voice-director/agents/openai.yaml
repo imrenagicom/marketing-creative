@@ -1,0 +1,4 @@
+interface:
+  display_name: "Voice Director"
+  short_description: "Cast and generate narration with word timestamps"
+  default_prompt: "Use $voice-director to cast a voice and generate the narration for my approved script, showing the dry-run estimate first."

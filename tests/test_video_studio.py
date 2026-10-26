@@ -242,5 +242,141 @@ class ScriptwriterTests(ProjectFixture):
         self.assertTrue(any("Beats without lines" in warning for warning in report["warnings"]))
 
 
+VOICE = SKILLS / "voice-director/scripts/voice.py"
+sys.path.insert(0, str(VOICE.parent))
+import voice  # noqa: E402
+
+FAKE_ELEVENLABS = '''#!{python}
+import base64, json, os, subprocess, sys, tempfile
+log = os.environ["FAKE_LOG"]
+with open(log, "a") as handle:
+    handle.write(json.dumps(sys.argv[1:]) + "\\n")
+if os.environ.get("FAKE_FAIL"):
+    sys.stderr.write("quota exceeded")
+    sys.exit(1)
+body = json.loads(sys.stdin.read())
+chars = list(body["text"])
+starts = [round(i * 0.05, 3) for i in range(len(chars))]
+ends = [round(s + 0.05, 3) for s in starts]
+audio = b"not-audio"
+if os.environ.get("FAKE_REAL_AUDIO"):
+    with tempfile.TemporaryDirectory() as temp:
+        out = os.path.join(temp, "a.mp3")
+        subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "sine=f=220:d=%.2f" % ends[-1], out], check=True)
+        audio = open(out, "rb").read()
+print(json.dumps({{"audio_base64": base64.b64encode(audio).decode(),
+                  "alignment": {{"characters": chars, "character_start_times_seconds": starts,
+                                "character_end_times_seconds": ends}}}}))
+'''
+
+
+class VoiceDirectorTests(ProjectFixture):
+    def setUp(self):
+        super().setUp()
+        for key in ("words", "shots"):
+            studio.path_of(self.root, key).unlink()
+        studio.write(self.root, "ledger", ledger.empty())
+        config = json.loads((SKILLS / "voice-director/assets/voice-config.example.json").read_text())
+        config["voices"]["narrator"]["voice_id"] = "voice123"
+        studio.write(self.root, "voice_config", config)
+        bin_dir = Path(self.temp.name) / "bin"
+        bin_dir.mkdir()
+        fake = bin_dir / "elevenlabs"
+        fake.write_text(FAKE_ELEVENLABS.format(python=sys.executable))
+        fake.chmod(0o755)
+        self.log = Path(self.temp.name) / "calls.log"
+        self.env = {"VIDEO_STUDIO_ELEVENLABS_BIN": str(fake), "FAKE_LOG": str(self.log)}
+        self.patch_env(self.env)
+
+    def patch_env(self, values):
+        import os
+        saved = {key: os.environ.get(key) for key in values}
+        os.environ.update(values)
+
+        def restore():
+            for key, value in saved.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+        self.addCleanup(restore)
+
+    def calls(self):
+        return self.log.read_text().splitlines() if self.log.exists() else []
+
+    def chars(self):
+        return sum(len(line["text"]) for line in self.read("script")["lines"]) + 2 * 5
+
+    def test_char_alignment_drops_audio_tags_and_whitespace(self):
+        text = "[warm voice] Hi there"
+        alignment = {"characters": list(text), "character_start_times_seconds": [i / 10 for i in range(len(text))],
+                     "character_end_times_seconds": [i / 10 + 0.1 for i in range(len(text))]}
+        words = voice.char_words(alignment)
+        self.assertEqual([w["text"] for w in words], ["Hi", "there"])
+        self.assertAlmostEqual(words[0]["start"], 1.3)
+
+    def test_plan_is_a_dry_run_with_estimate(self):
+        result = self.run_script(VOICE, "plan", self.root)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        plan = json.loads(result.stdout)
+        self.assertEqual(plan["characters"], self.chars())
+        self.assertEqual(plan["requests"][0]["body"]["language_code"], "en")
+        self.assertNotIn("output_format", plan["requests"][0]["body"])
+        self.assertFalse(plan["cap"]["allowed"])
+        self.assertEqual(self.calls(), [])
+
+    def test_generate_refuses_without_cap_and_sends_nothing(self):
+        result = self.run_script(VOICE, "generate", self.root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("No approved", result.stderr)
+        self.assertEqual(self.calls(), [])
+        self.assertEqual(ledger.read(self.root)["entries"], [])
+
+    def test_generate_writes_timed_words_and_ledger(self):
+        ledger.set_cap(self.root, "elevenlabs", 5000, "test cap")
+        result = self.run_script(VOICE, "generate", self.root, "--note", "first")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(self.calls()), 1)
+        args = json.loads(self.calls()[0])
+        self.assertIn("--no-extract", args)
+        self.assertEqual(args[args.index("--output-format") + 1], "mp3_44100_128")
+        words = self.read("words")
+        self.assertNotIn("[curious]", [w["text"] for w in words["words"]])
+        self.assertEqual(words["words"][0]["line"], "L01")
+        self.assertEqual(words["words"][-1]["line"], "L06")
+        entry = ledger.read(self.root)["entries"][0]
+        self.assertEqual((entry["status"], entry["estimate"]), ("succeeded", float(self.chars())))
+        studio.validate(self.root)
+
+    def test_provider_refusal_is_recorded_as_failed(self):
+        ledger.set_cap(self.root, "elevenlabs", 5000, "test cap")
+        self.patch_env({"FAKE_FAIL": "1"})
+        result = self.run_script(VOICE, "generate", self.root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("quota exceeded", result.stderr)
+        self.assertEqual(ledger.read(self.root)["entries"][0]["status"], "failed")
+        self.assertIsNone(studio.load(self.root, "words", required=False))
+
+    def test_alignment_word_count_mismatch_is_refused(self):
+        with self.assertRaisesRegex(studio.ContractError, "inspect the take"):
+            voice.assign_lines([{"text": "Hi", "start": 0, "end": 0.1}], self.read("script"), ["L01"])
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "ffmpeg needed for lines mode")
+    def test_lines_mode_joins_takes_with_gaps(self):
+        ledger.set_cap(self.root, "elevenlabs", 5000, "test cap")
+        config = self.read("voice_config")
+        config["mode"], config["line_gap"] = "lines", 0.5
+        self.put("voice_config", config)
+        self.patch_env({"FAKE_REAL_AUDIO": "1"})
+        result = self.run_script(VOICE, "generate", self.root)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(self.calls()), 6)
+        words = self.read("words")
+        l02 = next(w for w in words["words"] if w["line"] == "L02")
+        last_l01 = [w for w in words["words"] if w["line"] == "L01"][-1]
+        self.assertGreater(l02["start"] - last_l01["end"], 0.45)
+        self.assertGreater(words["duration"], words["words"][-1]["end"] - 0.1)
+
+
 if __name__ == "__main__":
     unittest.main()
