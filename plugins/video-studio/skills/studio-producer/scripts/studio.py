@@ -37,6 +37,7 @@ FILES = {
     "bible": "bible/bible.json",
     "takes": "takes/takes.json",
     "sound": "sound/cues.json",
+    "sound_config": "sound/sound-config.json",
     "style": "style.json",
     "ledger": "ledger.json",
 }

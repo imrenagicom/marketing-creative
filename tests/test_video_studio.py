@@ -990,5 +990,82 @@ class TakePlanTests(CinematicFixture):
         self.assertIn("no clips", sel.stderr)
 
 
+
+SOUND = SKILLS / "sound-designer/scripts/sound.py"
+FAKE_SOUND_CLI = '''#!{python}
+import json, os, subprocess, sys
+args = sys.argv[1:]
+with open(os.environ["FAKE_LOG"], "a") as handle:
+    handle.write(json.dumps(args) + "\\n")
+body = json.loads(sys.stdin.read())
+if os.environ.get("FAKE_FAIL"):
+    sys.stderr.write("insufficient credits")
+    sys.exit(1)
+out = args[args.index("-o") + 1]
+seconds = body.get("duration_seconds") or body.get("music_length_ms", 1000) / 1000
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anoisesrc=d=%.2f:a=0.1" % seconds, out], check=True)
+'''
+
+
+@unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg needed for sound tests")
+class SoundDesignerTests(CinematicFixture):
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.run_script(SHOTS, "time", self.root).returncode, 0)
+        config = json.loads((SKILLS / "sound-designer/assets/sound-config.example.json").read_text())
+        (self.root / "sound").mkdir()
+        studio.write(self.root, "sound_config", config)
+        fake = Path(self.temp.name) / "elevenlabs"
+        fake.write_text(FAKE_SOUND_CLI.format(python=sys.executable))
+        fake.chmod(0o755)
+        self.log = Path(self.temp.name) / "sound.log"
+        import os
+        saved = {k: os.environ.get(k) for k in ("VIDEO_STUDIO_ELEVENLABS_BIN", "FAKE_LOG", "FAKE_FAIL")}
+        os.environ.update({"VIDEO_STUDIO_ELEVENLABS_BIN": str(fake), "FAKE_LOG": str(self.log)})
+        os.environ.pop("FAKE_FAIL", None)
+
+        def restore():
+            for key, value in saved.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+        self.addCleanup(restore)
+
+    def test_plan_follows_shots_and_audio_policy(self):
+        result = self.run_script(SOUND, "plan", self.root)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        plan = json.loads(result.stdout)
+        self.assertEqual([c["id"] for c in plan["cues"]], ["sfx-S01", "sfx-S02", "sfx-S03", "sfx-S04", "amb-rooftop"])
+        self.assertFalse(plan["cap"]["allowed"])
+        self.assertFalse(self.log.exists())
+        bible = self.read("bible")
+        bible["audio_policy"]["music"] = "sparse low synth pulse"
+        self.put("bible", bible)
+        cues = json.loads(self.run_script(SOUND, "plan", self.root).stdout)["cues"]
+        music = next(c for c in cues if c["id"] == "music")
+        self.assertEqual(music["duration"], 13.0)
+
+    def test_generate_places_cues_under_the_cap_and_records_failures(self):
+        self.run_script(SOUND, "plan", self.root)
+        refused = self.run_script(SOUND, "generate", self.root)
+        self.assertEqual(refused.returncode, 1)
+        self.assertIn("No approved", refused.stderr)
+        ledger.set_cap(self.root, "elevenlabs", 500, "sound for 13 s film")
+        result = self.run_script(SOUND, "generate", self.root, "--cue", "sfx-S03", "--cue", "amb-rooftop")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        placed = self.read("sound")["cues"]
+        self.assertEqual([(c["id"], c["start"], c["loop"]) for c in placed], [("amb-rooftop", 0.0, True), ("sfx-S03", 6.0, False)])
+        self.assertTrue((self.root / placed[1]["file"]).is_file())
+        calls = [json.loads(line) for line in self.log.read_text().splitlines()]
+        self.assertEqual(calls[0][:2], ["text-to-sound-effects", "convert"])
+        import os
+        os.environ["FAKE_FAIL"] = "1"
+        failed = self.run_script(SOUND, "generate", self.root, "--cue", "sfx-S01")
+        self.assertEqual(failed.returncode, 1)
+        self.assertIn("insufficient credits", failed.stderr)
+        self.assertEqual(ledger.read(self.root)["entries"][-1]["status"], "failed")
+
+
 if __name__ == "__main__":
     unittest.main()
