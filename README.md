@@ -1,6 +1,6 @@
 # Marketing Creative and Performance
 
-Three independently installable plugins cover campaign planning, copywriting, analytics and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Creative owns thirteen skills for ideas, images, scripts and videos; Video Studio is a from-scratch explainer video studio with eight stage skills ([design](docs/video-studio-design.md)). Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
+Three independently installable plugins cover campaign planning, copywriting, analytics and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Creative owns thirteen skills for ideas, images, scripts and videos; Video Studio is a from-scratch video studio for explainers and cinematic short films with thirteen stage skills ([design](docs/video-studio-design.md)). Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
 
 ## Skills and handoffs
 
@@ -34,7 +34,7 @@ Start video work with [`marketing-video`](plugins/marketing-creative/skills/mark
 
 ## Video Studio
 
-`plugins/video-studio/` produces explainer and motion-graphics videos in English or Indonesian. Each stage skill reads and writes one JSON project contract, so work resumes from any stage:
+`plugins/video-studio/` produces explainer videos and cinematic short films in English or Indonesian. Each stage skill reads and writes one JSON project contract, so work resumes from any stage:
 
 | Skill | Input → output |
 | --- | --- |
@@ -44,10 +44,15 @@ Start video work with [`marketing-video`](plugins/marketing-creative/skills/mark
 | `voice-director` | Script → ElevenLabs narration take (via the `elevenlabs` CLI) and word timestamps, or alignment of a supplied recording |
 | `shot-designer` | Script and timings → linted shot list timed to the words |
 | `motion-designer` | Timed shots → HyperFrames compositions per canvas with keywords landing on the spoken word |
-| `editor` | Compositions → versioned renders, SRT/VTT captions and loudness-finished deliveries |
-| `qc-reviewer` | Render version → technical checks, a frame per shot and the human checks still required |
+| `editor` | Compositions or selected footage clips → versioned renders with a ducked sound mix, SRT/VTT captions and loudness-finished deliveries |
+| `qc-reviewer` | Generated take → dailies against the continuity pillars; render version → technical checks, a frame per shot and the human checks still required |
+| `reference-analyst` | Reference video → cuts, pacing, frames, audio stats and a techniques-vs-style report |
+| `continuity-bible` | Direction lock → characters, locations with motivated light, props, locks, reference images and Higgsfield elements |
+| `keyframe-generator` | Camera shots and bible → start/end frames under a per-project Higgsfield image cap |
+| `ai-video-generator` | Timed shots, bible and keyframes → Higgsfield takes approved per exact request, split into shot clips; single-shot retakes (opt-in) |
+| `sound-designer` | Shot sounds and audio policy → ElevenLabs sound effects, ambience beds and optional music placed on the timeline |
 
-Narration comes first and times every shot. ElevenLabs calls run under a per-project credit cap you approve once (`ledger.py`); nothing paid runs before an approved direction lock and cap. Requirements: Python 3.10+, FFmpeg/FFprobe, Node.js 22+ for HyperFrames rendering, and the `elevenlabs` CLI signed in with `elevenlabs auth login` (keychain) or `ELEVENLABS_API_KEY`. Start with `$studio-producer` (Claude: `/video-studio:studio-producer`).
+Explainers are narration-first: word timestamps time every shot. Films are continuity-first: the bible and shot plan come before any generation. ElevenLabs calls and Higgsfield images run under per-project caps you approve once (`ledger.py`); every Higgsfield video, reframe or upscale request needs your approval of that exact request. Requirements: Python 3.10+, FFmpeg/FFprobe, Node.js 22+ for HyperFrames rendering, the `elevenlabs` CLI signed in with `elevenlabs auth login` (keychain) or `ELEVENLABS_API_KEY`, and a connected Higgsfield MCP server for films. Start with `$studio-producer` (Claude: `/video-studio:studio-producer`).
 
 ## Install
 
@@ -89,7 +94,7 @@ agy plugin install /absolute/path/to/marketing-creative/plugins/video-studio
 agy plugin list --json
 ```
 
-Inside an interactive Antigravity CLI session, run `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-creative` and `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-performance` (or select *Install from local directory* in the `/plugin` manager). Installed plugins are staged under `~/.gemini/config/plugins/marketing-creative/` and `~/.gemini/config/plugins/marketing-performance/` and synchronized across the Antigravity App, IDE, and CLI; restart if newly installed skills do not appear immediately. When opening the `marketing-creative` repository itself as a workspace in Antigravity, `.agents/plugins.json` automatically registers all three plugins and their 25 skills without requiring global installation.
+Inside an interactive Antigravity CLI session, run `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-creative` and `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-performance` (or select *Install from local directory* in the `/plugin` manager). Installed plugins are staged under `~/.gemini/config/plugins/marketing-creative/` and `~/.gemini/config/plugins/marketing-performance/` and synchronized across the Antigravity App, IDE, and CLI; restart if newly installed skills do not appear immediately. When opening the `marketing-creative` repository itself as a workspace in Antigravity, `.agents/plugins.json` automatically registers all three plugins and their 30 skills without requiring global installation.
 
 For clients without plugin support, reference the complete skill tree from the client's instruction file, retaining all sibling skills and third-party/ notices. No global installation or client configuration is changed by this repository.
 

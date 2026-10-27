@@ -1,7 +1,7 @@
 {
   "name": "video-studio",
   "version": "0.11.0",
-  "description": "Explainer and motion-graphics video production in English or Indonesian: direction options, native scripts, ElevenLabs narration with word timing, timed shot plans, HyperFrames compositions, delivery and QC.",
+  "description": "Explainer and cinematic video production in English or Indonesian: direction options, native scripts, ElevenLabs narration and sound, continuity bibles, Higgsfield keyframes and approved video takes, HyperFrames compositions, assembly, delivery and QC.",
   "author": {
     "name": "Imre Nagi"
   },
@@ -14,6 +14,9 @@
     "narration",
     "elevenlabs",
     "hyperframes",
-    "indonesian"
+    "indonesian",
+    "cinematic",
+    "higgsfield",
+    "ai-video"
   ]
 }

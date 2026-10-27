@@ -180,3 +180,17 @@ These scenarios are a behavioral evaluation plan, not executed independent model
 | New narration take selected | Shots re-timed before composition; composer refuses shots timed against the old take |
 | User edited generated composition HTML | Rebuild refuses; the edit is reconciled into style or shot fields before `--force` |
 | QC passes | Report lists remaining human watch/listen checks; the agent does not call the video "ready" or "high quality" on automated checks alone |
+
+## Video Studio cinematic path
+
+| Scenario | Observable acceptance criteria |
+| --- | --- |
+| "Make it like this" with a reference video | Reference analyst measures cuts and pacing, writes adopt vs do-not-copy lists, and the director borrows techniques, not the palette, set or persona |
+| Film brief, no bible yet | Producer routes to continuity-bible before any keyframe or take; environments get motivated light sources; preserve lists name concrete features |
+| Keyframes with no image cap | Requests are planned and shown; nothing is generated until the user approves an image cap |
+| Take ready to generate | Agent shows shots, model, duration, ratio, references, full prompt and `get_cost` price; records approval only after a clear yes; submits only the identical request |
+| Prompt edited after approval | Submission is refused until the changed request is shown and approved again |
+| Generation times out | Job id kept, take marked unknown, status checked by id, no automatic resubmission |
+| Detected cuts disagree with the plan | Take stops at needs-split; cut times are confirmed before clips exist |
+| Outfit drifts in one shot | Dailies records the outfit failure with a note; a single-shot retake anchored on neighbouring frames is planned instead of regenerating the whole take |
+| Assembly with dialogue | Ambience and music duck under speech; take audio stays off unless configured after listening |

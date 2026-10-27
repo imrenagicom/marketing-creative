@@ -1,7 +1,7 @@
 # Video Studio plugin design
 
-Status: explainer path implemented in `plugins/video-studio/` (v1, 2026-10-27);
-footage recipes are still design. All earlier open questions are resolved below.
+Status: explainer path (v1) and cinematic footage path (v2) implemented in
+`plugins/video-studio/` (2026-10-27). All earlier open questions are resolved below.
 
 `video-studio` is a new skill plugin, designed from scratch and independent of
 the existing Marketing Creative skills. It covers cinematic films, explainers,
@@ -11,11 +11,13 @@ the existing Marketing Creative skills. It covers cinematic films, explainers,
 
 | Area | State |
 | --- | --- |
-| `studio-producer`, `director`, `scriptwriter`, `voice-director`, `shot-designer`, `motion-designer`, `editor`, `qc-reviewer` | Implemented for the explainer recipe, with offline tests |
-| `reference-analyst`, `continuity-bible`, `keyframe-generator`, `ai-video-generator`, `sound-designer` | Not built yet |
-| Multi-shot takes, cut-detection splitting, dailies QC | Not built yet (footage recipes) |
+| `studio-producer`, `director`, `scriptwriter`, `voice-director`, `shot-designer`, `motion-designer`, `editor`, `qc-reviewer` | Implemented for the explainer recipe (v1), with offline tests |
+| `reference-analyst`, `continuity-bible`, `keyframe-generator`, `ai-video-generator`, `sound-designer`; editor footage assembly; qc dailies | Implemented for the cinematic recipe (v2), with offline tests and mocked providers |
+| Multi-shot takes, cut-detection splitting, single-shot retakes | Implemented; takes whose detected cuts disagree with the plan stop at `needs-split` |
+| Higgsfield integration | Helpers prepare, fingerprint and record requests; the agent calls the MCP. Model limits and media roles not verified against `models_explore` (not exposed in the build session) |
 | Subject mattes (SAM 2.1 / BiRefNet) for text behind the subject | Not built yet; the composer keeps type beside the subject |
-| Higgsfield integration | Policy in the ledger (image cap, per-request video); no helper yet |
+| Graphic shots inside films (titles over footage) | Not built yet; footage assembly handles camera shots only |
+| UGC and music-video recipes | Not built yet |
 
 Contracts are JSON (not YAML as first sketched) so every helper stays standard-library only; field references live in `studio-producer/references/project-contract.md`.
 
