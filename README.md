@@ -1,6 +1,6 @@
 # Marketing Creative and Performance
 
-Two independently installable plugins cover campaign planning, copywriting, analytics and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Creative owns thirteen skills for ideas, images, scripts and videos. Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
+Three independently installable plugins cover campaign planning, copywriting, analytics and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Creative owns thirteen skills for ideas, images, scripts and videos; Video Studio is a from-scratch explainer video studio with eight stage skills ([design](docs/video-studio-design.md)). Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
 
 ## Skills and handoffs
 
@@ -32,9 +32,26 @@ Start video work with [`marketing-video`](plugins/marketing-creative/skills/mark
 
 `motion-voice` normalizes newly generated narration to configurable working targets (default −16 LUFS / −1.5 dBTP / LRA 9), with --no-normalize available. Imports preserve source level unless --normalize is requested. Existing takes use the local normalize command. Cue-based pause classes let ordinary/step pauses use different caps and null preserve dramatic gaps. See [loudness and pause controls](plugins/marketing-creative/skills/motion-voice/references/loudness-and-pauses.md); these mono-source targets do not certify the finished mix.
 
+## Video Studio
+
+`plugins/video-studio/` produces explainer and motion-graphics videos in English or Indonesian. Each stage skill reads and writes one JSON project contract, so work resumes from any stage:
+
+| Skill | Input → output |
+| --- | --- |
+| `studio-producer` | Idea, brief or existing project → project files, next stage, language choice and approved budgets |
+| `director` | Idea or brief → 2–3 direction options (hook, beats, acting baselines, visual plan) → the user-approved direction lock |
+| `scriptwriter` | Direction lock → native English or Indonesian script with register, delivery and on-screen keywords |
+| `voice-director` | Script → ElevenLabs narration take (via the `elevenlabs` CLI) and word timestamps, or alignment of a supplied recording |
+| `shot-designer` | Script and timings → linted shot list timed to the words |
+| `motion-designer` | Timed shots → HyperFrames compositions per canvas with keywords landing on the spoken word |
+| `editor` | Compositions → versioned renders, SRT/VTT captions and loudness-finished deliveries |
+| `qc-reviewer` | Render version → technical checks, a frame per shot and the human checks still required |
+
+Narration comes first and times every shot. ElevenLabs calls run under a per-project credit cap you approve once (`ledger.py`); nothing paid runs before an approved direction lock and cap. Requirements: Python 3.10+, FFmpeg/FFprobe, Node.js 22+ for HyperFrames rendering, and the `elevenlabs` CLI signed in with `elevenlabs auth login` (keychain) or `ELEVENLABS_API_KEY`. Start with `$studio-producer` (Claude: `/video-studio:studio-producer`).
+
 ## Install
 
-Plugins live in `plugins/marketing-creative/` and `plugins/marketing-performance/`. Install either or both complete trees; each plugin contains its own required resources and host manifests for Codex (`.codex-plugin/plugin.json`), Claude Code (`.claude-plugin/plugin.json`) and Google Antigravity (`plugin.json`). Creative production accepts supplied briefs without the Performance plugin.
+Plugins live in `plugins/marketing-creative/`, `plugins/marketing-performance/` and `plugins/video-studio/`. Install either or both complete trees; each plugin contains its own required resources and host manifests for Codex (`.codex-plugin/plugin.json`), Claude Code (`.claude-plugin/plugin.json`) and Google Antigravity (`plugin.json`). Creative production accepts supplied briefs without the Performance plugin.
 
 ### Codex
 
@@ -42,6 +59,7 @@ Plugins live in `plugins/marketing-creative/` and `plugins/marketing-performance
 codex plugin marketplace add /absolute/path/to/marketing-creative
 codex plugin add marketing-creative@marketing-creative
 codex plugin add marketing-performance@marketing-creative
+codex plugin add video-studio@marketing-creative
 codex plugin list --marketplace marketing-creative --json
 ```
 
@@ -53,6 +71,7 @@ Or register `imrenagicom/marketing-creative` after the relevant release is publi
 claude plugin marketplace add /absolute/path/to/marketing-creative
 claude plugin install marketing-creative@marketing-creative
 claude plugin install marketing-performance@marketing-creative
+claude plugin install video-studio@marketing-creative
 claude plugin details marketing-creative
 claude plugin details marketing-performance
 ```
@@ -66,10 +85,11 @@ From a checkout or an extracted plugin archive (`marketing-creative-plugin.zip` 
 ```sh
 agy plugin install /absolute/path/to/marketing-creative/plugins/marketing-creative
 agy plugin install /absolute/path/to/marketing-creative/plugins/marketing-performance
+agy plugin install /absolute/path/to/marketing-creative/plugins/video-studio
 agy plugin list --json
 ```
 
-Inside an interactive Antigravity CLI session, run `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-creative` and `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-performance` (or select *Install from local directory* in the `/plugin` manager). Installed plugins are staged under `~/.gemini/config/plugins/marketing-creative/` and `~/.gemini/config/plugins/marketing-performance/` and synchronized across the Antigravity App, IDE, and CLI; restart if newly installed skills do not appear immediately. When opening the `marketing-creative` repository itself as a workspace in Antigravity, `.agents/plugins.json` automatically registers both plugins and all 17 skills without requiring global installation.
+Inside an interactive Antigravity CLI session, run `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-creative` and `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-performance` (or select *Install from local directory* in the `/plugin` manager). Installed plugins are staged under `~/.gemini/config/plugins/marketing-creative/` and `~/.gemini/config/plugins/marketing-performance/` and synchronized across the Antigravity App, IDE, and CLI; restart if newly installed skills do not appear immediately. When opening the `marketing-creative` repository itself as a workspace in Antigravity, `.agents/plugins.json` automatically registers all three plugins and their 25 skills without requiring global installation.
 
 For clients without plugin support, reference the complete skill tree from the client's instruction file, retaining all sibling skills and third-party/ notices. No global installation or client configuration is changed by this repository.
 
@@ -151,7 +171,7 @@ Keep optional credentials outside this repository, in **`~/.config/marketing-cre
 
 | Credential | Used by | Required when |
 | --- | --- | --- |
-| `ELEVENLABS_API_KEY` | `motion-voice/scripts/voice.py` | Generating narration or a replacement phrase through the ElevenLabs adapter |
+| `ELEVENLABS_API_KEY` | `motion-voice/scripts/voice.py`; the `elevenlabs` CLI used by Video Studio | Generating narration or a replacement phrase. Video Studio's CLI can instead use the key stored by `elevenlabs auth login` in the OS keychain |
 | `GEMINI_API_KEY` | Gemini image, Veo and Omni helpers | Image generation/batches or explicitly approved video generation and job retrieval |
 | `GOOGLE_APPLICATION_CREDENTIALS` | `google-analytics-analyst/scripts/ga4_report.py` | Live GA4 Data API queries using a GCP Service Account JSON key |
 
@@ -318,11 +338,14 @@ python3 -m unittest discover -s tests -v
 python3 scripts/validate_package.py
 claude plugin validate ./plugins/marketing-creative
 claude plugin validate ./plugins/marketing-performance
+claude plugin validate ./plugins/video-studio
 claude plugin validate ./.claude-plugin/marketplace.json
 agy plugin validate ./plugins/marketing-creative
 agy plugin validate ./plugins/marketing-performance
+agy plugin validate ./plugins/video-studio
 python3 scripts/build_plugin.py --output /tmp/marketing-creative-plugin.zip
 python3 scripts/build_plugin.py --plugin marketing-performance --output /tmp/marketing-performance-plugin.zip
+python3 scripts/build_plugin.py --plugin video-studio --output /tmp/video-studio-plugin.zip
 ```
 
 The deterministic ZIP includes only manifests, skill instructions/references, approved scripts/example resources and upstream notices. It excludes samples, local documents, generated video/audio, dependencies and credentials. samples/ and local-docs/ stay local and ignored. Tests do not call paid APIs.
