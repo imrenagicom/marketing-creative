@@ -800,5 +800,79 @@ class ReferenceAnalystTests(unittest.TestCase):
         self.assertIn("No approved", result.stderr)
 
 
+
+BIBLE = SKILLS / "continuity-bible/scripts/bible.py"
+KEYFRAMES = SKILLS / "keyframe-generator/scripts/keyframes.py"
+
+
+class BibleAndKeyframeTests(CinematicFixture):
+    def png(self, name="out.png"):
+        path = Path(self.temp.name) / name
+        path.write_bytes(b"\x89PNG\r\n\x1a\nfake")
+        return path
+
+    def test_check_and_negatives(self):
+        report = json.loads(self.run_script(BIBLE, "check", self.root).stdout)
+        self.assertTrue(any("courier has no reference image" in w for w in report["warnings"]))
+        self.assertEqual(self.run_script(BIBLE, "negatives", self.root).returncode, 0)
+        negatives = self.read("bible")["negatives"]
+        self.assertTrue(any("teal waterproof jacket" in n for n in negatives))
+        self.assertIn("no added text, subtitles, logos or watermarks", negatives)
+
+    def test_reference_images_run_under_the_image_cap(self):
+        self.assertEqual(self.run_script(BIBLE, "sheets", self.root).returncode, 0)
+        refused = self.run_script(BIBLE, "reserve", self.root, "--ref", "courier", "--estimate", 4)
+        self.assertEqual(refused.returncode, 1)
+        self.assertIn("No approved higgsfield-image cap", refused.stderr)
+        ledger.set_cap(self.root, "higgsfield-image", 40, "12 images x ~3 credits")
+        entry = json.loads(self.run_script(BIBLE, "reserve", self.root, "--ref", "courier", "--estimate", 4).stdout)
+        result = self.run_script(BIBLE, "add-image", self.root, "--ref", "courier", "--entry", entry["id"],
+                                 "--file", self.png(), "--job-id", "job-1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        image = self.read("bible")["references"][0]["images"][0]
+        self.assertEqual(image, "bible/images/courier-v1.png")
+        self.assertTrue((self.root / (image + ".json")).is_file())
+        status = ledger.read(self.root)["entries"][-1]
+        self.assertEqual((status["status"], status["job_id"]), ("succeeded", "job-1"))
+        self.assertEqual(self.run_script(BIBLE, "link", self.root, "--ref", "courier", "--element",
+                                         "11111111-2222-4333-8444-555555555555").returncode, 0)
+
+    def test_keyframe_prompts_use_elements_only_on_element_models(self):
+        bible = self.read("bible")
+        bible["references"][0]["higgsfield_element_id"] = "11111111-2222-4333-8444-555555555555"
+        bible["references"][0]["images"] = ["bible/images/courier.png"]
+        self.put("bible", bible)
+        self.assertEqual(self.run_script(KEYFRAMES, "plan", self.root, "--canvas", "16x9").returncode, 0)
+        requests = json.loads((self.root / "keyframes/requests-16x9.json").read_text())["requests"]
+        self.assertEqual(len(requests), 4)
+        self.assertIn("<<<11111111-2222-4333-8444-555555555555>>>", requests[0]["prompt"])
+        self.assertIn("low sun frame left", requests[0]["prompt"])
+        self.assertEqual(requests[0]["aspect_ratio"], "16:9")
+        self.assertEqual(self.run_script(KEYFRAMES, "plan", self.root, "--canvas", "9x16", "--model", "gpt_image_2_5",
+                                         "--ends", "--shot", "S01").returncode, 0)
+        other = json.loads((self.root / "keyframes/requests-9x16.json").read_text())["requests"]
+        self.assertEqual([(r["shot"], r["frame"]) for r in other], [("S01", "start"), ("S01", "end")])
+        self.assertNotIn("<<<", other[0]["prompt"])
+        self.assertEqual(other[0]["medias"], [{"role": "image", "ref": "courier", "asset": "bible/images/courier.png"}])
+
+    def test_record_versions_keyframes_and_failures_stay_counted(self):
+        ledger.set_cap(self.root, "higgsfield-image", 40, "basis")
+        self.run_script(KEYFRAMES, "plan", self.root, "--canvas", "16x9")
+        paths = []
+        for n in range(2):
+            entry = json.loads(self.run_script(KEYFRAMES, "reserve", self.root, "--canvas", "16x9", "--shot", "S01",
+                                               "--estimate", 3).stdout)
+            result = self.run_script(KEYFRAMES, "record", self.root, "--canvas", "16x9", "--shot", "S01",
+                                     "--entry", entry["id"], "--file", self.png(f"k{n}.png"))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            paths.append(json.loads(result.stdout)["keyframe"])
+        self.assertEqual(paths, ["keyframes/16x9/S01-start-v1.png", "keyframes/16x9/S01-start-v2.png"])
+        self.assertEqual(self.read("shots")["shots"][0]["keyframes"]["16x9"]["start"], paths[1])
+        entry = json.loads(self.run_script(KEYFRAMES, "reserve", self.root, "--canvas", "16x9", "--shot", "S02",
+                                           "--estimate", 3).stdout)
+        self.run_script(KEYFRAMES, "fail", self.root, "--entry", entry["id"], "--uncertain")
+        self.assertEqual(ledger.spent(ledger.read(self.root), "higgsfield-image"), 9)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -83,7 +83,7 @@ IDs are short slugs (`B1`, `L03`, `S04`) and never change once downstream files 
 | `motivation` | why this picture appears now — what the narration needs shown |
 | `transition` | into this shot: `cut`, `wipe`, `fade`, `push` |
 | `visual` | graphic shots: `{mode, …}` with mode `title`, `kinetic`, `steps`, `ui-card`, `stat`, `image`, `end-card` |
-| camera fields | camera shots: `framing`, `movement`, `action`, `light_source`, `sound`, `refs[]` (bible ids), `screen_direction` (`left-to-right`, `right-to-left`, `toward-camera`, `away-from-camera`, `neutral`), `keyframes {start, end}` |
+| camera fields | camera shots: `framing`, `movement`, `action`, `light_source`, `sound`, `refs[]` (bible ids), `screen_direction` (`left-to-right`, `right-to-left`, `toward-camera`, `away-from-camera`, `neutral`), `keyframes {canvas: {start, end}}` (written by keyframe-generator) |
 | `duration` | seconds; required for footage shots when there is no narration |
 | `take` | take id; shots sharing a take are consecutive and generated together |
 | `max_take_seconds` | top level; the chosen model's maximum duration (default 15) |

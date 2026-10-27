@@ -1,0 +1,4 @@
+interface:
+  display_name: "Continuity Bible"
+  short_description: "Lock characters, locations, light and camera rules across shots"
+  default_prompt: "Use $continuity-bible to build the continuity bible for my film: characters, location with light sources, props and locks."

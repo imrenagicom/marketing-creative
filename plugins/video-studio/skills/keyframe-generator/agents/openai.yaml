@@ -1,0 +1,4 @@
+interface:
+  display_name: "Keyframe Generator"
+  short_description: "Generate start and end frames under the image budget"
+  default_prompt: "Use $keyframe-generator to plan and generate start frames for my film's shots in 16:9 under the image cap."
