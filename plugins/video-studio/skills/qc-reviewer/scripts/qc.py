@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Automated final checks for a Video Studio render version (stdlib + ffmpeg/ffprobe).
+"""Final checks for render versions and dailies review of generated takes (stdlib + ffmpeg/ffprobe).
 
-Writes qc/report.json and frames for visual review. Automated checks never
-replace watching and listening; the report lists what a person still has to do.
+Writes qc/report.json, dailies review files and frames for visual review.
+Automated checks never replace watching and listening; reports list what a
+person still has to do.
 """
 import argparse
 import json
@@ -14,7 +15,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "studio-producer/scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "editor/scripts"))
 from edit import measure, version_dir, versions  # noqa: E402
-from studio import ContractError, load, require  # noqa: E402
+from studio import ContractError, load, now, require  # noqa: E402
 
 DURATION_TOLERANCE = 0.15
 LOUDNESS_TOLERANCE = 1.0
@@ -71,7 +72,7 @@ def final(root, version=None):
     require(version, "Nothing rendered yet; run the editor first")
     folder = version_dir(root, version)
     manifest = json.loads((folder / "manifest.json").read_text())
-    project, words, shots = load(root, "project"), load(root, "words"), load(root, "shots")
+    project, words, shots = load(root, "project"), load(root, "words", required=False), load(root, "shots")
     formats = {f["id"]: f for f in project["formats"]}
     delivered = {d["canvas"]: d for d in manifest.get("delivery", [])}
     checks = []
@@ -112,8 +113,10 @@ def final(root, version=None):
             subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{at:.3f}", "-i", str(path), "-frames:v", "1",
                             str(frames / f"{shot['id']}.png")], check=True)
         check(canvas, "review frames", True, f"{len(shots['shots'])} frames in {frames.relative_to(root)}")
-    srt = root / "captions" / f"{words['language']}.srt"
-    if srt.is_file():
+    srt = root / "captions" / f"{words['language']}.srt" if words else None
+    if words is None:
+        check("all", "captions", True, "no narration or dialogue timings; captions not required")
+    elif srt.is_file():
         spans = parse_srt(srt)
         covered = spans and spans[0][0] <= words["words"][0]["start"] + 0.05 and spans[-1][1] >= words["words"][-1]["end"] - 0.05
         ordered = all(a[1] <= b[0] + 1e-3 for a, b in zip(spans, spans[1:]))
@@ -127,19 +130,136 @@ def final(root, version=None):
     return report
 
 
+PILLARS = ("face", "outfit", "location", "movement")
+SHOT_TOLERANCE = 0.5
+
+
+def review_path(root, take_id):
+    return Path(root) / "qc" / "dailies" / take_id / "review.json"
+
+
+def dailies(root, take_id):
+    """Frames, a contact sheet and technical checks for one take; pillar verdicts start unreviewed."""
+    root = Path(root)
+    takes, shots, project = load(root, "takes"), load(root, "shots"), load(root, "project")
+    take = next((t for t in takes["takes"] if t["id"] == take_id), None)
+    require(take is not None, f"No take {take_id}")
+    require(take.get("clips"), f"{take_id} has no shot clips yet ({take['status']}); ingest and split it first")
+    canvas = next(f for f in project["formats"] if f["id"] == take["canvas"])
+    by_id = {s["id"]: s for s in shots["shots"]}
+    folder = root / "qc" / "dailies" / take_id
+    folder.mkdir(parents=True, exist_ok=True)
+    review = json.loads(review_path(root, take_id).read_text()) if review_path(root, take_id).exists() else {}
+    frames, entries = [], {}
+    for shot_id in take["shots"]:
+        clip = root / take["clips"][shot_id]
+        info = probe(clip)
+        planned = by_id[shot_id]["end"] - by_id[shot_id]["start"]
+        ratio_ok = abs(info["width"] / info["height"] - canvas["width"] / canvas["height"]) < 0.02
+        checks = {"aspect": ratio_ok, "duration": abs(info["duration"] - planned) <= SHOT_TOLERANCE}
+        shot_frames = []
+        for label, fraction in (("a", 0.1), ("b", 0.5), ("c", 0.9)):
+            target = folder / f"{shot_id}-{label}.png"
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{info['duration'] * fraction:.3f}", "-i", str(clip),
+                            "-frames:v", "1", "-vf", "scale=480:-2", str(target)], check=True)
+            shot_frames.append(target.name)
+            frames.append(target)
+        previous = (review.get("shots") or {}).get(shot_id, {})
+        entries[shot_id] = {"clip": take["clips"][shot_id], "frames": shot_frames,
+                            "measured": {"width": info["width"], "height": info["height"], "duration": info["duration"]},
+                            "planned_duration": round(planned, 3), "checks": checks,
+                            "pillars": previous.get("pillars") or {pillar: {"status": "unreviewed"} for pillar in PILLARS},
+                            "refs": by_id[shot_id].get("refs", [])}
+    listing = folder / "sheet.txt"
+    listing.write_text("".join(f"file '{p.resolve()}'\nduration 1\n" for p in frames))
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(listing), "-vf",
+                    "scale=320:-2,tile=3x%d:padding=4:color=black" % len(take["shots"]), "-frames:v", "1",
+                    str(folder / "sheet.png")], check=True)
+    listing.unlink()
+    bible = load(root, "bible", required=False) or {"references": []}
+    review = {"take": take_id, "canvas": take["canvas"], "split": take.get("split"), "created": review.get("created", now()),
+              "updated": now(), "sheet": "sheet.png", "shots": entries,
+              "reference_images": {ref["id"]: ref.get("images", []) for ref in bible["references"]}}
+    review_path(root, take_id).write_text(json.dumps(review, indent=2) + "\n")
+    return review
+
+
+def verdict(root, take_id, shot_id, pillar, passed, note=""):
+    path = review_path(root, take_id)
+    require(path.exists(), f"Run dailies for {take_id} first")
+    review = json.loads(path.read_text())
+    require(shot_id in review["shots"], f"{take_id} does not cover {shot_id}")
+    require(pillar in PILLARS, f"Pillar must be one of {PILLARS}")
+    require(passed or note.strip(), "A failed pillar needs a note saying what drifted")
+    review["shots"][shot_id]["pillars"][pillar] = {"status": "pass" if passed else "fail", "note": note, "at": now()}
+    review["updated"] = now()
+    path.write_text(json.dumps(review, indent=2) + "\n")
+    return review["shots"][shot_id]["pillars"]
+
+
+def passed(root, take_id, shot_id):
+    """True when every pillar and automated check passed for this shot in this take."""
+    path = review_path(root, take_id)
+    if not path.exists():
+        return False
+    entry = json.loads(path.read_text())["shots"].get(shot_id)
+    return bool(entry) and all(entry["checks"].values()) and all(p["status"] == "pass" for p in entry["pillars"].values())
+
+
+def retakes(root):
+    """Shots whose latest dailies have a failed pillar or check."""
+    root = Path(root)
+    result = []
+    for path in sorted((root / "qc" / "dailies").glob("*/review.json")):
+        review = json.loads(path.read_text())
+        for shot_id, entry in review["shots"].items():
+            failed = [p for p, v in entry["pillars"].items() if v["status"] == "fail"]
+            failed += [c for c, ok in entry["checks"].items() if not ok]
+            if failed:
+                result.append({"take": review["take"], "canvas": review["canvas"], "shot": shot_id, "failed": failed,
+                               "notes": [v.get("note") for v in entry["pillars"].values() if v.get("note")]})
+    return result
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("command", choices=["final"])
-    parser.add_argument("root")
-    parser.add_argument("--version", type=int)
+    sub = parser.add_subparsers(dest="command", required=True)
+    end = sub.add_parser("final", help="Final checks on a render version")
+    end.add_argument("root")
+    end.add_argument("--version", type=int)
+    day = sub.add_parser("dailies", help="Frames, contact sheet and checks for one generated take")
+    day.add_argument("root")
+    day.add_argument("--take", required=True)
+    mark = sub.add_parser("verdict", help="Record a pillar verdict after looking at the frames")
+    mark.add_argument("root")
+    mark.add_argument("--take", required=True)
+    mark.add_argument("--shot", required=True)
+    mark.add_argument("--pillar", required=True, choices=PILLARS + ("all",))
+    group = mark.add_mutually_exclusive_group(required=True)
+    group.add_argument("--pass", dest="passed", action="store_true")
+    group.add_argument("--fail", dest="failed", action="store_true")
+    mark.add_argument("--note", default="")
+    todo = sub.add_parser("retakes", help="List shots that failed dailies")
+    todo.add_argument("root")
     args = parser.parse_args(argv)
     try:
-        report = final(args.root, args.version)
+        if args.command == "final":
+            report = final(args.root, args.version)
+            print(json.dumps(report, indent=2))
+            return 1 if report["failed"] else 0
+        if args.command == "dailies":
+            print(json.dumps(dailies(args.root, args.take), indent=2))
+        elif args.command == "verdict":
+            pillars = PILLARS if args.pillar == "all" else (args.pillar,)
+            for pillar in pillars:
+                result = verdict(args.root, args.take, args.shot, pillar, args.passed, args.note)
+            print(json.dumps(result, indent=2))
+        else:
+            print(json.dumps(retakes(args.root), indent=2))
     except (ContractError, subprocess.CalledProcessError) as error:
         print(f"qc: {error}", file=sys.stderr)
         return 1
-    print(json.dumps(report, indent=2))
-    return 1 if report["failed"] else 0
+    return 0
 
 
 if __name__ == "__main__":

@@ -16,8 +16,10 @@ import sys
 HERE = Path(__file__).resolve()
 sys.path.insert(0, str(HERE.parents[2] / "studio-producer/scripts"))
 sys.path.insert(0, str(HERE.parents[2] / "reference-analyst/scripts"))
+sys.path.insert(0, str(HERE.parents[2] / "qc-reviewer/scripts"))
 import ledger  # noqa: E402
 from analyze import cuts, probe  # noqa: E402
+import qc  # noqa: E402
 from prompting import ASPECT, ELEMENT_MODELS, environment, label, media_refs, refs_for  # noqa: E402
 from studio import (ContractError, load, now, require, validate_bible, validate_lock,  # noqa: E402
                     validate_project, validate_shots, validate_takes, write)
@@ -279,14 +281,19 @@ def ingest(root, take_id, source):
     return split(root, take_id)
 
 
-def select(root, take_id, shot_ids=None):
+def select(root, take_id, shot_ids=None, skip_dailies=None):
     project, _, _, shots, _, takes = inputs(root)
     take = get_take(takes, take_id)
     require(take["status"] == "succeeded", f"{take_id} has no clips yet ({take['status']})")
     chosen = takes.setdefault("selected", {}).setdefault(take["canvas"], {})
     for shot in shot_ids or take["shots"]:
         require(shot in take["shots"], f"{take_id} does not cover {shot}")
+        if not skip_dailies:
+            require(qc.passed(root, take_id, shot), f"{shot} in {take_id} has not passed dailies; run qc.py dailies and "
+                                                     "record verdicts, or pass --skip-dailies with the user's reason")
         chosen[shot] = take_id
+    if skip_dailies:
+        take.setdefault("dailies_skipped", []).append({"shots": shot_ids or take["shots"], "reason": skip_dailies, "at": now()})
     validate_takes(takes, shots, project)
     write(root, "takes", takes)
     return takes["selected"]
@@ -365,6 +372,7 @@ def main(argv=None):
     pick.add_argument("root")
     pick.add_argument("--take", required=True)
     pick.add_argument("--shot", action="append")
+    pick.add_argument("--skip-dailies", metavar="REASON", help="Select without a passed dailies review (record why)")
     again = sub.add_parser("retake", help="Plan a single-shot retake anchored on neighbouring clips")
     again.add_argument("root")
     again.add_argument("--canvas", required=True)
@@ -393,7 +401,7 @@ def main(argv=None):
             take = split(args.root, args.take, times)
             result = {"take": args.take, "status": take["status"], "clips": take.get("clips")}
         elif args.command == "select":
-            result = select(args.root, args.take, args.shot)
+            result = select(args.root, args.take, args.shot, args.skip_dailies)
         else:
             result = {"planned": retake(args.root, args.canvas, args.shot, args.model, args.with_end)}
         print(json.dumps(result, indent=2, ensure_ascii=False))

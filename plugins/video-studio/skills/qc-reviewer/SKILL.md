@@ -1,6 +1,6 @@
 ---
 name: qc-reviewer
-description: Run final quality control on a Video Studio render version — dimensions, frame rate, duration against the shot plan, audio presence, loudness and true peak, black frames, mid-video silence, caption coverage — extract a review frame per shot, and list the human watch-and-listen checks still required. Use whenever a video has been rendered or finished and the user asks whether it is ready, wants a QA pass before publishing, or a delivery may have technical problems. Not for creative critique of direction or script (director, scriptwriter).
+description: Run quality control for Video Studio — dailies review of each generated take against the continuity bible (face, outfit, location, movement) before clips are selected, and final checks on render versions (dimensions, frame rate, duration, audio, loudness, black frames, silence, captions) with the human watch-and-listen checks still required. Use whenever a take comes back from generation, a shot looks off, a video has been rendered or finished, or the user asks whether it is ready to publish. Not for creative critique of direction or script (director, scriptwriter).
 ---
 
 # QC Reviewer
@@ -37,4 +37,17 @@ It also writes one frame per shot midpoint to `qc/frames/v<N>/<canvas>/` for vis
 
 Summarise per canvas: passed, failed, warnings, and what still needs a human. Name the files checked (delivery vs raw render). Do not describe the video as "ready" or "high quality" on the strength of automated checks.
 
-Dailies review of generated footage (continuity of face, outfit, location, movement across takes) belongs to the footage recipes and is not part of this v1 explainer check.
+## Dailies (generated takes)
+
+Every generated take is reviewed before its clips can be selected. Read [dailies.md](references/dailies.md).
+
+```sh
+python3 <this-skill>/scripts/qc.py dailies <project-dir> --take T1-16x9
+python3 <this-skill>/scripts/qc.py verdict <project-dir> --take T1-16x9 --shot S02 --pillar outfit --fail --note "bag on the wrong shoulder"
+python3 <this-skill>/scripts/qc.py verdict <project-dir> --take T1-16x9 --shot S01 --pillar all --pass
+python3 <this-skill>/scripts/qc.py retakes <project-dir>
+```
+
+`dailies` extracts three frames per shot (10%, 50%, 90%), a contact sheet, and checks each clip's aspect ratio and length against the plan; pillar verdicts start as `unreviewed`. Look at the sheet next to the bible's reference images and record a verdict for each pillar — face, outfit, location (including light direction), movement (including screen direction across the cut). A failure needs a note saying what drifted. `retakes` lists every shot with a failed pillar or check for `ai-video-generator retake`.
+
+Record verdicts only for what was actually looked at; if the user reviewed, say so in the note.
