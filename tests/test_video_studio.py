@@ -874,5 +874,104 @@ class BibleAndKeyframeTests(CinematicFixture):
         self.assertEqual(ledger.spent(ledger.read(self.root), "higgsfield-image"), 9)
 
 
+
+TAKES = SKILLS / "ai-video-generator/scripts/takes.py"
+
+
+def solid_video(path, colors, seconds, size="640x360"):
+    inputs = []
+    for color in colors:
+        inputs += ["-f", "lavfi", "-i", f"color=c={color}:s={size}:r=24:d={seconds}"]
+    subprocess.run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex",
+                    "".join(f"[{i}]" for i in range(len(colors))) + f"concat=n={len(colors)}:v=1:a=0[v]",
+                    "-map", "[v]", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(path)], check=True)
+    return path
+
+
+class TakePlanTests(CinematicFixture):
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.run_script(SHOTS, "time", self.root).returncode, 0)
+        self.assertEqual(self.run_script(BIBLE, "negatives", self.root).returncode, 0)
+
+    def takes(self, *args):
+        result = self.run_script(TAKES, *args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_plan_compiles_timed_multi_shot_prompts(self):
+        planned = self.takes("plan", self.root, "--canvas", "16x9")
+        self.assertEqual(planned["planned"], ["T1-16x9", "T2-16x9"])
+        request = self.takes("show", self.root, "--take", "T2-16x9")
+        self.assertEqual((request["duration"], request["aspect_ratio"], request["model"]), (7, "16:9", "seedance_2_5"))
+        prompt = request["prompt"]
+        for fragment in ("REFERENCE ROLES:", "00:00–00:03.50 — S03", "00:03.50–00:07 — S04", "slow crane up following the drone",
+                         "PERFORMANCE:", "AUDIO: music: none", "AVOID:"):
+            self.assertIn(fragment, prompt)
+        self.assertNotIn("Maintain screen direction", prompt)  # both T2 shots are neutral
+
+    def test_replanning_a_draft_updates_it_and_keyframes_become_start_images(self):
+        self.takes("plan", self.root, "--canvas", "16x9")
+        shots = self.read("shots")
+        shots["shots"][0]["keyframes"] = {"16x9": {"start": "keyframes/16x9/S01-start-v1.png"}}
+        self.put("shots", shots)
+        self.takes("plan", self.root, "--canvas", "16x9", "--take", "T1")
+        takes = self.read("takes")["takes"]
+        self.assertEqual([t["id"] for t in takes], ["T1-16x9", "T2-16x9"])
+        self.assertEqual(takes[0]["request"]["medias"][0], {"role": "start_image", "asset": "keyframes/16x9/S01-start-v1.png"})
+
+    def test_submission_requires_approval_of_the_unchanged_request(self):
+        self.takes("plan", self.root, "--canvas", "16x9")
+        refused = self.run_script(TAKES, "submit", self.root, "--take", "T1-16x9")
+        self.assertEqual(refused.returncode, 1)
+        self.assertIn("not approved", refused.stderr)
+        self.takes("approve", self.root, "--take", "T1-16x9", "--estimate", 60)
+        takes = self.read("takes")
+        takes["takes"][0]["request"]["duration"] = 8
+        self.put("takes", takes)
+        changed = self.run_script(TAKES, "submit", self.root, "--take", "T1-16x9")
+        self.assertEqual(changed.returncode, 1)
+        self.assertIn("changed after approval", changed.stderr)
+        takes["takes"][0]["request"]["duration"] = 6
+        self.put("takes", takes)
+        request = self.takes("submit", self.root, "--take", "T1-16x9")
+        self.assertEqual(request["duration"], 6)
+        self.takes("job", self.root, "--take", "T1-16x9", "--job-id", "job-42")
+        entry = next(e for e in ledger.read(self.root)["entries"] if e["provider"] == "higgsfield-video")
+        self.assertEqual((entry["status"], entry["job_id"], entry["estimate"]), ("submitted", "job-42", 60))
+        again = self.run_script(TAKES, "submit", self.root, "--take", "T1-16x9")
+        self.assertEqual(again.returncode, 1)
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "ffmpeg needed to split takes")
+    def test_ingest_splits_on_matching_cuts_and_flags_mismatches(self):
+        self.takes("plan", self.root, "--canvas", "16x9")
+        for take in ("T1-16x9", "T2-16x9"):
+            self.takes("approve", self.root, "--take", take, "--estimate", 50)
+            self.takes("submit", self.root, "--take", take)
+        good = solid_video(Path(self.temp.name) / "t1.mp4", ["black", "white"], 3)
+        result = self.takes("ingest", self.root, "--take", "T1-16x9", "--file", good)
+        self.assertEqual(result["status"], "succeeded")
+        self.assertEqual(sorted(result["clips"]), ["S01", "S02"])
+        self.assertTrue((self.root / result["clips"]["S02"]).is_file())
+        bad = solid_video(Path(self.temp.name) / "t2.mp4", ["black"], 7)
+        flagged = self.takes("ingest", self.root, "--take", "T2-16x9", "--file", bad)
+        self.assertEqual(flagged["status"], "needs-split")
+        self.assertIsNone(flagged["clips"])
+        fixed = self.takes("split", self.root, "--take", "T2-16x9", "--at", "3.5")
+        self.assertEqual(fixed["status"], "succeeded")
+        self.takes("select", self.root, "--take", "T1-16x9")
+        self.takes("select", self.root, "--take", "T2-16x9")
+        studio.validate(self.root)
+        retake = self.takes("retake", self.root, "--canvas", "16x9", "--shot", "S03", "--with-end")["planned"]
+        take = next(t for t in self.read("takes")["takes"] if t["id"] == retake)
+        roles = [m["role"] for m in take["request"]["medias"]]
+        self.assertEqual((roles[0], roles[-1], take["duration"], take["retake_of"]), ("start_image", "end_image", 4, "T2-16x9"))
+        self.assertTrue((self.root / take["request"]["medias"][0]["asset"]).is_file())
+        self.assertIn("CONTINUITY", take["request"]["prompt"])
+        sel = self.run_script(TAKES, "select", self.root, "--take", retake)
+        self.assertEqual(sel.returncode, 1)
+        self.assertIn("no clips", sel.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

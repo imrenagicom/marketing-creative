@@ -24,6 +24,13 @@ def subject(ref, model):
     return f"{ref['name']} ({'; '.join(ref['preserve'])})"
 
 
+def label(ref, model):
+    """The reference's name, or its element placeholder when the model supports elements."""
+    if ref.get("higgsfield_element_id") and model in ELEMENT_MODELS:
+        return f"<<<{ref['higgsfield_element_id']}>>> ({ref['name']})"
+    return ref["name"]
+
+
 def media_refs(refs, model):
     """Reference images to attach when the model cannot use element placeholders.
 

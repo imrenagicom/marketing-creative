@@ -26,7 +26,7 @@ SHOT_KINDS = {"graphic", "camera"}
 TRANSITIONS = {"cut", "wipe", "fade", "push"}
 SCREEN_DIRECTIONS = {"left-to-right", "right-to-left", "toward-camera", "away-from-camera", "neutral"}
 REFERENCE_ROLES = {"character", "environment", "prop", "vehicle", "style"}
-TAKE_STATUSES = {"draft", "approved", "submitted", "succeeded", "failed", "unknown", "selected", "rejected"}
+TAKE_STATUSES = {"draft", "approved", "submitted", "succeeded", "needs-split", "failed", "unknown", "rejected"}
 FILES = {
     "project": "project.json",
     "lock": "direction/lock.json",
@@ -279,7 +279,6 @@ def validate_takes(takes, shots, project):
     unique_ids(items, "take")
     order = [shot["id"] for shot in shots["shots"]]
     canvases = {f["id"] for f in project["formats"]}
-    claimed = set()
     for take in items:
         label = f"Take {take['id']}"
         require(take.get("canvas") in canvases, f"{label} canvas must be one of the project formats")
@@ -289,12 +288,18 @@ def validate_takes(takes, shots, project):
         require(positions == list(range(positions[0], positions[0] + len(positions))),
                 f"{label} shots must be consecutive in screen order")
         require(take.get("status") in TAKE_STATUSES, f"{label} has unknown status")
-        if take["status"] in {"submitted", "succeeded", "unknown", "selected"}:
+        if take["status"] in {"submitted", "succeeded", "needs-split", "unknown"}:
             require((take.get("approval") or {}).get("fingerprint"), f"{label} was submitted without a recorded approval")
-        if take["status"] == "selected":
-            for shot in members:
-                require((take["canvas"], shot) not in claimed, f"Shot {shot} has two selected takes for {take['canvas']}")
-                claimed.add((take["canvas"], shot))
+    by_id = {take["id"]: take for take in items}
+    # One selected clip per shot and canvas; a single-shot retake can replace one shot of a longer take.
+    for canvas, chosen in (takes.get("selected") or {}).items():
+        require(canvas in canvases, f"Selection for unknown canvas {canvas}")
+        for shot, take_id in chosen.items():
+            take = by_id.get(take_id)
+            require(take is not None and take["canvas"] == canvas and shot in take["shots"],
+                    f"Selected take {take_id} does not cover {shot} on {canvas}")
+            require(take["status"] == "succeeded" and shot in (take.get("clips") or {}),
+                    f"Selected take {take_id} has no clip for {shot}")
 
 
 def validate(root):

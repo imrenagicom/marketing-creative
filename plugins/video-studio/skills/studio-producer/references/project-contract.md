@@ -106,10 +106,9 @@ IDs are short slugs (`B1`, `L03`, `S04`) and never change once downstream files 
 | --- | --- |
 | `takes[]` | `{id, canvas, shots[], provider, model, duration, aspect_ratio, prompt, medias[], approval, job_id, status, output, clips{shot: path}}` |
 | `shots[]` | consecutive shots in screen order |
-| `status` | `draft`, `approved`, `submitted`, `succeeded`, `failed`, `unknown`, `selected`, `rejected` |
+| `status` | `draft`, `approved`, `submitted`, `succeeded`, `needs-split`, `failed`, `unknown`, `rejected` |
 | `approval` | `{fingerprint, ledger_entry, estimate}`; required before submission |
-
-Only one selected take may cover a shot on a canvas.
+| `selected` | top level `{canvas: {shot: take_id}}` — the clip used for each shot; a single-shot retake can replace one shot of a longer take |
 
 ## sound/cues.json — `video-studio/sound@1`
 
