@@ -78,6 +78,11 @@ class ReleaseTests(unittest.TestCase):
                 for resource in ("SKILL.md", "agents/openai.yaml", "scripts/studio.py", "scripts/ledger.py",
                                  "references/project-contract.md", "assets/example-project/project.json"):
                     self.assertIn(f"skills/studio-producer/{resource}", names)
+                for skill in ("director", "scriptwriter", "voice-director", "shot-designer", "motion-designer",
+                              "editor", "qc-reviewer"):
+                    self.assertIn(f"skills/{skill}/SKILL.md", names)
+                self.assertIn("skills/motion-designer/scripts/compose.mjs", names)
+                self.assertIn("skills/voice-director/assets/voice-config.example.json", names)
                 self.assertNotIn("skills/marketing-video/SKILL.md", names)
                 self.assertNotIn("skills/marketing-brief/SKILL.md", names)
                 for manifest in ("plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json"):

@@ -551,5 +551,108 @@ class MotionDesignerTests(ProjectFixture):
         self.assertIn('Keyword "best ideas"', result.stderr)
 
 
+EDIT = SKILLS / "editor/scripts/edit.py"
+QC = SKILLS / "qc-reviewer/scripts/qc.py"
+sys.path.insert(0, str(EDIT.parent))
+import edit  # noqa: E402
+
+FAKE_HYPERFRAMES = '''#!{python}
+import json, subprocess, sys
+out = sys.argv[sys.argv.index("-o") + 1]
+build = json.load(open("build.json"))
+size = "%dx%d" % (build["width"], build["height"])
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=0x1A1D24:s=%s:r=30:d=%s" % (size, build["duration"]),
+                "-f", "lavfi", "-i", "sine=f=330:d=%s" % build["duration"], "-af", "volume=-12dB",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", out], check=True)
+'''
+
+
+class CaptionTests(unittest.TestCase):
+    def words(self):
+        return json.loads((EXAMPLE / "voice/words.json").read_text())["words"]
+
+    def test_cues_follow_lines_and_wrap_to_two_lines(self):
+        cues = edit.cues(self.words(), "en")
+        self.assertEqual(len(cues), 6)
+        self.assertEqual(cues[0]["text"], "Still losing your best\nideas in random chats?")
+        for cue in cues:
+            self.assertLessEqual(len(cue["text"].split("\n")), 2)
+            self.assertTrue(all(len(part) <= 42 for part in cue["text"].split("\n")))
+        for before, after in zip(cues, cues[1:]):
+            self.assertLessEqual(before["end"], after["start"])
+
+    def test_indonesian_lines_are_shorter_and_stamps_are_formatted(self):
+        words = [{"text": t, "start": i * 0.4, "end": i * 0.4 + 0.3, "line": "L01"}
+                 for i, t in enumerate("Simpan video ini supaya kamu nggak lupa langkah pentingnya nanti".split())]
+        cue = edit.cues(words, "id")[0]
+        self.assertTrue(all(len(part) <= 38 for part in cue["text"].split("\n")))
+        self.assertEqual(edit.stamp(3725.5, ","), "01:02:05,500")
+
+
+@unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "ffmpeg needed for render and QC tests")
+class EditorAndQcTests(ProjectFixture):
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.run_script(SHOTS, "time", self.root).returncode, 0)
+        shots = self.read("shots")["shots"]
+        project = self.read("project")
+        for fmt in project["formats"]:
+            folder = self.root / "compositions" / fmt["id"]
+            folder.mkdir(parents=True)
+            (folder / "index.html").write_text("<!doctype html>")
+            (folder / "build.json").write_text(json.dumps({"width": fmt["width"], "height": fmt["height"],
+                                                           "duration": shots[-1]["end"], "inputHashes": {}, "localGsap": True}))
+        fake = Path(self.temp.name) / "hyperframes"
+        fake.write_text(FAKE_HYPERFRAMES.format(python=sys.executable))
+        fake.chmod(0o755)
+        import os
+        previous = os.environ.get("VIDEO_STUDIO_HYPERFRAMES")
+        os.environ["VIDEO_STUDIO_HYPERFRAMES"] = str(fake)
+        self.addCleanup(lambda: os.environ.pop("VIDEO_STUDIO_HYPERFRAMES") if previous is None
+                        else os.environ.__setitem__("VIDEO_STUDIO_HYPERFRAMES", previous))
+
+    def test_renders_are_versioned_and_never_overwritten(self):
+        first = self.run_script(EDIT, "render", self.root, "--canvas", "9x16")
+        self.assertEqual(first.returncode, 0, first.stderr)
+        second = self.run_script(EDIT, "render", self.root, "--canvas", "9x16")
+        self.assertEqual(second.returncode, 0, second.stderr)
+        self.assertTrue((self.root / "renders/v1/9x16.mp4").is_file())
+        manifest = json.loads((self.root / "renders/v2/manifest.json").read_text())
+        self.assertEqual([r["canvas"] for r in manifest["renders"]], ["9x16"])
+        self.assertEqual(len(manifest["renders"][0]["sha256"]), 64)
+
+    def test_finish_normalizes_and_qc_passes_then_catches_problems(self):
+        self.assertEqual(self.run_script(EDIT, "render", self.root).returncode, 0)
+        self.assertEqual(self.run_script(EDIT, "captions", self.root).returncode, 0)
+        finished = self.run_script(EDIT, "finish", self.root)
+        self.assertEqual(finished.returncode, 0, finished.stderr)
+        for item in json.loads(finished.stdout):
+            self.assertAlmostEqual(item["measured_lufs"], -14.0, delta=1.0)
+        result = self.run_script(QC, "final", self.root)
+        report = json.loads(result.stdout)
+        self.assertEqual((result.returncode, report["failed"], report["warnings"]), (0, 0, 0), result.stdout)
+        self.assertTrue((self.root / "qc/frames/v1/9x16/S04.png").is_file())
+        self.assertIn("Watch every canvas start to finish with sound", report["manual_checks_remaining"])
+        project = self.read("project")
+        project["formats"][0]["height"] = 1350
+        self.put("project", project)
+        (self.root / "captions/en.srt").unlink()
+        broken = json.loads(self.run_script(QC, "final", self.root).stdout)
+        statuses = {(c["canvas"], c["check"]): c["status"] for c in broken["checks"]}
+        self.assertEqual(statuses[("9x16", "dimensions")], "fail")
+        self.assertEqual(statuses[("all", "captions")], "warn")
+
+    def test_burn_in_requires_captions_and_render_requires_builds(self):
+        self.assertEqual(self.run_script(EDIT, "render", self.root, "--canvas", "1x1").returncode, 1)
+        self.assertEqual(self.run_script(EDIT, "render", self.root, "--canvas", "16x9").returncode, 0)
+        burned = self.run_script(EDIT, "finish", self.root, "--burn-captions")
+        self.assertEqual(burned.returncode, 1)
+        self.assertIn("captions", burned.stderr)
+        shutil.rmtree(self.root / "compositions/9x16")
+        missing = self.run_script(EDIT, "render", self.root, "--canvas", "9x16")
+        self.assertEqual(missing.returncode, 1)
+        self.assertIn("has not been built", missing.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

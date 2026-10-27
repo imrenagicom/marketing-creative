@@ -1,0 +1,4 @@
+interface:
+  display_name: "QC Reviewer"
+  short_description: "Check renders before publishing and list human checks"
+  default_prompt: "Use $qc-reviewer to run final QC on my latest render and tell me what still needs a human check."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Editor"
+  short_description: "Render versioned videos, captions and loudness-finished deliveries"
+  default_prompt: "Use $editor to render my compositions, write captions and finish the deliveries for social at -14 LUFS."
