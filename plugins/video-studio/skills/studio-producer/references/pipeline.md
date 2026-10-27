@@ -1,6 +1,10 @@
 # Pipeline and handoffs
 
-## Stage order
+## Recipes
+
+The explainer recipe (below) is narration-first. The cinematic recipe is continuity-first: direction → bible → shots → keyframes → takes → dailies → sound → assembly; see [recipe-cinematic.md](recipe-cinematic.md). `studio.py status` follows the project's recipe.
+
+## Stage order (explainer)
 
 Audio comes before pictures: the narration's word timestamps decide how long every shot lasts and when each on-screen keyword appears. Building visuals first and stretching audio to fit produces rushed or padded delivery.
 

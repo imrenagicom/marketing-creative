@@ -654,5 +654,99 @@ class EditorAndQcTests(ProjectFixture):
         self.assertIn("has not been built", missing.stderr)
 
 
+
+CINEMATIC = SKILLS / "studio-producer/assets/example-cinematic"
+
+
+class CinematicFixture(ProjectFixture):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve() / "film"
+        shutil.copytree(CINEMATIC, self.root)
+        studio.write(self.root, "ledger", ledger.empty())
+
+
+class CinematicContractTests(CinematicFixture):
+    def test_status_follows_the_cinematic_recipe_without_a_script(self):
+        report = studio.validate(self.root)
+        self.assertIn("bible/bible.json", report["valid"])
+        self.assertEqual(report["next"], {"stage": "takes", "skill": "ai-video-generator"})
+
+    def test_bible_needs_preserve_lists_and_environment_light(self):
+        bible = self.read("bible")
+        bible["references"][1]["light_sources"] = []
+        self.put("bible", bible)
+        with self.assertRaisesRegex(studio.ContractError, "light source"):
+            studio.validate(self.root)
+        bible["references"][1]["light_sources"] = ["sun"]
+        bible["references"][0]["preserve"] = []
+        self.put("bible", bible)
+        with self.assertRaisesRegex(studio.ContractError, "preserve"):
+            studio.validate(self.root)
+
+    def test_shots_must_use_known_refs_and_consecutive_takes(self):
+        shots = self.read("shots")
+        shots["shots"][0]["refs"] = ["ghost"]
+        self.put("shots", shots)
+        with self.assertRaisesRegex(studio.ContractError, "unknown bible entry"):
+            studio.validate(self.root)
+        shots["shots"][0]["refs"] = ["courier"]
+        shots["shots"][2]["take"] = "T1"
+        shots["shots"][1]["take"] = "T2"
+        self.put("shots", shots)
+        with self.assertRaisesRegex(studio.ContractError, "not consecutive"):
+            studio.validate(self.root)
+
+    def test_time_uses_durations_without_narration(self):
+        result = self.run_script(SHOTS, "time", self.root)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        shots = self.read("shots")["shots"]
+        self.assertEqual([(s["start"], s["end"]) for s in shots], [(0.0, 3.0), (3.0, 6.0), (6.0, 9.5), (9.5, 13.0)])
+        report = json.loads(self.run_script(SHOTS, "lint", self.root).stdout)
+        self.assertEqual(report["errors"], [])
+
+    def test_lint_flags_long_takes_flips_and_missing_environment(self):
+        shots = self.read("shots")
+        shots["max_take_seconds"] = 5
+        shots["shots"][1]["screen_direction"] = "right-to-left"
+        shots["shots"][1]["refs"] = ["courier", "drone"]
+        del shots["shots"][3]["duration"]
+        self.put("shots", shots)
+        report = json.loads(self.run_script(SHOTS, "lint", self.root).stdout)
+        errors, warnings = " | ".join(report["errors"]), " | ".join(report["warnings"])
+        self.assertIn("Take T1 runs 6.0s", errors)
+        self.assertIn("S04 needs a duration", errors)
+        self.assertIn("Screen direction flips between S01 and S02", warnings)
+        self.assertIn("S02 has no environment reference", warnings)
+
+
+class RequestApprovalTests(CinematicFixture):
+    request = {"model": "seedance_2_5", "prompt": "A courier sprints", "duration": 6, "aspect_ratio": "16:9"}
+
+    def test_submission_needs_an_approval_of_the_exact_request(self):
+        with self.assertRaisesRegex(studio.ContractError, "No approval matches"):
+            ledger.consume_approval(self.root, "higgsfield-video", self.request)
+        ledger.approve(self.root, "higgsfield-video", "generate_video", self.request, 120)
+        changed = dict(self.request, duration=8)
+        with self.assertRaisesRegex(studio.ContractError, "No approval matches"):
+            ledger.consume_approval(self.root, "higgsfield-video", changed)
+        entry = ledger.consume_approval(self.root, "higgsfield-video", self.request)
+        self.assertEqual(entry["status"], "submitted")
+        self.assertEqual(ledger.spent(ledger.read(self.root), "higgsfield-video"), 120)
+        with self.assertRaisesRegex(studio.ContractError, "No approval matches"):
+            ledger.consume_approval(self.root, "higgsfield-video", self.request)
+
+    def test_per_request_and_capped_providers_stay_separate(self):
+        with self.assertRaises(studio.ContractError):
+            ledger.approve(self.root, "elevenlabs", "tts", self.request, 10)
+        request_file = Path(self.temp.name) / "request.json"
+        request_file.write_text(json.dumps(self.request))
+        result = self.run_script(PRODUCER / "ledger.py", "approve", self.root, "--provider", "higgsfield-video",
+                                 "--operation", "generate_video", "--request", request_file, "--estimate", 90)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIsNotNone(ledger.find_approval(ledger.read(self.root), "higgsfield-video", self.request))
+
+
 if __name__ == "__main__":
     unittest.main()

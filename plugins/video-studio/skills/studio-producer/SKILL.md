@@ -1,6 +1,6 @@
 ---
 name: studio-producer
-description: Start, resume or route a Video Studio production — explainer videos, animated explainers, product walkthrough explainers and narrated motion-graphics videos in English or Indonesian. Use whenever the user wants to make a video, continue a video project, check what stage a video is at, set a production budget, or hands over a brief, direction, script or narration and wants the rest produced. Owns the project files, pipeline order, language choice and paid-call budgets; the other Video Studio skills do the craft work.
+description: Start, resume or route a Video Studio production — explainer videos, narrated motion-graphics videos, and cinematic short films or story-led ads made from AI-generated footage, in English or Indonesian. Use whenever the user wants to make a video, continue a video project, check what stage a video is at, set a production budget, or hands over a brief, direction, script or narration and wants the rest produced. Owns the project files, pipeline order, language choice and paid-call budgets; the other Video Studio skills do the craft work.
 ---
 
 # Studio Producer
@@ -34,12 +34,15 @@ direction → script → voice + word timestamps → shots timed to audio → mo
 | Edit | `editor` | renders, captions, loudness-normalized deliveries |
 | QC | `qc-reviewer` | `qc/report.json` |
 
-Supplied material enters at its stage: a supplied script skips direction only if the user confirms the direction it implies; supplied narration with a transcript skips voicing and goes to alignment. The [explainer recipe](references/recipe-explainer.md) gives the defaults for this genre. Other genres (cinematic, UGC, music video) are planned; say so rather than improvising a pipeline for them.
+Supplied material enters at its stage: a supplied script skips direction only if the user confirms the direction it implies; supplied narration with a transcript skips voicing and goes to alignment. The [explainer recipe](references/recipe-explainer.md) gives the defaults for this genre.
+
+For films and story-led ads made from AI footage, use `--recipe cinematic` and follow [recipe-cinematic.md](references/recipe-cinematic.md): direction → continuity bible → camera shots → keyframes → approved takes → dailies → sound → assembly. UGC and music-video recipes are not built yet; say so rather than improvising one.
 
 ## Budgets and paid calls
 
 Read [cost-and-approval.md](references/cost-and-approval.md) before any paid call is planned. In short:
 
+- **Higgsfield images** (keyframes, references) run under their own per-project cap (`--provider higgsfield-image`). **Higgsfield video, reframe and upscale** need approval of each exact request (`ledger.py approve`), never a cap.
 - **ElevenLabs** runs under a per-project credit cap the user approves once. Propose the cap with its basis (script characters × allowed takes, plus any sound/music seconds), wait for a clear yes, then record it:
 
   ```sh

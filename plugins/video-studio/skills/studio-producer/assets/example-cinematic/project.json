@@ -1,0 +1,21 @@
+{
+  "schema": "video-studio/project@1",
+  "id": "rooftop-courier",
+  "title": "Rooftop courier",
+  "recipe": "cinematic",
+  "language": null,
+  "formats": [
+    {
+      "id": "16x9",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "id": "9x16",
+      "width": 1080,
+      "height": 1920
+    }
+  ],
+  "fps": 24,
+  "created": "2026-10-27T00:00:00+00:00"
+}

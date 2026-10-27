@@ -1,0 +1,73 @@
+{
+  "schema": "video-studio/bible@1",
+  "references": [
+    {
+      "id": "courier",
+      "role": "character",
+      "character": "courier",
+      "name": "Courier",
+      "description": "Woman in her twenties, athletic build, short black bob, teal waterproof jacket, black cargo trousers, white trainers, grey messenger bag.",
+      "preserve": [
+        "short black bob",
+        "teal waterproof jacket",
+        "grey messenger bag on left shoulder",
+        "white trainers"
+      ],
+      "images": []
+    },
+    {
+      "id": "rooftop",
+      "role": "environment",
+      "name": "Dusk rooftop",
+      "description": "Flat gravel rooftop with ventilation boxes, a water tower at the far edge and a city skyline behind.",
+      "preserve": [
+        "water tower at the far left edge",
+        "gravel surface",
+        "three grey vent boxes"
+      ],
+      "light_sources": [
+        "low setting sun from frame left, warm orange",
+        "magenta neon sign glow from the neighbouring building, frame right"
+      ],
+      "images": []
+    },
+    {
+      "id": "drone",
+      "role": "prop",
+      "name": "Delivery drone",
+      "description": "Matte white quadcopter with a yellow cargo clamp underneath and four green status lights.",
+      "preserve": [
+        "matte white body",
+        "yellow cargo clamp",
+        "four green status lights"
+      ],
+      "images": []
+    }
+  ],
+  "locks": [
+    {
+      "kind": "identity",
+      "text": "The courier never changes face, hair or outfit."
+    },
+    {
+      "kind": "screen-direction",
+      "text": "The courier runs left-to-right throughout the chase."
+    },
+    {
+      "kind": "geography",
+      "text": "The water tower stays on the far left; the sun stays frame left."
+    }
+  ],
+  "capture": {
+    "look": "handheld 35mm digital cinema, natural grain, shallow depth of field",
+    "motion_rules": [
+      "camera moves are caused by following the courier or the drone",
+      "no random rotations or teleporting moves"
+    ]
+  },
+  "audio_policy": {
+    "music": "none",
+    "dialogue": "none",
+    "sfx": "diegetic only"
+  }
+}

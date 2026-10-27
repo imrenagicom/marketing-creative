@@ -14,7 +14,7 @@ import sys
 
 LANGUAGES = {"en", "id"}
 REGISTERS = {"id": {"casual", "friendly", "formal"}, "en": {"casual", "conversational", "formal"}}
-RECIPES = {"explainer"}
+RECIPES = {"explainer", "cinematic"}
 FORMATS = {
     "16x9": (1920, 1080),
     "9x16": (1080, 1920),
@@ -24,6 +24,9 @@ FORMATS = {
 VISUAL_MODES = {"title", "kinetic", "steps", "ui-card", "stat", "image", "end-card"}
 SHOT_KINDS = {"graphic", "camera"}
 TRANSITIONS = {"cut", "wipe", "fade", "push"}
+SCREEN_DIRECTIONS = {"left-to-right", "right-to-left", "toward-camera", "away-from-camera", "neutral"}
+REFERENCE_ROLES = {"character", "environment", "prop", "vehicle", "style"}
+TAKE_STATUSES = {"draft", "approved", "submitted", "succeeded", "failed", "unknown", "selected", "rejected"}
 FILES = {
     "project": "project.json",
     "lock": "direction/lock.json",
@@ -31,15 +34,30 @@ FILES = {
     "voice_config": "voice/voice-config.json",
     "words": "voice/words.json",
     "shots": "shots/shots.json",
+    "bible": "bible/bible.json",
+    "takes": "takes/takes.json",
+    "sound": "sound/cues.json",
     "style": "style.json",
     "ledger": "ledger.json",
 }
-STAGES = (
-    ("direction", "lock", "director"),
-    ("script", "script", "scriptwriter"),
-    ("voice", "words", "voice-director"),
-    ("shots", "shots", "shot-designer"),
-)
+STAGES = {
+    "explainer": (
+        ("direction", "lock", "director"),
+        ("script", "script", "scriptwriter"),
+        ("voice", "words", "voice-director"),
+        ("shots", "shots", "shot-designer"),
+    ),
+    # Footage recipes: narration is optional (dialogue or voice-over may be added),
+    # so the continuity bible and shot plan drive timing instead.
+    "cinematic": (
+        ("direction", "lock", "director"),
+        ("bible", "bible", "continuity-bible"),
+        ("shots", "shots", "shot-designer"),
+        ("takes", "takes", "ai-video-generator"),
+    ),
+}
+NEXT_AFTER = {"explainer": {"stage": "compose", "skill": "motion-designer"},
+              "cinematic": {"stage": "sound", "skill": "sound-designer"}}
 ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 
 
@@ -183,13 +201,37 @@ def validate_words(words, script):
         previous = start
 
 
-def validate_shots(shots, script, lock, words=None):
+def validate_bible(bible, lock):
+    schema(bible, "bible")
+    references = bible.get("references")
+    require(isinstance(references, list) and references, "bible needs references")
+    unique_ids(references, "reference")
+    characters = {character["id"] for character in lock["characters"]}
+    for ref in references:
+        label = f"Reference {ref['id']}"
+        require(ref.get("role") in REFERENCE_ROLES, f"{label} role must be one of {sorted(REFERENCE_ROLES)}")
+        require(text(ref.get("name")) and text(ref.get("description")), f"{label} needs name and description")
+        require(isinstance(ref.get("preserve"), list) and ref["preserve"], f"{label} needs a preserve list of features that must not change")
+        require(isinstance(ref.get("images", []), list), f"{label} images must be a list of project-relative paths")
+        if ref["role"] == "environment":
+            require(ref.get("light_sources"), f"{label} needs at least one visible, motivated light source")
+        if ref["role"] == "character" and ref.get("character"):
+            require(ref["character"] in characters, f"{label} links unknown character {ref['character']!r}")
+    for lock_item in bible.get("locks", []):
+        require(lock_item.get("kind") in {"position", "identity", "screen-direction", "wardrobe", "geography", "period"}
+                and text(lock_item.get("text")), "Each bible lock needs a known kind and text")
+    capture = bible.get("capture") or {}
+    require(text(capture.get("look")), "bible.capture.look is required (the declared camera/device look)")
+
+
+def validate_shots(shots, script, lock, words=None, bible=None):
     schema(shots, "shots")
     items = shots.get("shots")
     require(isinstance(items, list) and items, "shots needs at least one shot")
     unique_ids(items, "shot")
     beats = {beat["id"] for beat in lock["beats"]}
-    lines = {line["id"] for line in script["lines"]}
+    lines = {line["id"] for line in script["lines"]} if script else set()
+    refs = {ref["id"] for ref in bible["references"]} if bible else None
     covered = []
     for shot in items:
         require(shot.get("kind") in SHOT_KINDS, f"Shot {shot['id']} kind must be graphic or camera")
@@ -202,10 +244,25 @@ def validate_shots(shots, script, lock, words=None):
         if shot["kind"] == "graphic":
             require((shot.get("visual") or {}).get("mode") in VISUAL_MODES,
                     f"Shot {shot['id']} visual.mode must be one of {sorted(VISUAL_MODES)}")
+        else:
+            for ref in shot.get("refs", []):
+                require(refs is None or ref in refs, f"Shot {shot['id']} references unknown bible entry {ref!r}")
+            require(shot.get("screen_direction", "neutral") in SCREEN_DIRECTIONS,
+                    f"Shot {shot['id']} screen_direction must be one of {sorted(SCREEN_DIRECTIONS)}")
+        if "duration" in shot:
+            require(isinstance(shot["duration"], (int, float)) and shot["duration"] > 0, f"Shot {shot['id']} duration must be positive")
+        if "take" in shot:
+            require(isinstance(shot["take"], str) and ID.match(shot["take"]), f"Shot {shot['id']} take must be an id")
         if "start" in shot or "end" in shot:
             require(isinstance(shot.get("start"), (int, float)) and isinstance(shot.get("end"), (int, float))
                     and shot["start"] < shot["end"], f"Shot {shot['id']} has invalid start/end")
     require(len(covered) == len(set(covered)), "A script line is assigned to more than one shot")
+    order = [shot.get("take") for shot in items if shot.get("take")]
+    seen = []
+    for take in order:
+        if not seen or seen[-1] != take:
+            require(take not in seen, f"Take {take} groups shots that are not consecutive")
+            seen.append(take)
     timed = [shot for shot in items if "start" in shot]
     if timed:
         require(len(timed) == len(items), "Either every shot is timed or none are")
@@ -215,17 +272,41 @@ def validate_shots(shots, script, lock, words=None):
             require(items[-1]["end"] >= words["duration"] - 0.05, "Shots end before the narration does")
 
 
+def validate_takes(takes, shots, project):
+    schema(takes, "takes")
+    items = takes.get("takes")
+    require(isinstance(items, list), "takes needs a takes list")
+    unique_ids(items, "take")
+    order = [shot["id"] for shot in shots["shots"]]
+    canvases = {f["id"] for f in project["formats"]}
+    claimed = set()
+    for take in items:
+        label = f"Take {take['id']}"
+        require(take.get("canvas") in canvases, f"{label} canvas must be one of the project formats")
+        members = take.get("shots") or []
+        require(members and all(shot in order for shot in members), f"{label} must list existing shots")
+        positions = [order.index(shot) for shot in members]
+        require(positions == list(range(positions[0], positions[0] + len(positions))),
+                f"{label} shots must be consecutive in screen order")
+        require(take.get("status") in TAKE_STATUSES, f"{label} has unknown status")
+        if take["status"] in {"submitted", "succeeded", "unknown", "selected"}:
+            require((take.get("approval") or {}).get("fingerprint"), f"{label} was submitted without a recorded approval")
+        if take["status"] == "selected":
+            for shot in members:
+                require((take["canvas"], shot) not in claimed, f"Shot {shot} has two selected takes for {take['canvas']}")
+                claimed.add((take["canvas"], shot))
+
+
 def validate(root):
     """Validate every contract present; return a status report."""
     root = Path(root)
     report = {"project": str(root), "valid": [], "missing": [], "next": None}
     project = load(root, "project")
     validate_project(project)
+    recipe = project["recipe"]
     report["valid"].append(FILES["project"])
-    lock = load(root, "lock", required=False)
-    script = load(root, "script", required=False)
-    words = load(root, "words", required=False)
-    shots = load(root, "shots", required=False)
+    present = {key: load(root, key, required=False) for key in ("lock", "script", "words", "shots", "bible", "takes")}
+    lock, script, words, shots, bible, takes = (present[k] for k in ("lock", "script", "words", "shots", "bible", "takes"))
     if lock is not None:
         validate_lock(lock)
         report["valid"].append(FILES["lock"])
@@ -237,12 +318,20 @@ def validate(root):
         require(script is not None, "voice/words.json exists without a script")
         validate_words(words, script)
         report["valid"].append(FILES["words"])
+    if bible is not None:
+        require(lock is not None, "bible exists without an approved direction lock")
+        validate_bible(bible, lock)
+        report["valid"].append(FILES["bible"])
     if shots is not None:
-        require(script is not None and lock is not None, "shots exist without script and direction lock")
-        validate_shots(shots, script, lock, words)
+        require(lock is not None, "shots exist without a direction lock")
+        require(script is not None or recipe != "explainer", "explainer shots need a script")
+        validate_shots(shots, script, lock, words, bible)
         report["valid"].append(FILES["shots"])
-    present = {"lock": lock, "script": script, "words": words, "shots": shots}
-    for stage, key, skill in STAGES:
+    if takes is not None:
+        require(shots is not None, "takes exist without shots")
+        validate_takes(takes, shots, project)
+        report["valid"].append(FILES["takes"])
+    for stage, key, skill in STAGES[recipe]:
         if present[key] is None:
             report["missing"].append(FILES[key])
             if report["next"] is None:
@@ -250,7 +339,7 @@ def validate(root):
     if project.get("language") is None and report["next"] and report["next"]["stage"] in {"script", "voice"}:
         report["next"]["blocked"] = "Choose the video language (en or id) before scripting"
     if report["next"] is None:
-        report["next"] = {"stage": "compose", "skill": "motion-designer"}
+        report["next"] = dict(NEXT_AFTER[recipe])
     return report
 
 
