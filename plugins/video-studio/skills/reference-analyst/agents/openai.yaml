@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reference Analyst"
+  short_description: "Break down reference videos into reusable techniques"
+  default_prompt: "Use $reference-analyst to break down this reference video into hook, shots, pacing and techniques we can adopt without copying its style."

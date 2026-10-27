@@ -748,5 +748,57 @@ class RequestApprovalTests(CinematicFixture):
         self.assertIsNotNone(ledger.find_approval(ledger.read(self.root), "higgsfield-video", self.request))
 
 
+
+ANALYZE = SKILLS / "reference-analyst/scripts/analyze.py"
+sys.path.insert(0, str(ANALYZE.parent))
+import analyze  # noqa: E402
+
+
+class ReferenceShotTests(unittest.TestCase):
+    def test_short_segments_merge_into_neighbours(self):
+        shots = analyze.shots_from([2.0, 2.1, 5.0], 8.0)
+        self.assertEqual([(s["start"], s["end"]) for s in shots], [(0.0, 2.1), (2.1, 5.0), (5.0, 8.0)])
+
+
+@unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "ffmpeg needed for reference analysis")
+class ReferenceAnalystTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.dir = Path(self.temp.name)
+        self.video = self.dir / "ref.mp4"
+        colors = ["black", "white", "black"]
+        inputs = []
+        for color in colors:
+            inputs += ["-f", "lavfi", "-i", f"color=c={color}:s=360x640:r=30:d=2"]
+        subprocess.run(["ffmpeg", "-v", "error", "-y", *inputs, "-f", "lavfi", "-i", "sine=f=440:d=6",
+                        "-filter_complex", "[0][1][2]concat=n=3:v=1:a=0[v]", "-map", "[v]", "-map", "3",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", str(self.video)], check=True)
+
+    def test_detects_cuts_frames_and_audio(self):
+        out = self.dir / "analysis"
+        result = subprocess.run([sys.executable, str(ANALYZE), str(self.video), "--out", str(out)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads((out / "analysis.json").read_text())
+        self.assertEqual(data["metadata"]["orientation"], "vertical")
+        self.assertEqual(data["pacing"]["shots"], 3)
+        self.assertAlmostEqual(data["shots"][1]["start"], 2.0, delta=0.1)
+        self.assertTrue((out / "contact-sheet.png").is_file())
+        self.assertTrue((out / data["shots"][0]["frame"]).is_file())
+        self.assertIsNotNone(data["audio"]["integrated_lufs"])
+        again = subprocess.run([sys.executable, str(ANALYZE), str(self.video), "--out", str(out)], capture_output=True, text=True)
+        self.assertEqual(again.returncode, 1)
+        self.assertIn("new directory", again.stderr)
+
+    def test_transcription_requires_an_approved_cap(self):
+        project = self.dir / "project"
+        shutil.copytree(EXAMPLE, project)
+        studio.write(project, "ledger", ledger.empty())
+        result = subprocess.run([sys.executable, str(ANALYZE), str(self.video), "--out", str(self.dir / "a2"),
+                                 "--transcribe-estimate", "50", "--project", str(project)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("No approved", result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
