@@ -1067,5 +1067,85 @@ class SoundDesignerTests(CinematicFixture):
         self.assertEqual(ledger.read(self.root)["entries"][-1]["status"], "failed")
 
 
+
+@unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "ffmpeg needed for footage assembly")
+class FootageAssemblyTests(CinematicFixture):
+    def setUp(self):
+        super().setUp()
+        for args in (("time",), ):
+            self.assertEqual(self.run_script(SHOTS, *args, self.root).returncode, 0)
+        self.run_script(BIBLE, "negatives", self.root)
+        self.run_script(TAKES, "plan", self.root, "--canvas", "16x9")
+        clips = {"T1-16x9": ["0x303030", "white"], "T2-16x9": ["white", "0x303030"]}  # not black: QC flags black frames
+        lengths = {"T1-16x9": 3, "T2-16x9": 3.5}
+        for take, colors in clips.items():
+            self.run_script(TAKES, "approve", self.root, "--take", take, "--estimate", 40)
+            self.run_script(TAKES, "submit", self.root, "--take", take)
+            raw = solid_video(Path(self.temp.name) / f"{take}.mp4", colors, lengths[take], size="1280x720")
+            result = self.run_script(TAKES, "ingest", self.root, "--take", take, "--file", raw)
+            self.assertEqual(json.loads(result.stdout)["status"], "succeeded", result.stdout)
+            self.run_script(TAKES, "select", self.root, "--take", take, "--skip-dailies", "synthetic fixture")
+        bed = self.root / "sound/ambience/amb-rooftop-v1.mp3"
+        bed.parent.mkdir(parents=True)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anoisesrc=d=5:a=0.2", str(bed)], check=True)
+        hit = self.root / "sound/sfx/sfx-S03-v1.mp3"
+        hit.parent.mkdir(parents=True)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "sine=f=880:d=0.5", str(hit)], check=True)
+        studio.write(self.root, "sound", {"schema": "video-studio/sound@1", "ducking": True, "use_take_audio": False, "cues": [
+            {"id": "amb-rooftop", "kind": "ambience", "start": 0.0, "duration": 13.0, "loop": True, "gain_db": -18,
+             "file": "sound/ambience/amb-rooftop-v1.mp3"},
+            {"id": "sfx-S03", "kind": "sfx", "start": 6.0, "duration": 0.5, "loop": False, "gain_db": -6,
+             "file": "sound/sfx/sfx-S03-v1.mp3"}]})
+
+    def test_assemble_finish_and_qc_a_silent_film(self):
+        missing = self.run_script(EDIT, "assemble", self.root, "--canvas", "9x16")
+        self.assertEqual(missing.returncode, 1)
+        self.assertIn("No selected clip for S01 on 9x16", missing.stderr)
+        result = self.run_script(EDIT, "assemble", self.root, "--canvas", "16x9")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        manifest = json.loads(result.stdout)
+        render = self.root / "renders" / f"v{manifest['version']}" / "16x9.mp4"
+        info = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,width,height:format=duration",
+                               "-of", "json", str(render)], capture_output=True, text=True)
+        data = json.loads(info.stdout)
+        video = next(s for s in data["streams"] if s["codec_type"] == "video")
+        self.assertEqual((video["width"], video["height"]), (1920, 1080))
+        self.assertTrue(any(s["codec_type"] == "audio" for s in data["streams"]))
+        self.assertAlmostEqual(float(data["format"]["duration"]), 13.0, delta=0.1)
+        timeline = json.loads((self.root / "timeline.json").read_text())["canvases"]["16x9"]
+        self.assertEqual([e["shot"] for e in timeline], ["S01", "S02", "S03", "S04"])
+        self.assertEqual(manifest["renders"][0]["audio"], {"narration": False, "cues": 2, "take_audio": False})
+        finished = self.run_script(EDIT, "finish", self.root)
+        self.assertEqual(finished.returncode, 0, finished.stderr)
+        report = json.loads(self.run_script(QC, "final", self.root).stdout)
+        failures = [c for c in report["checks"] if c["status"] == "fail"]
+        self.assertEqual(failures, [])
+        self.assertTrue((self.root / f"qc/frames/v{manifest['version']}/16x9/S04.png").is_file())
+
+
+    def test_dialogue_is_mixed_over_ducked_beds(self):
+        project = self.read("project")
+        project["language"] = "en"
+        self.put("project", project)
+        studio.write(self.root, "script", {"schema": "video-studio/script@1", "language": "en", "register": "casual",
+                                           "lines": [{"id": "L01", "beat": "B2", "speaker": "courier", "text": "Got it.",
+                                                      "keywords": ["Got it"]}]})
+        voice_file = self.root / "voice/takes/T1/narration.mp3"
+        voice_file.parent.mkdir(parents=True)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "sine=f=220:d=2", str(voice_file)], check=True)
+        studio.write(self.root, "words", {"schema": "video-studio/words@1", "audio": "voice/takes/T1/narration.mp3",
+                                          "duration": 2.0, "language": "en", "source": "elevenlabs-tts",
+                                          "words": [{"text": "Got", "start": 0.2, "end": 0.5, "line": "L01"},
+                                                    {"text": "it.", "start": 0.55, "end": 0.9, "line": "L01"}]})
+        shots = self.read("shots")
+        shots["shots"][2]["lines"] = ["L01"]
+        self.put("shots", shots)
+        result = self.run_script(EDIT, "assemble", self.root, "--canvas", "16x9")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        log = next((self.root / "renders").glob("v*/16x9.assemble.log")).read_text()
+        self.assertIn("sidechaincompress", log)
+        self.assertTrue(json.loads(result.stdout)["renders"][0]["audio"]["narration"])
+
+
 if __name__ == "__main__":
     unittest.main()
