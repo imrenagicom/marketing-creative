@@ -452,5 +452,104 @@ class ShotDesignerTests(ProjectFixture):
         self.assertIn("voice/words.json", result.stderr)
 
 
+COMPOSE = SKILLS / "motion-designer/scripts/compose.mjs"
+
+
+def node_ok():
+    if not shutil.which("node"):
+        return False
+    version = subprocess.run(["node", "--version"], capture_output=True, text=True).stdout.strip().lstrip("v")
+    return int(version.split(".")[0]) >= 20
+
+
+@unittest.skipUnless(node_ok(), "Node.js 20+ needed for the composition generator")
+class MotionDesignerTests(ProjectFixture):
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.run_script(SHOTS, "time", self.root).returncode, 0)
+
+    def compose(self, *args):
+        return subprocess.run(["node", str(COMPOSE), str(self.root), *args], capture_output=True, text=True)
+
+    def html(self, canvas):
+        return (self.root / "compositions" / canvas / "index.html").read_text()
+
+    def test_builds_each_canvas_with_contract_and_word_cues(self):
+        result = self.compose()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        built = json.loads(result.stdout)
+        self.assertEqual([b["canvas"] for b in built], ["9x16", "16x9"])
+        shots, words = self.read("shots")["shots"], self.read("words")
+        vertical, wide = self.html("9x16"), self.html("16x9")
+        self.assertIn(f'data-duration="{shots[-1]["end"]}"', vertical)
+        self.assertIn('data-width="1080" data-height="1920"', vertical)
+        self.assertIn('data-width="1920" data-height="1080"', wide)
+        self.assertIn('window.__timelines["main"] = tl;', vertical)
+        self.assertIn("text-align:center", vertical)
+        self.assertIn("text-align:left", wide)
+        best = next(w for w in words["words"] if w["text"] == "best")
+        self.assertIn(f'class="word key">best</span>', vertical)
+        cue = round(best["start"] - 0.05, 3)
+        self.assertIn(f"{cue});", vertical)
+        three = next(w for w in words["words"] if w["text"] == "three-step")
+        self.assertIn(">three-step</span>", vertical)
+        self.assertIn(f"{round(three['start'] - 0.05, 3)});", vertical)
+        self.assertIn("cdn.jsdelivr.net/npm/gsap@3.14.2", vertical)
+        manifest = json.loads((self.root / "compositions/9x16/build.json").read_text())
+        self.assertFalse(manifest["localGsap"])
+        self.assertIsNone(manifest["narration"])
+        self.assertNotIn("<audio", vertical)
+
+    def test_copies_narration_and_local_gsap(self):
+        audio = self.root / self.read("words")["audio"]
+        audio.parent.mkdir(parents=True, exist_ok=True)
+        audio.write_bytes(b"fake-mp3")
+        gsap = Path(self.temp.name) / "gsap.min.js"
+        gsap.write_text("window.gsap={};")
+        result = self.compose("--gsap", gsap, "--only", "9x16")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        html = self.html("9x16")
+        self.assertIn('src="assets/runtime/gsap.min.js"', html)
+        self.assertIn('<audio id="narration" src="assets/voice/takes/T1/narration.mp3"', html)
+        self.assertTrue((self.root / "compositions/9x16/assets/voice/takes/T1/narration.mp3").is_file())
+        self.assertFalse((self.root / "compositions/16x9").exists())
+
+    def test_refuses_to_overwrite_hand_edits_without_force(self):
+        self.assertEqual(self.compose().returncode, 0)
+        page = self.root / "compositions/9x16/index.html"
+        page.write_text(page.read_text().replace("Save this", "Save this now"))
+        refused = self.compose()
+        self.assertEqual(refused.returncode, 1)
+        self.assertIn("edited after generation", refused.stderr)
+        self.assertIn("Save this now", page.read_text())
+        self.assertEqual(self.compose("--force").returncode, 0)
+        self.assertNotIn("Save this now", page.read_text())
+
+    def test_refuses_untimed_or_stale_shots(self):
+        words = self.read("words")
+        words["duration"] = round(words["duration"] + 0.5, 3)
+        self.put("words", words)
+        stale = self.compose()
+        self.assertEqual(stale.returncode, 1)
+        self.assertIn("different narration take", stale.stderr)
+        shots = self.read("shots")
+        for shot in shots["shots"]:
+            shot.pop("start"), shot.pop("end")
+        self.put("shots", shots)
+        untimed = self.compose()
+        self.assertEqual(untimed.returncode, 1)
+        self.assertIn("not timed", untimed.stderr)
+
+    def test_keyword_must_be_in_the_line_timings(self):
+        words = self.read("words")
+        for word in words["words"]:
+            if word["text"] == "best":
+                word["text"] = "worst"
+        self.put("words", words)
+        result = self.compose()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Keyword "best ideas"', result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

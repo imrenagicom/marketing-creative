@@ -20,7 +20,7 @@ PLUGINS = {
         "marketing-omni-video"},
     "marketing-performance": {"marketing-brief", "campaign-manager",
         "marketing-copywriter", "google-analytics-analyst"},
-    "video-studio": {"studio-producer", "director", "scriptwriter", "voice-director", "shot-designer"},
+    "video-studio": {"studio-producer", "director", "scriptwriter", "voice-director", "shot-designer", "motion-designer"},
 }
 
 
