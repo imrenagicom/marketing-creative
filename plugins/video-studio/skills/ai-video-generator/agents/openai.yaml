@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Video Generator"
+  short_description: "Generate approved Higgsfield video takes and split them into shots"
+  default_prompt: "Use $ai-video-generator to prepare the Higgsfield take requests for my film and show me each one with its price before anything is submitted."
+policy:
+  allow_implicit_invocation: false

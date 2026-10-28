@@ -1,0 +1,4 @@
+interface:
+  display_name: "Studio Producer"
+  short_description: "Start, resume and budget a Video Studio production"
+  default_prompt: "Use $studio-producer to start or resume my explainer video project and tell me the next stage."

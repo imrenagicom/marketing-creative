@@ -1,0 +1,41 @@
+{
+  "schema": "video-studio/direction-lock@1",
+  "version": 1,
+  "logline": "A courier sprints across a dusk rooftop and hands a parcel to a delivery drone a second before the light dies.",
+  "hook": {
+    "pattern": "cold-open",
+    "opening": "Mid-sprint: low tracking shot at shoe level as the courier vaults a rooftop vent, the sun flaring behind her."
+  },
+  "structure": "chase → near miss → handoff → release",
+  "beats": [
+    {
+      "id": "B1",
+      "purpose": "hook",
+      "summary": "The sprint is already on.",
+      "seconds": 6
+    },
+    {
+      "id": "B2",
+      "purpose": "payoff",
+      "summary": "Handoff to the drone and its lift-off.",
+      "seconds": 7
+    }
+  ],
+  "characters": [
+    {
+      "id": "courier",
+      "role": "bike courier in her twenties",
+      "acting_baseline": "Focused and economical; breathes hard but never panics; small satisfied exhale after the handoff."
+    }
+  ],
+  "visual_plan": "Warm low sun against cool shadows; the courier's teal jacket is the only saturated cool colour. Handheld energy in the chase, locked-off calm for the release.",
+  "audio_policy": {
+    "voice": "none",
+    "music": "none",
+    "sfx": "diegetic only: footsteps on gravel, breath, wind, drone rotors"
+  },
+  "approved": {
+    "by": "user",
+    "at": "2026-10-27T00:00:00+00:00"
+  }
+}

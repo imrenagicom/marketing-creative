@@ -1,11 +1,25 @@
 # Video Studio plugin design
 
-Status: design agreed in discussion, not yet implemented (2026-10-27). All
-earlier open questions are resolved below.
+Status: explainer path (v1) and cinematic footage path (v2) implemented in
+`plugins/video-studio/` (2026-10-27). All earlier open questions are resolved below.
 
 `video-studio` is a new skill plugin, designed from scratch and independent of
 the existing Marketing Creative skills. It covers cinematic films, explainers,
 2D/3D animation, UGC/talking-head ads, product demos and music videos.
+
+## Implementation status (2026-10-27)
+
+| Area | State |
+| --- | --- |
+| `studio-producer`, `director`, `scriptwriter`, `voice-director`, `shot-designer`, `motion-designer`, `editor`, `qc-reviewer` | Implemented for the explainer recipe (v1), with offline tests |
+| `reference-analyst`, `continuity-bible`, `keyframe-generator`, `ai-video-generator`, `sound-designer`; editor footage assembly; qc dailies | Implemented for the cinematic recipe (v2), with offline tests and mocked providers |
+| Multi-shot takes, cut-detection splitting, single-shot retakes | Implemented; takes whose detected cuts disagree with the plan stop at `needs-split` |
+| Higgsfield integration | Helpers prepare, fingerprint and record requests; the agent calls the MCP. Model limits and media roles not verified against `models_explore` (not exposed in the build session) |
+| Subject mattes (SAM 2.1 / BiRefNet) for text behind the subject | Not built yet; the composer keeps type beside the subject |
+| Graphic shots inside films (titles over footage) | Not built yet; footage assembly handles camera shots only |
+| UGC and music-video recipes | Not built yet |
+
+Contracts are JSON (not YAML as first sketched) so every helper stays standard-library only; field references live in `studio-producer/references/project-contract.md`.
 
 ## Design principles
 
@@ -130,9 +144,9 @@ matching stage; the producer does not restart intake.
 All files are versioned inside the project's run directory; selected finals
 stay separate from low-resolution previews.
 
-- **`project.yaml`** — brief, recipe, formats, budgets, current stage. Written
+- **`project.json`** — brief, recipe, formats, budgets, current stage. Written
   by the producer, read by every skill.
-- **`direction-lock.yaml`** — chosen direction, hook pattern, beat outline,
+- **`direction/lock.json`** — chosen direction, hook pattern, beat outline,
   per-character acting baselines, camera plan, light and audio policy. Versioned;
   changes propagate downstream explicitly.
 - **Shot registry** — one record per shot with a stable ID (`S03`). Required
@@ -311,7 +325,7 @@ English and Indonesian are both first-class. The language for a video is
 chosen when the user asks to produce it; the producer asks once if the brief
 does not say.
 
-- `project.yaml` records `language` (`en` or `id`). The direction lock stays
+- `project.json` records `language` (`en` or `id`). The direction lock stays
   language-neutral (beats, acting, camera); language starts at the script.
 - **Write natively, never translate.** `scriptwriter` keeps separate hook
   libraries, CTA patterns and examples for each language.

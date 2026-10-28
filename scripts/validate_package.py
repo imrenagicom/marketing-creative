@@ -20,6 +20,8 @@ PLUGINS = {
         "marketing-omni-video"},
     "marketing-performance": {"marketing-brief", "campaign-manager",
         "marketing-copywriter", "google-analytics-analyst"},
+    "video-studio": {"studio-producer", "reference-analyst", "continuity-bible", "keyframe-generator", "ai-video-generator", "sound-designer", "director", "scriptwriter", "voice-director", "shot-designer", "motion-designer",
+        "editor", "qc-reviewer"},
 }
 
 
@@ -138,7 +140,7 @@ def validate_plugin(plugin):
         require(not re.search(r"\bTODO\b|\[TBD\]", text), f"Unfinished scaffold: {skill}")
         ui = (skill.parent / "agents/openai.yaml").read_text(encoding="utf-8")
         require(f"${name[1]}" in ui, f"UI prompt does not invoke skill: {skill}")
-        if name[1] in {"marketing-veo-video","marketing-omni-video"}:
+        if name[1] in {"marketing-veo-video", "marketing-omni-video", "ai-video-generator"}:
             require(re.search(r"^\s+allow_implicit_invocation: false$",ui,re.M),
                     f"Paid video generation must remain opt-in: {skill}")
 
@@ -162,7 +164,7 @@ def validate_plugin(plugin):
 
 
 def validate(plugin_name=None):
-    """Validate both plugins, or select one archive's independently usable tree."""
+    """Validate every plugin, or select one archive's independently usable tree."""
     names = [plugin_name] if plugin_name else PLUGINS
     files = []
     for name in names:
@@ -185,4 +187,4 @@ def validate(plugin_name=None):
 
 if __name__ == "__main__":
     files = validate()
-    print(f"Validated both plugins, resources and marketplaces: {len(files)} package files")
+    print(f"Validated all plugins, resources and marketplaces: {len(files)} package files")

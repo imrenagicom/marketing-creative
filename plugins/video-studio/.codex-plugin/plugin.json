@@ -1,0 +1,39 @@
+{
+  "name": "video-studio",
+  "version": "0.11.0",
+  "description": "Explainer and cinematic video production in English or Indonesian: direction options, native scripts, ElevenLabs narration and sound, continuity bibles, Higgsfield keyframes and approved video takes, HyperFrames compositions, assembly, delivery and QC.",
+  "author": {
+    "name": "Imre Nagi"
+  },
+  "homepage": "https://github.com/imrenagicom/marketing-creative",
+  "repository": "https://github.com/imrenagicom/marketing-creative",
+  "keywords": [
+    "video",
+    "explainer",
+    "motion-graphics",
+    "narration",
+    "elevenlabs",
+    "hyperframes",
+    "indonesian",
+    "cinematic",
+    "higgsfield",
+    "ai-video"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Video Studio",
+    "shortDescription": "Direct, voice, generate and deliver explainers and short films",
+    "longDescription": "Produce explainer videos and cinematic short films from idea to delivery: the director drafts direction options you pick and edit, scripts are written natively in English or Indonesian, ElevenLabs supplies narration with word timestamps and sound design, a continuity bible locks characters, locations and light, Higgsfield generates keyframes under an image budget and video takes only after you approve each exact request, takes pass dailies review, and HyperFrames compositions or footage timelines are rendered, finished and quality-checked.",
+    "developerName": "Imre Nagi",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use studio-producer to start a 45-second explainer video for our product in Indonesian.",
+      "Use director to draft three direction options for an explainer about our onboarding flow.",
+      "Use studio-producer to check what stage my video project is at and continue it."
+    ]
+  }
+}

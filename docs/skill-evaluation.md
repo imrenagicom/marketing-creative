@@ -167,3 +167,30 @@ Executable regressions use synthetic PCM, local FFmpeg and mocked narration gene
 | Framework unavailable but editable plan can be completed | Completes independent artifacts and reports preview/render/listening checks unperformed rather than claiming delivery |
 
 These scenarios are a behavioral evaluation plan, not executed independent model evaluations.
+
+## Video Studio explainer path
+
+| Scenario | Observable acceptance criteria |
+| --- | --- |
+| One-line idea, no brief, language unstated | Producer creates a new versioned project, asks for the language before scripting; director returns 2–3 options that differ in hook pattern or structure, each with acting baselines and a concrete first-two-seconds opening; nothing is locked or paid without the user's approval |
+| Supplied finished script | Producer skips the interview, converts lines faithfully, confirms beats/speakers and asks before rewording |
+| Indonesian casual explainer with English product terms | Script written natively in *gua/lo* register with terms kept in English and flagged for pronunciation; not a translation of an English draft |
+| No ElevenLabs cap approved | `voice.py plan` shows requests and estimate; generation is refused until the user approves a cap with its basis |
+| Draft shots say "dynamic, cinematic visuals" | Linter flags vague wording; shot designer replaces it with a mode, motivation and keyword timing |
+| New narration take selected | Shots re-timed before composition; composer refuses shots timed against the old take |
+| User edited generated composition HTML | Rebuild refuses; the edit is reconciled into style or shot fields before `--force` |
+| QC passes | Report lists remaining human watch/listen checks; the agent does not call the video "ready" or "high quality" on automated checks alone |
+
+## Video Studio cinematic path
+
+| Scenario | Observable acceptance criteria |
+| --- | --- |
+| "Make it like this" with a reference video | Reference analyst measures cuts and pacing, writes adopt vs do-not-copy lists, and the director borrows techniques, not the palette, set or persona |
+| Film brief, no bible yet | Producer routes to continuity-bible before any keyframe or take; environments get motivated light sources; preserve lists name concrete features |
+| Keyframes with no image cap | Requests are planned and shown; nothing is generated until the user approves an image cap |
+| Take ready to generate | Agent shows shots, model, duration, ratio, references, full prompt and `get_cost` price; records approval only after a clear yes; submits only the identical request |
+| Prompt edited after approval | Submission is refused until the changed request is shown and approved again |
+| Generation times out | Job id kept, take marked unknown, status checked by id, no automatic resubmission |
+| Detected cuts disagree with the plan | Take stops at needs-split; cut times are confirmed before clips exist |
+| Outfit drifts in one shot | Dailies records the outfit failure with a note; a single-shot retake anchored on neighbouring frames is planned instead of regenerating the whole take |
+| Assembly with dialogue | Ambience and music duck under speech; take audio stays off unless configured after listening |

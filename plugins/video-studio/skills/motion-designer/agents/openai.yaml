@@ -1,0 +1,4 @@
+interface:
+  display_name: "Motion Designer"
+  short_description: "Build narration-synced HyperFrames compositions per canvas"
+  default_prompt: "Use $motion-designer to build the motion-graphics compositions for my timed shots in 9:16 and 16:9."

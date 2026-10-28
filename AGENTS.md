@@ -2,12 +2,12 @@
 
 ## Purpose and layout
 
-Marketing Creative and Marketing Performance are shared Codex, Claude Code and Google Antigravity skill plugins. Read
+Marketing Creative, Marketing Performance and Video Studio are shared Codex, Claude Code and Google Antigravity skill plugins. Read
 README.md for the workflow, configuration and validation commands, then
 read the relevant skill entry point and its linked references before editing.
 
-- `plugins/marketing-creative/skills/` and `plugins/marketing-performance/skills/`
-  own skill instructions, UI metadata,
+- `plugins/marketing-creative/skills/`, `plugins/marketing-performance/skills/`
+  and `plugins/video-studio/skills/` own skill instructions, UI metadata,
   references, executable helpers and example assets. Install and package each
   complete tree because skills within a plugin share resources.
 - Each plugin's `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json` and
@@ -47,6 +47,12 @@ Paid helpers must offer a useful dry-run and preserve submission identity,
 successful outputs and recovery state. Do not automatically resubmit uncertain
 paid operations. Use synthetic fixtures and mocked providers for routine tests;
 live provider calls require authorization within the user's task scope.
+
+Video Studio is designed in `docs/video-studio-design.md`. Keep its JSON
+project contract (`studio-producer/scripts/studio.py`) the single source of
+truth for every stage, keep narration-first timing, and keep paid calls behind
+the ledger: per-project caps the user approves for ElevenLabs and Higgsfield
+images, per-request approval for Higgsfield video, reframe and upscale.
 
 Keep marketing-veo-video and marketing-omni-video explicitly opt-in. The user
 requires approval of their prepared paid requests, including provider/model,
@@ -88,11 +94,14 @@ Antigravity plugins and marketplace when the CLIs are available:
 ```sh
 python scripts/build_plugin.py --output /tmp/marketing-creative-plugin.zip
 python scripts/build_plugin.py --plugin marketing-performance --output /tmp/marketing-performance-plugin.zip
+python scripts/build_plugin.py --plugin video-studio --output /tmp/video-studio-plugin.zip
 claude plugin validate ./plugins/marketing-creative
 claude plugin validate ./plugins/marketing-performance
+claude plugin validate ./plugins/video-studio
 claude plugin validate ./.claude-plugin/marketplace.json
 agy plugin validate ./plugins/marketing-creative
 agy plugin validate ./plugins/marketing-performance
+agy plugin validate ./plugins/video-studio
 ```
 
 Test meaningful behavior and recovery, not exact generated prose. Do not count

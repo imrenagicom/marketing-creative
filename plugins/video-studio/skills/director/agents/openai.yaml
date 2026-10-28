@@ -1,0 +1,4 @@
+interface:
+  display_name: "Director"
+  short_description: "Draft direction options, then lock the one you choose"
+  default_prompt: "Use $director to draft three different directions for my explainer video so I can pick and edit one."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sound Designer"
+  short_description: "Generate sound effects, ambience and music placed on the shot timeline"
+  default_prompt: "Use $sound-designer to plan the sound effects and ambience for my film and show me the estimate before generating."

@@ -1,0 +1,67 @@
+{
+  "schema": "video-studio/script@1",
+  "language": "en",
+  "register": "conversational",
+  "lines": [
+    {
+      "id": "L01",
+      "beat": "B1",
+      "speaker": "narrator",
+      "text": "[curious] Still losing your best ideas in random chats?",
+      "keywords": [
+        "best ideas"
+      ],
+      "delivery": "light, teasing"
+    },
+    {
+      "id": "L02",
+      "beat": "B2",
+      "speaker": "narrator",
+      "text": "Here is a three-step capture habit that sticks.",
+      "keywords": [
+        "three-step"
+      ],
+      "delivery": "confident"
+    },
+    {
+      "id": "L03",
+      "beat": "B3",
+      "speaker": "narrator",
+      "text": "One: capture everything in a single inbox.",
+      "keywords": [
+        "single inbox"
+      ],
+      "delivery": "brisk"
+    },
+    {
+      "id": "L04",
+      "beat": "B3",
+      "speaker": "narrator",
+      "text": "Two: tag it before you close the note.",
+      "keywords": [
+        "tag it"
+      ],
+      "delivery": "brisk"
+    },
+    {
+      "id": "L05",
+      "beat": "B3",
+      "speaker": "narrator",
+      "text": "Three: review your inbox every Friday.",
+      "keywords": [
+        "every Friday"
+      ],
+      "delivery": "brisk, landing"
+    },
+    {
+      "id": "L06",
+      "beat": "B4",
+      "speaker": "narrator",
+      "text": "[warm] Save this, and try it for one week.",
+      "keywords": [
+        "Save this"
+      ],
+      "delivery": "direct, unhurried"
+    }
+  ]
+}

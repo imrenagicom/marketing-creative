@@ -1,0 +1,89 @@
+{
+  "schema": "video-studio/shots@1",
+  "max_take_seconds": 15,
+  "shots": [
+    {
+      "id": "S01",
+      "kind": "camera",
+      "beat": "B1",
+      "lines": [],
+      "take": "T1",
+      "duration": 3,
+      "refs": [
+        "courier",
+        "rooftop"
+      ],
+      "screen_direction": "left-to-right",
+      "motivation": "Drop the viewer into the chase.",
+      "transition": "cut",
+      "framing": "low wide shot at shoe level",
+      "movement": "fast lateral tracking left to right, following her feet",
+      "action": "She vaults a grey vent box, trainers kicking gravel",
+      "light_source": "low sun frame left flaring behind her",
+      "sound": "footsteps on gravel, hard breathing"
+    },
+    {
+      "id": "S02",
+      "kind": "camera",
+      "beat": "B1",
+      "lines": [],
+      "take": "T1",
+      "duration": 3,
+      "refs": [
+        "courier",
+        "rooftop",
+        "drone"
+      ],
+      "screen_direction": "left-to-right",
+      "motivation": "Reveal the goal: the waiting drone.",
+      "transition": "cut",
+      "framing": "medium shot over her right shoulder",
+      "movement": "handheld push in toward the drone hovering at the roof edge",
+      "action": "She swings the messenger bag forward while running",
+      "light_source": "sun frame left, neon glow on the drone from frame right",
+      "sound": "wind rising, distant rotor hum"
+    },
+    {
+      "id": "S03",
+      "kind": "camera",
+      "beat": "B2",
+      "lines": [],
+      "take": "T2",
+      "duration": 3.5,
+      "refs": [
+        "courier",
+        "rooftop",
+        "drone"
+      ],
+      "screen_direction": "neutral",
+      "motivation": "Land the handoff as the beat's payoff.",
+      "transition": "cut",
+      "framing": "close-up on hands and the yellow cargo clamp",
+      "movement": "static, locked-off",
+      "action": "She clips the parcel into the clamp; the green lights blink once",
+      "light_source": "last warm sunlight from frame left",
+      "sound": "clamp click, rotor hum"
+    },
+    {
+      "id": "S04",
+      "kind": "camera",
+      "beat": "B2",
+      "lines": [],
+      "take": "T2",
+      "duration": 3.5,
+      "refs": [
+        "courier",
+        "rooftop",
+        "drone"
+      ],
+      "screen_direction": "neutral",
+      "motivation": "Release: the drone lifts away and she exhales.",
+      "transition": "fade",
+      "framing": "wide shot, courier in the foreground, skyline behind",
+      "movement": "slow crane up following the drone",
+      "action": "The drone rises past the water tower; she rests hands on knees and exhales",
+      "light_source": "sun dipping below the skyline frame left, neon taking over",
+      "sound": "rotors receding, wind, one exhale"
+    }
+  ]
+}

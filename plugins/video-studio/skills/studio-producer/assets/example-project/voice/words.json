@@ -1,0 +1,279 @@
+{
+  "schema": "video-studio/words@1",
+  "audio": "voice/takes/T1/narration.mp3",
+  "duration": 19.175,
+  "language": "en",
+  "source": "elevenlabs-tts",
+  "words": [
+    {
+      "text": "Still",
+      "start": 0.2,
+      "end": 0.545,
+      "line": "L01"
+    },
+    {
+      "text": "losing",
+      "start": 0.605,
+      "end": 0.995,
+      "line": "L01"
+    },
+    {
+      "text": "your",
+      "start": 1.055,
+      "end": 1.355,
+      "line": "L01"
+    },
+    {
+      "text": "best",
+      "start": 1.415,
+      "end": 1.715,
+      "line": "L01"
+    },
+    {
+      "text": "ideas",
+      "start": 1.775,
+      "end": 2.12,
+      "line": "L01"
+    },
+    {
+      "text": "in",
+      "start": 2.18,
+      "end": 2.39,
+      "line": "L01"
+    },
+    {
+      "text": "random",
+      "start": 2.45,
+      "end": 2.84,
+      "line": "L01"
+    },
+    {
+      "text": "chats?",
+      "start": 2.9,
+      "end": 3.245,
+      "line": "L01"
+    },
+    {
+      "text": "Here",
+      "start": 3.655,
+      "end": 3.955,
+      "line": "L02"
+    },
+    {
+      "text": "is",
+      "start": 4.015,
+      "end": 4.225,
+      "line": "L02"
+    },
+    {
+      "text": "a",
+      "start": 4.285,
+      "end": 4.45,
+      "line": "L02"
+    },
+    {
+      "text": "three-step",
+      "start": 4.51,
+      "end": 5.035,
+      "line": "L02"
+    },
+    {
+      "text": "capture",
+      "start": 5.095,
+      "end": 5.53,
+      "line": "L02"
+    },
+    {
+      "text": "habit",
+      "start": 5.59,
+      "end": 5.935,
+      "line": "L02"
+    },
+    {
+      "text": "that",
+      "start": 5.995,
+      "end": 6.295,
+      "line": "L02"
+    },
+    {
+      "text": "sticks.",
+      "start": 6.355,
+      "end": 6.745,
+      "line": "L02"
+    },
+    {
+      "text": "One:",
+      "start": 7.155,
+      "end": 7.41,
+      "line": "L03"
+    },
+    {
+      "text": "capture",
+      "start": 7.47,
+      "end": 7.905,
+      "line": "L03"
+    },
+    {
+      "text": "everything",
+      "start": 7.965,
+      "end": 8.535,
+      "line": "L03"
+    },
+    {
+      "text": "in",
+      "start": 8.595,
+      "end": 8.805,
+      "line": "L03"
+    },
+    {
+      "text": "a",
+      "start": 8.865,
+      "end": 9.03,
+      "line": "L03"
+    },
+    {
+      "text": "single",
+      "start": 9.09,
+      "end": 9.48,
+      "line": "L03"
+    },
+    {
+      "text": "inbox.",
+      "start": 9.54,
+      "end": 9.885,
+      "line": "L03"
+    },
+    {
+      "text": "Two:",
+      "start": 10.295,
+      "end": 10.55,
+      "line": "L04"
+    },
+    {
+      "text": "tag",
+      "start": 10.61,
+      "end": 10.865,
+      "line": "L04"
+    },
+    {
+      "text": "it",
+      "start": 10.925,
+      "end": 11.135,
+      "line": "L04"
+    },
+    {
+      "text": "before",
+      "start": 11.195,
+      "end": 11.585,
+      "line": "L04"
+    },
+    {
+      "text": "you",
+      "start": 11.645,
+      "end": 11.9,
+      "line": "L04"
+    },
+    {
+      "text": "close",
+      "start": 11.96,
+      "end": 12.305,
+      "line": "L04"
+    },
+    {
+      "text": "the",
+      "start": 12.365,
+      "end": 12.62,
+      "line": "L04"
+    },
+    {
+      "text": "note.",
+      "start": 12.68,
+      "end": 12.98,
+      "line": "L04"
+    },
+    {
+      "text": "Three:",
+      "start": 13.39,
+      "end": 13.735,
+      "line": "L05"
+    },
+    {
+      "text": "review",
+      "start": 13.795,
+      "end": 14.185,
+      "line": "L05"
+    },
+    {
+      "text": "your",
+      "start": 14.245,
+      "end": 14.545,
+      "line": "L05"
+    },
+    {
+      "text": "inbox",
+      "start": 14.605,
+      "end": 14.95,
+      "line": "L05"
+    },
+    {
+      "text": "every",
+      "start": 15.01,
+      "end": 15.355,
+      "line": "L05"
+    },
+    {
+      "text": "Friday.",
+      "start": 15.415,
+      "end": 15.805,
+      "line": "L05"
+    },
+    {
+      "text": "Save",
+      "start": 16.215,
+      "end": 16.515,
+      "line": "L06"
+    },
+    {
+      "text": "this,",
+      "start": 16.575,
+      "end": 16.875,
+      "line": "L06"
+    },
+    {
+      "text": "and",
+      "start": 16.935,
+      "end": 17.19,
+      "line": "L06"
+    },
+    {
+      "text": "try",
+      "start": 17.25,
+      "end": 17.505,
+      "line": "L06"
+    },
+    {
+      "text": "it",
+      "start": 17.565,
+      "end": 17.775,
+      "line": "L06"
+    },
+    {
+      "text": "for",
+      "start": 17.835,
+      "end": 18.09,
+      "line": "L06"
+    },
+    {
+      "text": "one",
+      "start": 18.15,
+      "end": 18.405,
+      "line": "L06"
+    },
+    {
+      "text": "week.",
+      "start": 18.465,
+      "end": 18.765,
+      "line": "L06"
+    }
+  ]
+}

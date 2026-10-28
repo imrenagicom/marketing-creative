@@ -1,0 +1,22 @@
+{
+  "name": "video-studio",
+  "version": "0.11.0",
+  "description": "Explainer and cinematic video production in English or Indonesian: direction options, native scripts, ElevenLabs narration and sound, continuity bibles, Higgsfield keyframes and approved video takes, HyperFrames compositions, assembly, delivery and QC.",
+  "author": {
+    "name": "Imre Nagi"
+  },
+  "homepage": "https://github.com/imrenagicom/marketing-creative",
+  "repository": "https://github.com/imrenagicom/marketing-creative",
+  "keywords": [
+    "video",
+    "explainer",
+    "motion-graphics",
+    "narration",
+    "elevenlabs",
+    "hyperframes",
+    "indonesian",
+    "cinematic",
+    "higgsfield",
+    "ai-video"
+  ]
+}
