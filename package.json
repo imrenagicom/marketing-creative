@@ -1,6 +1,6 @@
 {
   "name": "marketing-creative",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "private": true,
   "description": "Release tooling for the shared Marketing Creative skill plugin",
   "repository": {

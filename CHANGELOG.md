@@ -1,3 +1,29 @@
+## [0.12.0](https://github.com/imrenagicom/marketing-creative/compare/v0.11.0...v0.12.0) (2026-10-28)
+
+### Features
+
+* **video-studio:** add ai-video-generator take lifecycle ([ddbab24](https://github.com/imrenagicom/marketing-creative/commit/ddbab24050c36baac47caf4b3bc69dc004827a4a))
+* **video-studio:** add cinematic recipe contracts and request approvals ([6e11adb](https://github.com/imrenagicom/marketing-creative/commit/6e11adbef6d010525763d87ce64b3fc3b19645d2))
+* **video-studio:** add continuity-bible and keyframe-generator ([0eebe2c](https://github.com/imrenagicom/marketing-creative/commit/0eebe2c61b9bb41b19b5517fe035585762154fa9))
+* **video-studio:** add dailies review gating take selection ([ba47ec0](https://github.com/imrenagicom/marketing-creative/commit/ba47ec02f77e244977334de1af36ef91d21be78c))
+* **video-studio:** add director and scriptwriter skills ([8782f32](https://github.com/imrenagicom/marketing-creative/commit/8782f32d71fd6097ad5174fb10ee2af362e62bba))
+* **video-studio:** add editor delivery and qc-reviewer checks ([9b19228](https://github.com/imrenagicom/marketing-creative/commit/9b19228425168bf9cc35922ea1ac9d0d244164d0))
+* **video-studio:** add motion-designer hyperframes compositions ([05795d3](https://github.com/imrenagicom/marketing-creative/commit/05795d3d1e8d50b999c4e11139bbe030ff53449f))
+* **video-studio:** add reference-analyst for technique breakdowns ([94eb83e](https://github.com/imrenagicom/marketing-creative/commit/94eb83e2c047635feae692cc268456711454b78a))
+* **video-studio:** add shot-designer linting and narration timing ([2e49555](https://github.com/imrenagicom/marketing-creative/commit/2e4955589ee3a46f88df249d07739cb5efb38990))
+* **video-studio:** add sound-designer with elevenlabs sfx and music ([f72b88e](https://github.com/imrenagicom/marketing-creative/commit/f72b88e4aea795510015a508c9428d893d5471f6))
+* **video-studio:** add voice-director with elevenlabs cli narration ([4b9ca2b](https://github.com/imrenagicom/marketing-creative/commit/4b9ca2bc8319cd533120e16362be46699eebb145))
+* **video-studio:** assemble footage timelines with a ducked sound mix ([0c8a8f2](https://github.com/imrenagicom/marketing-creative/commit/0c8a8f2984a8feb79efd17ba4dbb3a0876adee5e))
+* **video-studio:** scaffold plugin with studio-producer contracts ([812efc9](https://github.com/imrenagicom/marketing-creative/commit/812efc9efa8f46245ad0c4aacf92dbc79cc89330))
+
+### Skills and documentation
+
+* add video-studio plugin design ([d78c8e2](https://github.com/imrenagicom/marketing-creative/commit/d78c8e2a156c8bdf410de79cc71bfd9f945f4993))
+* **agents:** add video-studio to repository guidance ([420a202](https://github.com/imrenagicom/marketing-creative/commit/420a202a9c8786a9403e759ec5166daeb8710c8e))
+* resolve video-studio open questions ([8be0ddd](https://github.com/imrenagicom/marketing-creative/commit/8be0dddd126f4accdcd63d58835765669f2871ec))
+* **video-studio:** document the cinematic path and its validation ([e2b467c](https://github.com/imrenagicom/marketing-creative/commit/e2b467c79b5604b9f446e1346398cba716ac8490))
+* **video-studio:** document the explainer path and its validation ([a81b7e3](https://github.com/imrenagicom/marketing-creative/commit/a81b7e3c69f988b2409bab8f274ebec5b44acfaf))
+
 ## [0.11.0](https://github.com/imrenagicom/marketing-creative/compare/v0.10.1...v0.11.0) (2026-10-20)
 
 ### Features
