@@ -1,3 +1,23 @@
+## [0.14.0](https://github.com/imrenagicom/marketing-creative/compare/v0.13.0...v0.14.0) (2026-10-29)
+
+### Features
+
+* **marketing-images:** move image board and producer into own plugin ([65a93e4](https://github.com/imrenagicom/marketing-creative/commit/65a93e4415b2808667bf0cd9c987ce429dcc612a))
+* remove the deprecated marketing-creative plugin ([4b6a51e](https://github.com/imrenagicom/marketing-creative/commit/4b6a51eaaf57e80032d80bee5d143269f1f3e503))
+* **video-studio:** add contact-sheet boards for keyframes and bible ([6211891](https://github.com/imrenagicom/marketing-creative/commit/62118911447cb7831768ba8695dcc3fb34b3008f))
+* **video-studio:** link projects to campaigns and hand off approved videos ([625ab4e](https://github.com/imrenagicom/marketing-creative/commit/625ab4e6791e843eaa78aa439f72a98b7f6186ca))
+
+### Skills and documentation
+
+* **agents:** describe the campaign suite and the deprecated plugin ([ebcec80](https://github.com/imrenagicom/marketing-creative/commit/ebcec8040db3e5983bd05d9cf461acb9a8540c46))
+* make image and performance plugins campaign-aware ([4ef87fc](https://github.com/imrenagicom/marketing-creative/commit/4ef87fcfdf3ea32d0a984a28bfd8f3b42419add6))
+* update guidance and validation for the removed plugin ([e2e1563](https://github.com/imrenagicom/marketing-creative/commit/e2e15630df6fe2c48d92b4918ae805a807eb626e))
+* **validation:** record images plugin, boards and deprecation checks ([8e0ad5d](https://github.com/imrenagicom/marketing-creative/commit/8e0ad5d9e73e88f9a14e4d707134047c38381565))
+
+### Maintenance
+
+* **marketing-creative:** deprecate in favour of video-studio and images ([fe289b3](https://github.com/imrenagicom/marketing-creative/commit/fe289b399a53b295f4ce182bc73fd1c2f3fe03f6))
+
 ## [0.13.0](https://github.com/imrenagicom/marketing-creative/compare/v0.12.0...v0.13.0) (2026-10-29)
 
 ### Features

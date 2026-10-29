@@ -2,8 +2,8 @@
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "video-studio",
   "displayName": "Video Studio",
-  "version": "0.13.0",
-  "description": "Campaign videos — explainers and cinematic short films in English or Indonesian: direction options from the campaign brief, native scripts, ElevenLabs narration and sound, continuity bibles, contact-sheet boards, Higgsfield or Gemini API keyframes and approved video takes, HyperFrames compositions, assembly, QC and handoff into the campaign's approved assets.",
+  "version": "0.14.0",
+  "description": "Campaign videos \u2014 explainers and cinematic short films in English or Indonesian: direction options from the campaign brief, native scripts, ElevenLabs narration and sound, continuity bibles, contact-sheet boards, Higgsfield or Gemini API keyframes and approved video takes, HyperFrames compositions, assembly, QC and handoff into the campaign's approved assets.",
   "suggestedPrompts": [
     "Use studio-producer to start a 45-second explainer video for our product in Indonesian.",
     "Use director to draft three direction options for an explainer about our onboarding flow.",
