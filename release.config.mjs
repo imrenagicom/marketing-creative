@@ -1,22 +1,13 @@
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-export const archivePath = join(
-  process.env.RUNNER_TEMP || tmpdir(),
-  "marketing-creative-plugin.zip",
-);
+export const archiveDir = process.env.RUNNER_TEMP || tmpdir();
 
-export const imagesArchivePath = join(
-  process.env.RUNNER_TEMP || tmpdir(), "marketing-images-plugin.zip",
-);
+export const imagesArchivePath = join(archiveDir, "marketing-images-plugin.zip");
 
-export const performanceArchivePath = join(
-  process.env.RUNNER_TEMP || tmpdir(), "marketing-performance-plugin.zip",
-);
+export const performanceArchivePath = join(archiveDir, "marketing-performance-plugin.zip");
 
-export const videoStudioArchivePath = join(
-  process.env.RUNNER_TEMP || tmpdir(), "video-studio-plugin.zip",
-);
+export const videoStudioArchivePath = join(archiveDir, "video-studio-plugin.zip");
 
 export default {
   branches: ["main"],
@@ -56,9 +47,6 @@ export default {
         "CHANGELOG.md",
         "package.json",
         "package-lock.json",
-        "plugins/marketing-creative/.codex-plugin/plugin.json",
-        "plugins/marketing-creative/.claude-plugin/plugin.json",
-        "plugins/marketing-creative/plugin.json",
         "plugins/marketing-images/.codex-plugin/plugin.json",
         "plugins/marketing-images/.claude-plugin/plugin.json",
         "plugins/marketing-images/plugin.json",
@@ -73,7 +61,6 @@ export default {
     }],
     ["@semantic-release/github", {
       assets: [
-        { path: archivePath, label: "Marketing Creative complete skill plugin" },
         { path: imagesArchivePath, label: "Marketing Images complete skill plugin" },
         { path: performanceArchivePath, label: "Marketing Performance complete skill plugin" },
         { path: videoStudioArchivePath, label: "Video Studio complete skill plugin" },

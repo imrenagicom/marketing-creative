@@ -5,7 +5,6 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-PLUGIN = ROOT / "plugins" / "marketing-creative"
 MANIFESTS = (".codex-plugin/plugin.json", ".claude-plugin/plugin.json", "plugin.json")
 ANTIGRAVITY_FIELDS = {
     "$schema", "name", "displayName", "version",
@@ -13,10 +12,6 @@ ANTIGRAVITY_FIELDS = {
 }
 PLUGINS_CONFIG = ".agents/plugins.json"
 PLUGINS = {
-    "marketing-creative": {"marketing-video", "creative-ideation", "ad-video-director",
-        "motion-video-producer", "motion-art-director", "motion-storyboard",
-        "motion-voice", "motion-composer", "motion-video-qa", "marketing-veo-video",
-        "marketing-omni-video"},
     "marketing-images": {"marketing-image-board", "marketing-image-producer"},
     "marketing-performance": {"marketing-brief", "campaign-manager",
         "marketing-copywriter", "google-analytics-analyst"},
@@ -34,9 +29,8 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def package_files(plugin=None):
+def package_files(plugin):
     """An explicit surface allowlist; never archive the repository root."""
-    plugin = PLUGIN if plugin is None else plugin
     files = [plugin / path for path in MANIFESTS]
     require(not plugin.is_symlink() and not (plugin / "skills").is_symlink(),
             "Plugin and skill roots must not be symlinks")
@@ -59,13 +53,7 @@ def package_files(plugin=None):
                                   and relative.parts[0] == "marketing-image-producer")
             require(allowed, f"Unexpected skill asset: {path}")
             files.append(path)
-    notices = plugin / "third-party"
-    require(not notices.is_symlink(), "Third-party root must not be a symlink")
-    expected_notices = ({"bang-motion.LICENSE", "hyperframe-pro.LICENSE"}
-                        if plugin.name == "marketing-creative" else set())
-    require(({p.name for p in notices.iterdir()} if notices.exists() else set()) == expected_notices,
-            "Unexpected or missing third-party notices")
-    files.extend(notices / name for name in sorted(expected_notices))
+    require(not (plugin / "third-party").exists(), "No plugin bundles third-party material; add notices deliberately")
     for path in files:
         require(path.is_file() and not path.is_symlink(), f"Missing/unsafe package file: {path}")
         require(path.resolve().is_relative_to(plugin.resolve()), f"Package file escapes plugin: {path}")
@@ -140,7 +128,7 @@ def validate_plugin(plugin):
         require(not re.search(r"\bTODO\b|\[TBD\]", text), f"Unfinished scaffold: {skill}")
         ui = (skill.parent / "agents/openai.yaml").read_text(encoding="utf-8")
         require(f"${name[1]}" in ui, f"UI prompt does not invoke skill: {skill}")
-        if name[1] in {"marketing-veo-video", "marketing-omni-video", "ai-video-generator"}:
+        if name[1] == "ai-video-generator":
             require(re.search(r"^\s+allow_implicit_invocation: false$",ui,re.M),
                     f"Paid video generation must remain opt-in: {skill}")
 

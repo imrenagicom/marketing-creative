@@ -1,6 +1,0 @@
-interface:
-  display_name: "Motion Composer"
-  short_description: "Deprecated — Build seekable video layouts in four standard ratios"
-  default_prompt: "Use $motion-composer to resume or revise my existing Marketing Creative project; for new work point me to its Video Studio or Marketing Images replacement."
-policy:
-  allow_implicit_invocation: false

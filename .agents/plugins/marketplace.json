@@ -5,18 +5,6 @@
   },
   "plugins": [
     {
-      "name": "marketing-creative",
-      "source": {
-        "source": "local",
-        "path": "./plugins/marketing-creative"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
-    },
-    {
       "name": "marketing-images",
       "source": {
         "source": "local",

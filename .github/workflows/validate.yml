@@ -30,7 +30,6 @@ jobs:
           "$RUNNER_TEMP/marketing-creative-venv/bin/python" -m pip install -r plugins/marketing-images/skills/marketing-image-producer/scripts/requirements.txt
           "$RUNNER_TEMP/marketing-creative-venv/bin/python" -m unittest discover -s tests -v
       - run: python3 scripts/validate_package.py
-      - run: python3 scripts/build_plugin.py --output "$RUNNER_TEMP/marketing-creative-validation.zip"
       - run: python3 scripts/build_plugin.py --plugin marketing-images --output "$RUNNER_TEMP/marketing-images-validation.zip"
       - run: python3 scripts/build_plugin.py --plugin marketing-performance --output "$RUNNER_TEMP/marketing-performance-validation.zip"
       - run: python3 scripts/build_plugin.py --plugin video-studio --output "$RUNNER_TEMP/video-studio-validation.zip"

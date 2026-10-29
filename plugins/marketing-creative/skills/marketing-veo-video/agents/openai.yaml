@@ -1,6 +1,0 @@
-interface:
-  display_name: "Marketing Veo Video"
-  short_description: "Deprecated — Generate approved marketing clips with Google Veo"
-  default_prompt: "Use $marketing-veo-video to resume or revise my existing Marketing Creative project; for new work point me to its Video Studio or Marketing Images replacement."
-policy:
-  allow_implicit_invocation: false

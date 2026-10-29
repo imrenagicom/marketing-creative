@@ -1,6 +1,0 @@
-interface:
-  display_name: "Creative Ideation"
-  short_description: "Deprecated — Explore distinct concepts from a marketing brief"
-  default_prompt: "Use $creative-ideation to resume or revise my existing Marketing Creative project; for new work point me to its Video Studio or Marketing Images replacement."
-policy:
-  allow_implicit_invocation: false

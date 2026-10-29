@@ -23,32 +23,17 @@ class ReleaseTests(unittest.TestCase):
             for name in ("package.json", "package-lock.json"):
                 shutil.copy2(ROOT / name, root / name)
             original_lock = json.loads((root / "package-lock.json").read_text())
-            archive = Path(directory) / "release.zip"
             subprocess.run([sys.executable, str(root / "scripts/prepare_release.py"),
-                            "0.2.3", "--output", str(archive)], check=True,
+                            "0.2.3", "--output-dir", directory], check=True,
                            capture_output=True, text=True)
+            self.assertEqual(sorted(p.name for p in Path(directory).glob("*.zip")),
+                             ["marketing-images-plugin.zip", "marketing-performance-plugin.zip", "video-studio-plugin.zip"])
             for name in VERSION_FILES:
                 self.assertEqual(json.loads((root / name).read_text())["version"], "0.2.3")
             lock = json.loads((root / "package-lock.json").read_text())
             self.assertEqual(lock["packages"][""]["version"], "0.2.3")
             self.assertEqual({k: v for k, v in lock["packages"].items() if k},
                              {k: v for k, v in original_lock["packages"].items() if k})
-            with zipfile.ZipFile(archive) as package:
-                for manifest in ("plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json"):
-                    parsed = json.loads(package.read(manifest))
-                    self.assertEqual(parsed["version"], "0.2.3")
-                    self.assertEqual(parsed["name"], "marketing-creative")
-                self.assertIn("skills/creative-ideation/SKILL.md", package.namelist())
-                for resource in ("SKILL.md", "agents/openai.yaml"):
-                    self.assertIn(f"skills/marketing-video/{resource}", package.namelist())
-                self.assertIn("skills/motion-storyboard/references/beat-planning.md", package.namelist())
-                self.assertIn("skills/motion-voice/references/loudness-and-pauses.md", package.namelist())
-                self.assertNotIn("skills/marketing-brief/SKILL.md", package.namelist())
-                self.assertNotIn("skills/marketing-copywriter/SKILL.md", package.namelist())
-                self.assertNotIn("skills/google-analytics-analyst/SKILL.md", package.namelist())
-                self.assertNotIn("skills/marketing-image-board/SKILL.md", package.namelist())
-                self.assertFalse(any("node_modules" in name for name in package.namelist()))
-
             with zipfile.ZipFile(Path(directory) / "marketing-images-plugin.zip") as package:
                 names = package.namelist()
                 for resource in ("SKILL.md", "agents/openai.yaml", "scripts/split_board.py",
@@ -57,7 +42,6 @@ class ReleaseTests(unittest.TestCase):
                 for resource in ("SKILL.md", "agents/openai.yaml", "scripts/gemini_images.py",
                                  "scripts/requirements.txt", "references/gemini-api.md"):
                     self.assertIn(f"skills/marketing-image-producer/{resource}", names)
-                self.assertNotIn("skills/marketing-video/SKILL.md", names)
                 self.assertFalse(any(name.startswith("third-party/") for name in names))
                 for manifest in ("plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json"):
                     parsed = json.loads(package.read(manifest))
@@ -82,8 +66,6 @@ class ReleaseTests(unittest.TestCase):
                 for resource in ("SKILL.md", "agents/openai.yaml", "references/channel-copy.md",
                                  "references/voice-and-style.md"):
                     self.assertIn(f"skills/marketing-copywriter/{resource}", package.namelist())
-                self.assertNotIn("skills/creative-ideation/SKILL.md", package.namelist())
-                self.assertNotIn("skills/marketing-video/SKILL.md", package.namelist())
                 for manifest in ("plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json"):
                     parsed = json.loads(package.read(manifest))
                     self.assertEqual(parsed["version"], "0.2.3")
@@ -102,7 +84,6 @@ class ReleaseTests(unittest.TestCase):
                 self.assertIn("skills/voice-director/assets/voice-config.example.json", names)
                 self.assertIn("skills/ai-video-generator/scripts/takes.py", names)
                 self.assertIn("skills/studio-producer/assets/example-cinematic/bible/bible.json", names)
-                self.assertNotIn("skills/marketing-video/SKILL.md", names)
                 self.assertNotIn("skills/marketing-brief/SKILL.md", names)
                 for manifest in ("plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json"):
                     parsed = json.loads(package.read(manifest))

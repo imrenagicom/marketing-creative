@@ -8,11 +8,6 @@
   },
   "plugins": [
     {
-      "name": "marketing-creative",
-      "source": "./plugins/marketing-creative",
-      "description": "Deprecated: replaced by Video Studio and Marketing Images; kept to resume existing Marketing Creative video projects"
-    },
-    {
       "name": "marketing-images",
       "source": "./plugins/marketing-images",
       "description": "Campaign image concepts in one cropped contact sheet, then selected Nano Banana finals individually or through the discounted Gemini Batch API"

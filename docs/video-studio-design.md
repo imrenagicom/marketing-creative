@@ -3,8 +3,8 @@
 Status: explainer path (v1) and cinematic footage path (v2) implemented in
 `plugins/video-studio/` (2026-10-27). All earlier open questions are resolved below.
 
-`video-studio` is a new skill plugin, designed from scratch and independent of
-the existing Marketing Creative skills. It covers cinematic films, explainers,
+`video-studio` is a skill plugin designed from scratch, independent of the
+former Marketing Creative skills (removed after v0.13.0), which it replaces. It covers cinematic films, explainers,
 2D/3D animation, UGC/talking-head ads, product demos and music videos.
 
 ## Implementation status (2026-10-27)

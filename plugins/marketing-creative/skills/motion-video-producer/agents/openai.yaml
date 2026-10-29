@@ -1,6 +1,0 @@
-interface:
-  display_name: "Motion Video Producer"
-  short_description: "Deprecated — Orchestrate mixed media into marketing videos"
-  default_prompt: "Use $motion-video-producer to resume or revise my existing Marketing Creative project; for new work point me to its Video Studio or Marketing Images replacement."
-policy:
-  allow_implicit_invocation: false
