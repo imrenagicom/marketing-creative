@@ -553,6 +553,8 @@ class MotionDesignerTests(ProjectFixture):
 
 EDIT = SKILLS / "editor/scripts/edit.py"
 QC = SKILLS / "qc-reviewer/scripts/qc.py"
+CAMPAIGN = SKILLS / "studio-producer/scripts/campaign.py"
+STUDIO = SKILLS / "studio-producer/scripts/studio.py"
 sys.path.insert(0, str(EDIT.parent))
 import edit  # noqa: E402
 
@@ -641,6 +643,36 @@ class EditorAndQcTests(ProjectFixture):
         statuses = {(c["canvas"], c["check"]): c["status"] for c in broken["checks"]}
         self.assertEqual(statuses[("9x16", "dimensions")], "fail")
         self.assertEqual(statuses[("all", "captions")], "warn")
+
+    def test_campaign_link_and_handoff_file_approved_video_without_overwriting(self):
+        campaign = Path(self.temp.name) / "marketing/campaigns/2026-10-29-launch"
+        ad = "meta-ads/campaigns/launch/adsets/broad/ads/demo-video"
+        (campaign / ad).mkdir(parents=True)
+        (campaign / "campaign.json").write_text(json.dumps({"schema_version": 1, "campaign_id": "2026-10-29-launch",
+                                                            "defaults": {}, "links": []}))
+        missing = self.run_script(CAMPAIGN, "link", self.root, "--campaign", campaign, "--deliverable", "instagram/posts/none")
+        self.assertIn("No ad or post directory", missing.stderr)
+        linked = self.run_script(CAMPAIGN, "link", self.root, "--campaign", campaign, "--deliverable", ad)
+        self.assertEqual(linked.returncode, 0, linked.stderr)
+        status = json.loads(self.run_script(STUDIO, "validate", self.root).stdout)["campaign"]
+        self.assertEqual((status["id"], status["found"], status["brief"], status["deliverables"]),
+                         ("2026-10-29-launch", True, False, [ad]))
+        early = self.run_script(CAMPAIGN, "handoff", self.root, "--deliverable", ad, "--note", "approved in chat")
+        self.assertIn("No final QC report", early.stderr)
+        for step in (("render",), ("captions",), ("finish",)):
+            self.assertEqual(self.run_script(EDIT, *step, self.root).returncode, 0)
+        self.assertEqual(self.run_script(QC, "final", self.root).returncode, 0)
+        other = self.run_script(CAMPAIGN, "handoff", self.root, "--deliverable", "twitter/posts/x", "--note", "ok")
+        self.assertIn("not one of this video's campaign deliverables", other.stderr)
+        for revision in ("v001", "v002"):
+            done = self.run_script(CAMPAIGN, "handoff", self.root, "--deliverable", ad, "--note", "User approved v1 in chat")
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(done.stdout)["approved"], f"{ad}/assets/approved/{revision}")
+        record = json.loads((campaign / ad / "assets/approved/v001/assets.json").read_text())
+        self.assertEqual((record["campaign_id"], record["render"], record["source"]), ("2026-10-29-launch", "v1", "video-studio"))
+        video = campaign / ad / "assets/approved/v001" / record["assets"][0]["file"]
+        self.assertTrue(video.is_file())
+        self.assertEqual(len(record["assets"][0]["sha256"]), 64)
 
     def test_burn_in_requires_captions_and_render_requires_builds(self):
         self.assertEqual(self.run_script(EDIT, "render", self.root, "--canvas", "1x1").returncode, 1)

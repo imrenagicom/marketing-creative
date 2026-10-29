@@ -40,6 +40,7 @@ IDs are short slugs (`B1`, `L03`, `S04`) and never change once downstream files 
 | `language` | `en`, `id`, or `null` until the user chooses |
 | `formats[]` | `{id, width, height}`; ids `16x9`, `9x16`, `4x5`, `1x1` |
 | `fps` | 24, 25, 30 or 60 |
+| `campaign` | optional `{dir, id, deliverables[]}`, written by `campaign.py link`: the campaign directory relative to the project, its `campaign_id`, and the ad or post paths (relative to the campaign) this video serves ([campaign.md](campaign.md)) |
 
 ## direction/lock.json — `video-studio/direction-lock@1`
 

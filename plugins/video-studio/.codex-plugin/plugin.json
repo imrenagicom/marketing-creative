@@ -1,7 +1,7 @@
 {
   "name": "video-studio",
   "version": "0.12.0",
-  "description": "Explainer and cinematic video production in English or Indonesian: direction options, native scripts, ElevenLabs narration and sound, continuity bibles, Higgsfield or Gemini API keyframes and approved video takes, HyperFrames compositions, assembly, delivery and QC.",
+  "description": "Campaign videos — explainers and cinematic short films in English or Indonesian: direction options from the campaign brief, native scripts, ElevenLabs narration and sound, continuity bibles, contact-sheet boards, Higgsfield or Gemini API keyframes and approved video takes, HyperFrames compositions, assembly, QC and handoff into the campaign's approved assets.",
   "author": {
     "name": "Imre Nagi"
   },
@@ -24,7 +24,7 @@
   "interface": {
     "displayName": "Video Studio",
     "shortDescription": "Direct, voice, generate and deliver explainers and short films",
-    "longDescription": "Produce explainer videos and cinematic short films from idea to delivery: the director drafts direction options you pick and edit, scripts are written natively in English or Indonesian, ElevenLabs supplies narration with word timestamps and sound design, a continuity bible locks characters, locations and light, Higgsfield generates keyframes under an image budget and video takes only after you approve each exact request, takes pass dailies review, and HyperFrames compositions or footage timelines are rendered, finished and quality-checked.",
+    "longDescription": "Produce a marketing campaign's explainer videos and cinematic short films from brief to delivery, inside the campaign workspace that campaign-manager keeps. The director drafts direction options from the campaign brief for you to pick and edit. Scripts are written natively in English or Indonesian. ElevenLabs supplies narration with word timestamps, and sound design. A continuity bible locks characters, locations and light. Contact-sheet boards preview shots cheaply. Higgsfield or the Gemini API generates keyframes under an image budget, and video takes only after you approve each exact request. Takes pass dailies review, and HyperFrames compositions or footage timelines are rendered, finished and quality-checked. Approved deliveries are filed into each ad's or post's approved assets.",
     "developerName": "Imre Nagi",
     "category": "Productivity",
     "capabilities": [

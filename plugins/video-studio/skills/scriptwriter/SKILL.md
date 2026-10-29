@@ -13,6 +13,8 @@ Run `studio.py status <project-dir>` (in the producer's scripts). You need an ap
 
 Read the lock's hook, beats, acting baselines and register. Read [structures.md](references/structures.md), then the writing guide for the language: [writing-en.md](references/writing-en.md) or [writing-id.md](references/writing-id.md).
 
+For a campaign video, keep every claim, number, price and offer to what the campaign brief supports, in its approved wording, and end on the deliverable's CTA. When a line needs a fact the brief doesn't have, ask; don't invent it ([campaign.md](../studio-producer/references/campaign.md)).
+
 ## Write `script/script.json`
 
 One entry per spoken line: `{id, beat, speaker, text, delivery, keywords, on_screen?}` (fields in the producer's [project contract](../studio-producer/references/project-contract.md)).
