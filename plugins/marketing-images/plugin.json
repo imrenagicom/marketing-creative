@@ -1,0 +1,12 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "marketing-images",
+  "displayName": "Marketing Images",
+  "version": "0.12.0",
+  "description": "Campaign images for ads, social posts and carousels: brief-led concept contact sheets cropped into stable-ID previews, then selected finals with Nano Banana individually or through Gemini's discounted Batch API.",
+  "suggestedPrompts": [
+    "Use marketing-image-board to explore image concepts for this campaign brief in one contact sheet.",
+    "Use marketing-image-producer to generate my selected board tiles as final 4K campaign images.",
+    "Use marketing-image-producer to batch the approved carousel slides for this Instagram post."
+  ]
+}

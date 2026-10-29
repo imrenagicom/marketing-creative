@@ -6,6 +6,10 @@ export const archivePath = join(
   "marketing-creative-plugin.zip",
 );
 
+export const imagesArchivePath = join(
+  process.env.RUNNER_TEMP || tmpdir(), "marketing-images-plugin.zip",
+);
+
 export const performanceArchivePath = join(
   process.env.RUNNER_TEMP || tmpdir(), "marketing-performance-plugin.zip",
 );
@@ -55,6 +59,9 @@ export default {
         "plugins/marketing-creative/.codex-plugin/plugin.json",
         "plugins/marketing-creative/.claude-plugin/plugin.json",
         "plugins/marketing-creative/plugin.json",
+        "plugins/marketing-images/.codex-plugin/plugin.json",
+        "plugins/marketing-images/.claude-plugin/plugin.json",
+        "plugins/marketing-images/plugin.json",
         "plugins/marketing-performance/.codex-plugin/plugin.json",
         "plugins/marketing-performance/.claude-plugin/plugin.json",
         "plugins/marketing-performance/plugin.json",
@@ -67,6 +74,7 @@ export default {
     ["@semantic-release/github", {
       assets: [
         { path: archivePath, label: "Marketing Creative complete skill plugin" },
+        { path: imagesArchivePath, label: "Marketing Images complete skill plugin" },
         { path: performanceArchivePath, label: "Marketing Performance complete skill plugin" },
         { path: videoStudioArchivePath, label: "Video Studio complete skill plugin" },
       ],

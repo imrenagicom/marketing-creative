@@ -340,7 +340,8 @@ class ProductionTests(unittest.TestCase):
         files = PACKAGE.validate()
         self.assertEqual(len([p for p in files if p.name == "SKILL.md"]),
                          sum(len(skills) for skills in PACKAGE.PLUGINS.values()))
-        self.assertEqual(len(PACKAGE.PLUGINS["marketing-creative"]) + len(PACKAGE.PLUGINS["marketing-performance"]), 17)
+        self.assertEqual(len(PACKAGE.PLUGINS["marketing-creative"]) + len(PACKAGE.PLUGINS["marketing-performance"]), 15)
+        self.assertEqual(PACKAGE.PLUGINS["marketing-images"], {"marketing-image-board", "marketing-image-producer"})
         self.assertEqual(len([p for p in files if p.suffix == ".LICENSE"]), 2)
         self.assertTrue(any(p.name == "voice.py" for p in files))
         self.assertFalse(any("local-docs" in p.parts or "samples" in p.parts for p in files))

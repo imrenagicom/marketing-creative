@@ -18,8 +18,8 @@ Own the mixed-media timeline and final exports. Provider video skills create sou
 | Campaign strategy or audience/offer decisions | `$marketing-brief` (optional marketing-performance plugin; use the supplied brief or establish the necessary strategic facts directly if unavailable) |
 | Distinct creative ideas or a selected creative brief | [creative-ideation](../creative-ideation/SKILL.md) |
 | Exact ad script and production direction | [ad-video-director](../ad-video-director/SKILL.md) |
-| Contact-sheet image exploration | [marketing-image-board](../marketing-image-board/SKILL.md) |
-| Selected standalone/generated images | [marketing-image-producer](../marketing-image-producer/SKILL.md) |
+| Contact-sheet image exploration | `$marketing-image-board` (marketing-images plugin) |
+| Selected standalone/generated images | `$marketing-image-producer` (marketing-images plugin) |
 | User-approved Veo asset/reference/interpolation/extension | [marketing-veo-video](../marketing-veo-video/SKILL.md) |
 | User-approved Omni generation/conversational editing/extension | [marketing-omni-video](../marketing-omni-video/SKILL.md) |
 | Visual identity, style and motion language | [motion-art-director](../motion-art-director/SKILL.md) |

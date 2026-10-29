@@ -1,6 +1,6 @@
 # Marketing Creative and Performance
 
-Three independently installable plugins cover campaign planning, copywriting, analytics and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Creative owns thirteen skills for ideas, images, scripts and videos; Video Studio is a from-scratch video studio for explainers and cinematic short films with thirteen stage skills ([design](docs/video-studio-design.md)). Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
+Four independently installable plugins cover campaign planning, copywriting, analytics and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Images owns `marketing-image-board` and `marketing-image-producer` for campaign images; Marketing Creative owns eleven skills for ideas, scripts and videos; Video Studio is a from-scratch video studio for explainers and cinematic short films with thirteen stage skills ([design](docs/video-studio-design.md)). Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
 
 ## Skills and handoffs
 
@@ -12,8 +12,8 @@ Three independently installable plugins cover campaign planning, copywriting, an
 | `marketing-brief` (marketing-performance) | Product facts, research and goal → strategic brief, evidence, placement requirements |
 | `marketing-copywriter` (marketing-performance) | Brief or draft → exact ad, landing-page, email or social copy, voice/style variants and localization |
 | `creative-ideation` | Marketing brief → distinct concepts and selected creative brief |
-| `marketing-image-board` | Brief, concepts and optional references → one board with a chosen tile count/ratio and locally cropped previews |
-| `marketing-image-producer` | Brief or selected concepts/tiles, with optional references → standalone image assets or discounted asynchronous Gemini batches |
+| `marketing-image-board` (marketing-images) | Brief, concepts and optional references → one board with a chosen tile count/ratio and locally cropped previews |
+| `marketing-image-producer` (marketing-images) | Brief or selected concepts/tiles, with optional references → standalone image assets or discounted asynchronous Gemini batches |
 | `marketing-veo-video` | Explicitly approved Veo request → generated marketing video or clip with measured metadata and provenance |
 | `marketing-omni-video` | Explicitly approved Omni Flash request → reference-driven video, conversational edit, extension or upscaled clip |
 | `ad-video-director` | Selected idea and brief → exact script, copy, shot direction and production handoff |
@@ -56,13 +56,14 @@ Explainers are narration-first: word timestamps time every shot. Films are conti
 
 ## Install
 
-Plugins live in `plugins/marketing-creative/`, `plugins/marketing-performance/` and `plugins/video-studio/`. Install either or both complete trees; each plugin contains its own required resources and host manifests for Codex (`.codex-plugin/plugin.json`), Claude Code (`.claude-plugin/plugin.json`) and Google Antigravity (`plugin.json`). Creative production accepts supplied briefs without the Performance plugin.
+Plugins live in `plugins/marketing-creative/`, `plugins/marketing-images/`, `plugins/marketing-performance/` and `plugins/video-studio/`. Install either or both complete trees; each plugin contains its own required resources and host manifests for Codex (`.codex-plugin/plugin.json`), Claude Code (`.claude-plugin/plugin.json`) and Google Antigravity (`plugin.json`). Creative production accepts supplied briefs without the Performance plugin.
 
 ### Codex
 
 ```sh
 codex plugin marketplace add /absolute/path/to/marketing-creative
 codex plugin add marketing-creative@marketing-creative
+codex plugin add marketing-images@marketing-creative
 codex plugin add marketing-performance@marketing-creative
 codex plugin add video-studio@marketing-creative
 codex plugin list --marketplace marketing-creative --json
@@ -75,6 +76,7 @@ Or register `imrenagicom/marketing-creative` after the relevant release is publi
 ```sh
 claude plugin marketplace add /absolute/path/to/marketing-creative
 claude plugin install marketing-creative@marketing-creative
+claude plugin install marketing-images@marketing-creative
 claude plugin install marketing-performance@marketing-creative
 claude plugin install video-studio@marketing-creative
 claude plugin details marketing-creative
@@ -85,16 +87,17 @@ After publication, use `claude plugin marketplace add imrenagicom/marketing-crea
 
 ### Google Antigravity
 
-From a checkout or an extracted plugin archive (`marketing-creative-plugin.zip` / `marketing-performance-plugin.zip`):
+From a checkout or an extracted plugin archive (`marketing-creative-plugin.zip`, `marketing-images-plugin.zip`, `marketing-performance-plugin.zip` or `video-studio-plugin.zip`):
 
 ```sh
 agy plugin install /absolute/path/to/marketing-creative/plugins/marketing-creative
+agy plugin install /absolute/path/to/marketing-creative/plugins/marketing-images
 agy plugin install /absolute/path/to/marketing-creative/plugins/marketing-performance
 agy plugin install /absolute/path/to/marketing-creative/plugins/video-studio
 agy plugin list --json
 ```
 
-Inside an interactive Antigravity CLI session, run `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-creative` and `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-performance` (or select *Install from local directory* in the `/plugin` manager). Installed plugins are staged under `~/.gemini/config/plugins/marketing-creative/` and `~/.gemini/config/plugins/marketing-performance/` and synchronized across the Antigravity App, IDE, and CLI; restart if newly installed skills do not appear immediately. When opening the `marketing-creative` repository itself as a workspace in Antigravity, `.agents/plugins.json` automatically registers all three plugins and their 30 skills without requiring global installation.
+Inside an interactive Antigravity CLI session, run `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-creative` and `/plugin install /absolute/path/to/marketing-creative/plugins/marketing-performance` (or select *Install from local directory* in the `/plugin` manager). Installed plugins are staged under `~/.gemini/config/plugins/marketing-creative/` and `~/.gemini/config/plugins/marketing-performance/` and synchronized across the Antigravity App, IDE, and CLI; restart if newly installed skills do not appear immediately. When opening the `marketing-creative` repository itself as a workspace in Antigravity, `.agents/plugins.json` automatically registers all four plugins and their 30 skills without requiring global installation.
 
 For clients without plugin support, reference the complete skill tree from the client's instruction file, retaining all sibling skills and third-party/ notices. No global installation or client configuration is changed by this repository.
 
@@ -220,7 +223,7 @@ The default is **Nano Banana 2.1 (`gemini-nano-banana-2.1`)**, verified against 
 Image helpers need Python 3.10+ and Pillow (no Google SDK). Install in a separate environment:
 
 ```sh
-SUITE="$PWD/plugins/marketing-creative/skills"
+SUITE="$PWD/plugins/marketing-images/skills"
 python3 -m venv /path/to/image-tools-env
 /path/to/image-tools-env/bin/python -m pip install -r "$SUITE/marketing-image-producer/scripts/requirements.txt"
 PYTHON=/path/to/image-tools-env/bin/python
@@ -228,7 +231,7 @@ IMG_TOOL="$SUITE/marketing-image-producer/scripts/gemini_images.py"
 SPLIT_TOOL="$SUITE/marketing-image-board/scripts/split_board.py"
 ```
 
-Copy the [campaign example](plugins/marketing-creative/skills/marketing-image-board/assets/campaign.example.json) into your work directory. Its nine-cell square layout is only an example: choose the concept count for the brief and set any supported sheet ratio/rows/columns, or omit `grid` for automatic packing. A partially occupied last row is allowed; unused cells stay blank and are not cropped. Each concept has a stable ID and a distinct prompt. Use the same saved plan for generation and splitting.
+Copy the [campaign example](plugins/marketing-images/skills/marketing-image-board/assets/campaign.example.json) into your work directory. Its nine-cell square layout is only an example: choose the concept count for the brief and set any supported sheet ratio/rows/columns, or omit `grid` for automatic packing. A partially occupied last row is allowed; unused cells stay blank and are not cropped. Each concept has a stable ID and a distinct prompt. Use the same saved plan for generation and splitting.
 
 References are optional. Use `references: []` or omit reference fields for brief-only generation. For one or more inputs, use `"references": [{"path": "product.png", "role": "product"}, {"path": "look.png", "role": "style"}]`, with paths relative to the plan. The example's older single `reference` string remains supported; use either field. Repeated `--reference /path/to/image.png` flags override the plan's references. Up to fourteen reference images are supported per request, including a selected tile. Image plans contain no credentials.
 
@@ -255,7 +258,7 @@ The board command makes one `generateContent` call for all concepts. More tiles 
 
 Batch uses the actual asynchronous Gemini Batch API, with automatic inline/JSONL transport. Google currently documents [50% of equivalent standard inference cost and a target turnaround up to 24 hours](https://ai.google.dev/gemini-api/docs/batch-api). Concurrent standard calls do not receive that discount. Board savings depend on resolution and input/output tokens; they are not a guaranteed ninefold reduction. Batch changes cost/latency, while full-resolution regeneration is the quality step.
 
-See the [image workflow](plugins/marketing-creative/skills/marketing-image-producer/references/image-workflow.md), [board guidance](plugins/marketing-creative/skills/marketing-image-board/references/board-workflow.md) and [API source register](plugins/marketing-creative/skills/marketing-image-producer/references/gemini-api.md) for plan fields, errors, output manifests and model/API verification.
+See the [image workflow](plugins/marketing-images/skills/marketing-image-producer/references/image-workflow.md), [board guidance](plugins/marketing-images/skills/marketing-image-board/references/board-workflow.md) and [API source register](plugins/marketing-images/skills/marketing-image-producer/references/gemini-api.md) for plan fields, errors, output manifests and model/API verification.
 
 ### Optional Veo video generation
 
@@ -338,17 +341,20 @@ Canvas presets are 1920×1080, 1080×1920, 1080×1350 and 1080×1080. They are n
 ```sh
 # Activate the image-tools environment above to run all image tests.
 . /path/to/image-tools-env/bin/activate
-python3 -m pip install -r plugins/marketing-creative/skills/marketing-image-producer/scripts/requirements.txt
+python3 -m pip install -r plugins/marketing-images/skills/marketing-image-producer/scripts/requirements.txt
 python3 -m unittest discover -s tests -v
 python3 scripts/validate_package.py
 claude plugin validate ./plugins/marketing-creative
+claude plugin validate ./plugins/marketing-images
 claude plugin validate ./plugins/marketing-performance
 claude plugin validate ./plugins/video-studio
 claude plugin validate ./.claude-plugin/marketplace.json
 agy plugin validate ./plugins/marketing-creative
+agy plugin validate ./plugins/marketing-images
 agy plugin validate ./plugins/marketing-performance
 agy plugin validate ./plugins/video-studio
 python3 scripts/build_plugin.py --output /tmp/marketing-creative-plugin.zip
+python3 scripts/build_plugin.py --plugin marketing-images --output /tmp/marketing-images-plugin.zip
 python3 scripts/build_plugin.py --plugin marketing-performance --output /tmp/marketing-performance-plugin.zip
 python3 scripts/build_plugin.py --plugin video-studio --output /tmp/video-studio-plugin.zip
 ```

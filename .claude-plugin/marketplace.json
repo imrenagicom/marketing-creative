@@ -13,6 +13,11 @@
       "description": "Thirteen creative skills with a video workflow entry point, beat planning, narration finishing, images and opt-in Veo/Omni clips"
     },
     {
+      "name": "marketing-images",
+      "source": "./plugins/marketing-images",
+      "description": "Campaign image concepts in one cropped contact sheet, then selected Nano Banana finals individually or through the discounted Gemini Batch API"
+    },
+    {
       "name": "marketing-performance",
       "source": "./plugins/marketing-performance",
       "description": "Marketing briefs, channel-ready copy, Google Analytics 4 funnel analysis and campaign operations with documented UTM links and performance reports"

@@ -7,7 +7,7 @@ description: Explore marketing image concepts in a flexible tiled Gemini contact
 
 Use the marketing brief and any supplied reference images to explore distinct image assets in ONE generated image. A board is a set of marketing options or carousel slides, not necessarily a chronological video storyboard. Reference images are optional; use them when available to guide product identity, brand, characters or style.
 
-Read supplied references using available image-viewing tools and identify each one's role. Preserve the actual product, brand and supported claims. Read supplied briefs/concepts rather than repeating strategy intake; use [creative-ideation](../creative-ideation/SKILL.md) when the underlying ideas are missing.
+Read supplied references using available image-viewing tools and identify each one's role. Preserve the actual product, brand and supported claims. Read supplied briefs/concepts rather than repeating strategy intake; when the underlying ideas are missing, draft them first: each concept ties the audience's tension to visible product proof and a clear action, and differs in idea rather than palette. Use `$marketing-brief` (marketing-performance plugin) when the campaign strategy itself is missing.
 
 ## Plan the cells
 

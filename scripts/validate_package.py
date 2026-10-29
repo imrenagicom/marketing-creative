@@ -15,9 +15,9 @@ PLUGINS_CONFIG = ".agents/plugins.json"
 PLUGINS = {
     "marketing-creative": {"marketing-video", "creative-ideation", "ad-video-director",
         "motion-video-producer", "motion-art-director", "motion-storyboard",
-        "motion-voice", "motion-composer", "motion-video-qa",
-        "marketing-image-board", "marketing-image-producer", "marketing-veo-video",
+        "motion-voice", "motion-composer", "motion-video-qa", "marketing-veo-video",
         "marketing-omni-video"},
+    "marketing-images": {"marketing-image-board", "marketing-image-producer"},
     "marketing-performance": {"marketing-brief", "campaign-manager",
         "marketing-copywriter", "google-analytics-analyst"},
     "video-studio": {"studio-producer", "reference-analyst", "continuity-bible", "keyframe-generator", "ai-video-generator", "sound-designer", "director", "scriptwriter", "voice-director", "shot-designer", "motion-designer",

@@ -17,6 +17,18 @@
       "category": "Productivity"
     },
     {
+      "name": "marketing-images",
+      "source": {
+        "source": "local",
+        "path": "./plugins/marketing-images"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "marketing-performance",
       "source": {
         "source": "local",
