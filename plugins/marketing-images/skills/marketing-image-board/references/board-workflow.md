@@ -17,9 +17,9 @@ Omit grid dimensions to let the shared helper choose packing based on item count
 Set IMG_TOOL to the installed marketing-image-producer/scripts/gemini_images.py path and SPLIT_TOOL to this skill's scripts/split_board.py. See [setup and plan contract](../../marketing-image-producer/references/image-workflow.md).
 
 ```sh
-python3 "$IMG_TOOL" board campaign.json --out /path/to/work/board-v1 --dry-run
-python3 "$IMG_TOOL" board campaign.json --out /path/to/work/board-v1
-python3 "$SPLIT_TOOL" /path/to/work/board-v1/board.png --plan campaign.json --out /path/to/work/tiles-v1
+python3 "$IMG_TOOL" board image-plan.json --out /path/to/work/board-v1 --dry-run
+python3 "$IMG_TOOL" board image-plan.json --out /path/to/work/board-v1
+python3 "$SPLIT_TOOL" /path/to/work/board-v1/board.png --plan image-plan.json --out /path/to/work/tiles-v1
 ```
 
 Use the actual returned image extension from assets.json (PNG/JPEG/WEBP), not an assumed PNG. No output directory is created by dry-run. An actual run needs a new output directory; preserve prior versions.

@@ -1,6 +1,6 @@
 ---
 name: marketing-image-producer
-description: Generate marketing images from a brief, optional reference images or selected concept-board tiles using Nano Banana, individually or through Gemini's discounted asynchronous Batch API. Use for final Instagram posts, carousel assets and image ads.
+description: Generate marketing images from a brief, optional reference images or selected concept-board tiles using Nano Banana, individually or through Gemini's discounted asynchronous Batch API. Use for a campaign's final Instagram posts, carousel assets and image ads.
 ---
 
 # Marketing Image Producer
@@ -8,6 +8,10 @@ description: Generate marketing images from a brief, optional reference images o
 Produce the authorized image deliverable from the marketing/creative brief and any supplied reference images. References are optional, including for direct generation without a board. For exploratory alternatives, use [marketing-image-board](../marketing-image-board/SKILL.md) first; a supplied selected concept can enter here directly.
 
 Read supplied references and selected tiles using available viewing tools. Identify each reference's role, such as product, style, logo or character. Preserve product identity, evidence, approved copy and the chosen direction. A tile is a layout reference, not a source of new facts.
+
+## Work inside the campaign
+
+Every final image is a creative for a marketing campaign. Read [campaign.md](references/campaign.md). Take the brief, approved claims, copy, CTA and required ratios from the campaign and its ad or post specs. Run generation under the deliverable's `assets/development/images/`, and file approved finals into its next `assets/approved/vNNN/images/` with `assets.json`. Alt text goes to `$marketing-copywriter`, and revision pointers to `$campaign-manager`. Reuse approved images across ads and posts by copying them, never by regenerating. With no campaign, offer `$campaign-manager`, or work in a separate directory and say the images are not filed to a campaign.
 
 ## Choose delivery mode
 
@@ -38,4 +42,4 @@ A succeeded batch can contain failed items. Download preserves successful images
 
 Inspect every generated image at delivery size. Check exact copy, logos/product fidelity, claims, composition, placement crop and generated-art labeling where relevant. A model can render incorrect text; ask for textless imagery plus deterministic typography when exact typesetting is needed. Do not declare an image reviewed from an HTTP success.
 
-Show native/local images to the user. Keep assets.json, original reference/plan, selected IDs, actual dimensions, generation model and review notes with the campaign. For a video, register the reviewed image and hash in its asset manifest; this skill does not render video or publish ads.
+Show native/local images to the user. Keep assets.json, original reference/plan, selected IDs, actual dimensions, generation model and review notes in the deliverable's approved revision, as [campaign.md](references/campaign.md) describes. For a video, register the reviewed image and hash in its asset manifest; this skill does not render video or publish ads.

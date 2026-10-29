@@ -30,7 +30,7 @@ Under `<YYYY-MM-DD>-<campaign-name>/meta-ads/`, organize campaigns, ad sets, and
                   development/
                     storyboard/          # concepts, scripts, style direction, beat sheets, storyboard.json
                     images/              # references, contact-sheet boards, cropped tiles, candidate renders
-                    video/               # video projects, scene generators, Veo/Omni runs, draft renders/QA
+                    video/               # Video Studio projects, scene generators and Gemini/Higgsfield runs, draft renders/QA
                     audio/               # voice configs, raw/normalized narration takes, alignment, music/SFX
                   approved/
                     v001/                # approved deliverable revision ready for publishing

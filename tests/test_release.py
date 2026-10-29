@@ -52,7 +52,7 @@ class ReleaseTests(unittest.TestCase):
             with zipfile.ZipFile(Path(directory) / "marketing-images-plugin.zip") as package:
                 names = package.namelist()
                 for resource in ("SKILL.md", "agents/openai.yaml", "scripts/split_board.py",
-                                 "references/board-workflow.md", "assets/campaign.example.json"):
+                                 "references/board-workflow.md", "assets/image-plan.example.json"):
                     self.assertIn(f"skills/marketing-image-board/{resource}", names)
                 for resource in ("SKILL.md", "agents/openai.yaml", "scripts/gemini_images.py",
                                  "scripts/requirements.txt", "references/gemini-api.md"):

@@ -8,7 +8,7 @@ For an ad, distinguish primary text, headline, description, CTA label and any on
 
 For social posts, match the reader's context and the requested format. A carousel needs an opening promise, a useful ordered progression and a payoff; it is not a collection of unrelated headline variants. Distinguish captions from text that must fit on the artwork. Use hashtags, emoji or engagement prompts when they suit the brand and assignment, rather than adding them by default. Do not manufacture customer comments, endorsements or personal experience.
 
-Short-form video hooks, overlay lines and post captions fit this skill. Timing the whole script, dialogue, shots and edit cues belongs to ad-video-director. Preserve a supplied concept when refining its lines.
+Short-form video hooks, overlay lines and post captions fit this skill. Timing the whole script, dialogue, shots and edit cues belongs to Video Studio's scriptwriter and shot-designer (`$studio-producer`). Preserve a supplied concept when refining its lines.
 
 Whenever images, carousel slides, videos or other visual assets are created or attached for an ad or social post, also write concise accessibility alt text for each visual asset (per image, per carousel slide in sequence, or describing the video's visual action and key on-screen text). Describe what is actually shown and any essential text rendered in the artwork without keyword stuffing or inventing unshown details.
 

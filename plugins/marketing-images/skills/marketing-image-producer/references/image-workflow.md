@@ -20,7 +20,7 @@ Python 3.10+ and Pillow are required. No Google SDK is needed: the helper uses G
 }
 ```
 
-Set items to the concept count needed, without a fixed nine-item requirement. The [complete campaign example](../../marketing-image-board/assets/campaign.example.json) is one possible 3×3 layout. Every item needs a unique filename-safe ID. Omit grid for automatic sheet ratio/packing, constrain only its aspectRatio, or set rows/columns explicitly. Extra trailing grid cells are blank and not cropped. Use the same saved plan for generation and splitting.
+Set items to the concept count needed, without a fixed nine-item requirement. The [complete image plan example](../../marketing-image-board/assets/image-plan.example.json) is one possible 3×3 layout. Every item needs a unique filename-safe ID. Omit grid for automatic sheet ratio/packing, constrain only its aspectRatio, or set rows/columns explicitly. Extra trailing grid cells are blank and not cropped. Use the same saved plan for generation and splitting.
 
 References are optional: omit references or use [] for brief-only generation. Entries can be path strings or objects with path/role; paths resolve relative to the plan. The older reference string still works for a single product image; use either reference or references. Repeated --reference /path/to/image flags override plan references, with paths relative to the current directory and default product role. Reference PNG/JPEG/WEBP files must each be under 18 MiB; total request limits still apply. At most fourteen images are accepted per request, including the selected tile (so at most thirteen other references with --tiles).
 
@@ -42,8 +42,8 @@ Use that Python interpreter for generation and local splitting. Dry-run validate
 ## Single final
 
 ```sh
-python3 "$IMG_TOOL" image campaign.json --select demo --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/final-demo-v1 --dry-run
-python3 "$IMG_TOOL" image campaign.json --select demo --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/final-demo-v1
+python3 "$IMG_TOOL" image image-plan.json --select demo --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/final-demo-v1 --dry-run
+python3 "$IMG_TOOL" image image-plan.json --select demo --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/final-demo-v1
 ```
 
 Omit --tiles to work directly from the brief and any supplied references. image requires exactly one selected item (or a plan with one item). For an ad-hoc reference, add --reference /path/to/product.png; repeat the flag to supply additional images. Use the actual output filename in assets.json.
@@ -51,8 +51,8 @@ Omit --tiles to work directly from the brief and any supplied references. image 
 ## Discounted final batch
 
 ```sh
-python3 "$IMG_TOOL" batch-submit campaign.json --select demo objection action --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/finals-v1 --dry-run
-python3 "$IMG_TOOL" batch-submit campaign.json --select demo objection action --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/finals-v1
+python3 "$IMG_TOOL" batch-submit image-plan.json --select demo objection action --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/finals-v1 --dry-run
+python3 "$IMG_TOOL" batch-submit image-plan.json --select demo objection action --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/finals-v1
 python3 "$IMG_TOOL" batch-status /path/to/work/finals-v1
 python3 "$IMG_TOOL" batch-download /path/to/work/finals-v1
 ```

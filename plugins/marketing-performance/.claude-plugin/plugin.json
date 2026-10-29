@@ -1,7 +1,7 @@
 {
   "name": "marketing-performance",
   "version": "0.12.0",
-  "description": "Marketing briefs, copywriting, campaign operations, Google Analytics 4 funnel analysis and documented UTM planning in the current workspace.",
+  "description": "The campaign workspace every creative plugin works in: marketing briefs, copywriting, campaign operations, Google Analytics 4 funnel analysis and documented UTM planning in the current workspace.",
   "author": {
     "name": "Imre Nagi"
   },

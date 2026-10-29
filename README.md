@@ -2,6 +2,16 @@
 
 Four independently installable plugins cover campaign planning, copywriting, analytics and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Images owns `marketing-image-board` and `marketing-image-producer` for campaign images; Marketing Creative owns eleven skills for ideas, scripts and videos; Video Studio is a from-scratch video studio for explainers and cinematic short films with thirteen stage skills ([design](docs/video-studio-design.md)). Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
 
+## One campaign, every plugin
+
+The plugins serve one purpose: producing a marketing campaign. `campaign-manager` (marketing-performance) creates the campaign workspace, `marketing/campaigns/<YYYY-MM-DD>-<campaign-name>/`, with its brief, Meta Ads and social trees, tracking and reports. The creative plugins work inside it:
+
+- Marketing Images plans boards and finals in an ad's or post's `assets/development/images/` and files approved images into `assets/approved/vNNN/images/`.
+- Video Studio creates its project in `assets/development/video/<YYYY-MM-DD>-<slug>/`, records the link with `campaign.py link`, and after QC and the user's approval runs `campaign.py handoff` to file the deliveries into `assets/approved/vNNN/video/` with `assets.json`.
+- `marketing-copywriter` writes the copy and alt text. `campaign-manager` updates revision pointers and UTMs and writes performance reports.
+
+Every creative skill reads the campaign brief, approved claims, CTA and required ratios instead of repeating intake. None of them publishes or edits the campaign's `campaign.json`, `ad.json` or `post.json`.
+
 ## Skills and handoffs
 
 | Skill | Input → output |
@@ -38,7 +48,7 @@ Start video work with [`marketing-video`](plugins/marketing-creative/skills/mark
 
 | Skill | Input → output |
 | --- | --- |
-| `studio-producer` | Idea, brief or existing project → project files, next stage, language choice and approved budgets |
+| `studio-producer` | Idea, campaign brief or existing project → project files linked to the campaign, next stage, language choice, approved budgets and the approved-asset handoff |
 | `director` | Idea or brief → 2–3 direction options (hook, beats, acting baselines, visual plan) → the user-approved direction lock |
 | `scriptwriter` | Direction lock → native English or Indonesian script with register, delivery and on-screen keywords |
 | `voice-director` | Script → ElevenLabs narration take (via the `elevenlabs` CLI) and word timestamps, or alignment of a supplied recording |
@@ -231,7 +241,7 @@ IMG_TOOL="$SUITE/marketing-image-producer/scripts/gemini_images.py"
 SPLIT_TOOL="$SUITE/marketing-image-board/scripts/split_board.py"
 ```
 
-Copy the [campaign example](plugins/marketing-images/skills/marketing-image-board/assets/campaign.example.json) into your work directory. Its nine-cell square layout is only an example: choose the concept count for the brief and set any supported sheet ratio/rows/columns, or omit `grid` for automatic packing. A partially occupied last row is allowed; unused cells stay blank and are not cropped. Each concept has a stable ID and a distinct prompt. Use the same saved plan for generation and splitting.
+Copy the [image plan example](plugins/marketing-images/skills/marketing-image-board/assets/image-plan.example.json) into your work directory. Its nine-cell square layout is only an example: choose the concept count for the brief and set any supported sheet ratio/rows/columns, or omit `grid` for automatic packing. A partially occupied last row is allowed; unused cells stay blank and are not cropped. Each concept has a stable ID and a distinct prompt. Use the same saved plan for generation and splitting.
 
 References are optional. Use `references: []` or omit reference fields for brief-only generation. For one or more inputs, use `"references": [{"path": "product.png", "role": "product"}, {"path": "look.png", "role": "style"}]`, with paths relative to the plan. The example's older single `reference` string remains supported; use either field. Repeated `--reference /path/to/image.png` flags override the plan's references. Up to fourteen reference images are supported per request, including a selected tile. Image plans contain no credentials.
 
@@ -239,15 +249,15 @@ Image generation supports **1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9,
 
 ```sh
 # One billable generation request for the whole board, whatever its tile count.
-"$PYTHON" "$IMG_TOOL" board campaign.json --out /path/to/work/board-v1 --dry-run
-"$PYTHON" "$IMG_TOOL" board campaign.json --out /path/to/work/board-v1
+"$PYTHON" "$IMG_TOOL" board image-plan.json --out /path/to/work/board-v1 --dry-run
+"$PYTHON" "$IMG_TOOL" board image-plan.json --out /path/to/work/board-v1
 
 # Use the actual returned image filename from assets.json.
-"$PYTHON" "$SPLIT_TOOL" /path/to/work/board-v1/board.png --plan campaign.json --out /path/to/work/tiles-v1
+"$PYTHON" "$SPLIT_TOOL" /path/to/work/board-v1/board.png --plan image-plan.json --out /path/to/work/tiles-v1
 
 # Regenerate only selected designs as separate higher-resolution assets.
-"$PYTHON" "$IMG_TOOL" batch-submit campaign.json --select demo objection action --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/finals-v1 --dry-run
-"$PYTHON" "$IMG_TOOL" batch-submit campaign.json --select demo objection action --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/finals-v1
+"$PYTHON" "$IMG_TOOL" batch-submit image-plan.json --select demo objection action --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/finals-v1 --dry-run
+"$PYTHON" "$IMG_TOOL" batch-submit image-plan.json --select demo objection action --tiles /path/to/work/tiles-v1 --size 4K --out /path/to/work/finals-v1
 "$PYTHON" "$IMG_TOOL" batch-status /path/to/work/finals-v1
 "$PYTHON" "$IMG_TOOL" batch-download /path/to/work/finals-v1
 ```
