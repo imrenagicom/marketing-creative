@@ -991,6 +991,194 @@ class TakePlanTests(CinematicFixture):
 
 
 
+FAKE_GEMINI_CLI = """#!{python}
+import json, os, shutil, sys, time
+args = sys.argv[1:]
+with open(os.environ["FAKE_LOG"], "a") as handle:
+    handle.write(json.dumps(args) + "\\n")
+if "--dry-run" in args:
+    sys.stderr.write("[DRY-RUN] POST /v1beta/interactions")
+    sys.exit(0)
+failure = os.environ.get("FAKE_FAIL")
+if failure == "refuse":
+    sys.stderr.write("invalid argument")
+    sys.exit(2)
+if failure == "crash":
+    sys.stderr.write("connection reset")
+    sys.exit(1)
+out = args[args.index("--out") + 1] if "--out" in args else None
+if args[0] == "image":
+    os.makedirs(out, exist_ok=True)
+    path = os.path.join(out, "gemini-image-1.png")
+    open(path, "wb").write(b"\\x89PNG\\r\\n\\x1a\\nfake")
+    print(json.dumps({{"kind": "image", "path": path, "status": "completed", "response_id": "resp-img"}}))
+elif "--resume" in args:
+    os.makedirs(out, exist_ok=True)
+    path = os.path.join(out, "gemini-video-1.mp4")
+    shutil.copy(os.environ["FAKE_VIDEO"], path)
+    print(json.dumps({{"kind": "video", "path": path, "status": "completed"}}))
+else:
+    print(json.dumps({{"id": "int-vid", "status": "in_progress"}}))
+"""
+
+
+class GeminiFixture(CinematicFixture):
+    def setUp(self):
+        super().setUp()
+        import os
+        fake = Path(self.temp.name) / "gemini-api"
+        fake.write_text(FAKE_GEMINI_CLI.format(python=sys.executable))
+        fake.chmod(0o755)
+        self.log = Path(self.temp.name) / "gemini.log"
+        keys = ("VIDEO_STUDIO_GEMINI_BIN", "FAKE_LOG", "FAKE_FAIL", "FAKE_VIDEO")
+        saved = {k: os.environ.get(k) for k in keys}
+        os.environ.update({"VIDEO_STUDIO_GEMINI_BIN": str(fake), "FAKE_LOG": str(self.log)})
+        os.environ.pop("FAKE_FAIL", None)
+
+        def restore():
+            for key, value in saved.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+        self.addCleanup(restore)
+
+    def calls(self):
+        return [json.loads(line) for line in self.log.read_text().splitlines()] if self.log.exists() else []
+
+    def fail_with(self, mode):
+        import os
+        os.environ["FAKE_FAIL"] = mode
+        self.addCleanup(os.environ.pop, "FAKE_FAIL", None)
+
+    def ok(self, script, *args):
+        result = self.run_script(script, *args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+
+class GeminiKeyframeTests(GeminiFixture):
+    def setUp(self):
+        super().setUp()
+        bible = self.read("bible")
+        bible["references"][0]["higgsfield_element_id"] = "11111111-2222-4333-8444-555555555555"
+        bible["references"][0]["images"] = ["bible/images/courier.png"]
+        self.put("bible", bible)
+        (self.root / "bible/images").mkdir(parents=True, exist_ok=True)
+        (self.root / "bible/images/courier.png").write_bytes(b"\x89PNG\r\n\x1a\nref")
+
+    def test_plan_attaches_reference_images_and_preview_stays_offline(self):
+        self.ok(KEYFRAMES, "plan", self.root, "--canvas", "16x9", "--provider", "gemini", "--shot", "S01")
+        request = json.loads((self.root / "keyframes/requests-16x9.json").read_text())["requests"][0]
+        self.assertEqual((request["provider"], request["model"], request["image_size"]), ("gemini", "gemini-nano-banana-2.1", "2K"))
+        self.assertEqual(request["inputs"], ["bible/images/courier.png"])
+        self.assertNotIn("<<<", request["prompt"])
+        preview = self.ok(KEYFRAMES, "preview", self.root, "--canvas", "16x9", "--shot", "S01")
+        self.assertEqual((preview["estimate_usd"], preview["problems"], preview["missing_inputs"]), (0.0504, [], []))
+        self.assertIn("--dry-run", self.calls()[-1])
+        self.assertEqual(ledger.read(self.root)["entries"], [])
+
+    def test_generate_runs_under_the_cap_and_records_failures(self):
+        self.ok(KEYFRAMES, "plan", self.root, "--canvas", "16x9", "--provider", "gemini")
+        refused = self.run_script(KEYFRAMES, "generate", self.root, "--canvas", "16x9", "--shot", "S01")
+        self.assertEqual(refused.returncode, 1)
+        self.assertIn("No approved gemini-image cap", refused.stderr)
+        self.assertEqual(self.calls(), [])
+        ledger.set_cap(self.root, "gemini-image", 1.0, "8 keyframes x $0.0504 plus retries")
+        made = self.ok(KEYFRAMES, "generate", self.root, "--canvas", "16x9", "--shot", "S01")
+        self.assertEqual(made["keyframe"], "keyframes/16x9/S01-start-v1.png")
+        self.assertTrue((self.root / made["keyframe"]).is_file())
+        self.assertFalse((self.root / ".gemini-incoming").exists() and any((self.root / ".gemini-incoming").iterdir()))
+        args = self.calls()[-1]
+        self.assertEqual(args[0], "image")
+        self.assertEqual(args[args.index("-i") + 1], str(self.root / "bible/images/courier.png"))
+        self.assertEqual(json.loads(args[args.index("--body") + 1])["response_format"]["image_size"], "2K")
+        entry = ledger.read(self.root)["entries"][-1]
+        self.assertEqual((entry["provider"], entry["status"], entry["job_id"]), ("gemini-image", "succeeded", "resp-img"))
+        self.fail_with("refuse")
+        self.assertEqual(self.run_script(KEYFRAMES, "generate", self.root, "--canvas", "16x9", "--shot", "S02").returncode, 1)
+        self.fail_with("crash")
+        crashed = self.run_script(KEYFRAMES, "generate", self.root, "--canvas", "16x9", "--shot", "S03")
+        self.assertIn("unknown", crashed.stderr)
+        statuses = [e["status"] for e in ledger.read(self.root)["entries"]]
+        self.assertEqual(statuses, ["succeeded", "failed", "unknown"])
+        self.assertAlmostEqual(ledger.spent(ledger.read(self.root), "gemini-image"), 0.1008)
+
+    def test_bible_sheets_generate_through_gemini(self):
+        self.ok(BIBLE, "sheets", self.root, "--provider", "gemini")
+        ledger.set_cap(self.root, "gemini-image", 1.0, "basis")
+        made = self.ok(BIBLE, "generate", self.root, "--ref", "rooftop")
+        self.assertEqual(made["image"], "bible/images/rooftop-v1.png")
+        self.assertEqual(self.read("bible")["references"][1]["images"], ["bible/images/rooftop-v1.png"])
+        self.assertNotIn("-i", self.calls()[-1])
+
+
+class GeminiTakeTests(GeminiFixture):
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.run_script(SHOTS, "time", self.root).returncode, 0)
+        self.assertEqual(self.run_script(BIBLE, "negatives", self.root).returncode, 0)
+
+    def test_plan_checks_native_limits_and_binds_the_first_frame(self):
+        project = self.read("project")
+        project["formats"].append(dict(project["formats"][0], id="4x5", width=1080, height=1350))
+        self.put("project", project)
+        refused = self.run_script(TAKES, "plan", self.root, "--canvas", "4x5", "--provider", "gemini")
+        self.assertEqual(refused.returncode, 1)
+        self.assertIn("16:9 and 9:16 only", refused.stderr)
+        shots = self.read("shots")
+        shots["shots"][0]["keyframes"] = {"16x9": {"start": "keyframes/16x9/S01-start-v1.png"}}
+        self.put("shots", shots)
+        self.ok(TAKES, "plan", self.root, "--canvas", "16x9", "--provider", "gemini")
+        takes = self.read("takes")["takes"]
+        first, second = takes[0], takes[1]
+        self.assertEqual((first["provider"], first["estimate_usd"], second["estimate_usd"]), ("gemini", 0.6, 0.7))
+        self.assertEqual((first["request"]["task"], first["request"]["inputs"]),
+                         ("image_to_video", ["keyframes/16x9/S01-start-v1.png"]))
+        self.assertEqual(second["request"]["task"], "text_to_video")
+        preview = self.ok(TAKES, "preview", self.root, "--take", "T1-16x9")
+        self.assertEqual(preview["missing_inputs"], ["keyframes/16x9/S01-start-v1.png"])
+        body = json.loads(preview["command"][preview["command"].index("--body") + 1])
+        self.assertEqual(body["response_format"]["duration"], "6s")
+        self.assertEqual(body["generation_config"]["video_config"]["task"], "image_to_video")
+
+    def test_submit_needs_approval_records_the_interaction_and_never_resubmits(self):
+        self.ok(TAKES, "plan", self.root, "--canvas", "16x9", "--provider", "gemini")
+        blocked = self.run_script(TAKES, "submit", self.root, "--take", "T1-16x9")
+        self.assertIn("not approved", blocked.stderr)
+        self.assertEqual(self.calls(), [])
+        self.ok(TAKES, "approve", self.root, "--take", "T1-16x9", "--estimate", 0.6)
+        sent = self.ok(TAKES, "submit", self.root, "--take", "T1-16x9")
+        self.assertEqual(sent["interaction_id"], "int-vid")
+        self.assertIn("--async", self.calls()[-1])
+        take = self.read("takes")["takes"][0]
+        self.assertEqual((take["status"], take["job_id"]), ("submitted", "int-vid"))
+        entry = next(e for e in ledger.read(self.root)["entries"] if e["provider"] == "gemini-video")
+        self.assertEqual((entry["status"], entry["job_id"], entry["estimate"]), ("submitted", "int-vid", 0.6))
+        self.assertEqual(self.run_script(TAKES, "submit", self.root, "--take", "T1-16x9").returncode, 1)
+        self.assertEqual(len(self.calls()), 1)
+        self.ok(TAKES, "approve", self.root, "--take", "T2-16x9", "--estimate", 0.7)
+        self.fail_with("crash")
+        lost = self.run_script(TAKES, "submit", self.root, "--take", "T2-16x9")
+        self.assertIn("unknown", lost.stderr)
+        self.assertEqual(self.read("takes")["takes"][1]["status"], "unknown")
+        self.assertEqual(self.run_script(TAKES, "submit", self.root, "--take", "T2-16x9").returncode, 1)
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "ffmpeg needed to split takes")
+    def test_fetch_downloads_by_interaction_and_splits(self):
+        import os
+        os.environ["FAKE_VIDEO"] = str(solid_video(Path(self.temp.name) / "t1.mp4", ["black", "white"], 3))
+        self.ok(TAKES, "plan", self.root, "--canvas", "16x9", "--provider", "gemini", "--take", "T1")
+        self.ok(TAKES, "approve", self.root, "--take", "T1-16x9", "--estimate", 0.6)
+        self.ok(TAKES, "submit", self.root, "--take", "T1-16x9")
+        fetched = self.ok(TAKES, "fetch", self.root, "--take", "T1-16x9")
+        self.assertEqual((fetched["status"], sorted(fetched["clips"])), ("succeeded", ["S01", "S02"]))
+        self.assertEqual(self.calls()[-1][:3], ["video", "--resume", "int-vid"])
+        self.assertFalse((self.root / "takes/T1-16x9/incoming").exists())
+        entry = next(e for e in ledger.read(self.root)["entries"] if e["provider"] == "gemini-video")
+        self.assertEqual(entry["status"], "succeeded")
+
+
 SOUND = SKILLS / "sound-designer/scripts/sound.py"
 FAKE_SOUND_CLI = '''#!{python}
 import json, os, subprocess, sys

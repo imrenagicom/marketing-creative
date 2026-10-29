@@ -4,7 +4,7 @@ A short film, brand film or story-led ad built from AI-generated footage. The pi
 
 ## Pipeline
 
-direction → continuity bible → shots (camera, explicit durations) → keyframes → takes (Higgsfield video, approved per request) → dailies QC → retakes → sound design → assembly and mix → finish → final QC.
+direction → continuity bible → shots (camera, explicit durations) → keyframes → takes (Higgsfield or Gemini API video, approved per request) → dailies QC → retakes → sound design → assembly and mix → finish → final QC.
 
 | Stage | Skill | Produces |
 | --- | --- | --- |

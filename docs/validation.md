@@ -178,3 +178,11 @@ All thirteen Video Studio entry points passed skill-creator `quick_validate.py` 
 The ElevenLabs sound-effects, music and speech-to-text request shapes were checked with the real CLI `--dry-run`; generation was tested only against mocked CLIs. Reference analysis ran on the local reference video and detected 10 cuts across its 52 s, which move between the 6 camera setups in the manual breakdown. Higgsfield calls were not made: helpers were exercised with synthetic files, and model names, element support and media roles come from MCP tool descriptions read on 2026-10-27 because `models_explore` was not exposed in this session.
 
 Not performed: any live Higgsfield or ElevenLabs generation, listening or visual review of real generated footage, verification of model duration limits or media roles, caption burn-in, and any assessment of creative quality.
+
+## Video Studio Gemini API provider (2026-10-29)
+
+Added the `gemini-api` CLI as an alternative image and video provider. `continuity-bible` and `keyframe-generator` can now generate under a USD `gemini-image` cap, and `ai-video-generator` can generate under per-request `gemini-video` approval with `--async` submission, a recorded interaction id and `--resume` download. The CLI contract was read from the source of google-gemini/gemini-api-cli `main@68ce6f1` (README, `image`/`video` commands, the bundled `CreateInteraction` schema and its async contract tests). Prices and Omni limits came from ai.google.dev on 2026-10-29.
+
+The full offline suite passed: 204 tests, 44 skipped. The skips are existing Pillow-dependent image tests in other plugins, and no Video Studio test was skipped. The new tests use a mocked `gemini-api` binary. `quick_validate.py` passed for the four changed skills. Package validation, `claude plugin validate` (plugin and marketplace) and `agy plugin validate` passed, and the video-studio archive was built.
+
+Not performed: building or running the real `gemini-api` binary (so its `--dry-run` did not check the generated commands, including the `generation_config.video_config.task` body key), any live Gemini generation, and any visual review of Gemini images or footage. The 1080p and 4k Omni rates are not published, so no estimate is given for them.

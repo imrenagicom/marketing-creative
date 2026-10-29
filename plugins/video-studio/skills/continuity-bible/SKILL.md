@@ -34,6 +34,8 @@ Supplied photos go in `bible/images/` and the reference's `images`. For referenc
 3. Call `generate_image` with the request, download the result, then `bible.py add-image <project> --ref <id> --entry <ledger id> --file <path> --job-id <id>`.
 4. On a refusal run `bible.py fail --entry <id>`; on a timeout add `--uncertain`, check the job, and never resubmit automatically.
 
+With the Gemini API CLI ([gemini-api.md](../studio-producer/references/gemini-api.md)), run `bible.py sheets <project> --provider gemini` to plan the requests and `bible.py preview <project> --ref <id>` to see the command and USD estimate. `bible.py generate <project> --ref <id>` then checks the `gemini-image` cap, runs the CLI once and adds the image. Uncertain failures stay `unknown` and are not rerun automatically.
+
 Show the user the images before using them; approved images are the identity from then on.
 
 For characters, environments, props and vehicles, create a Higgsfield element from the best image (`media_upload` → PUT → `media_confirm`, then `manage_reference_elements` with `action: "create"`), wait until it is `completed`, and record it with `bible.py link <project> --ref <id> --element <uuid>`. Prompts for element-aware models then use `<<<uuid>>>` placeholders; other models receive the reference images as media.

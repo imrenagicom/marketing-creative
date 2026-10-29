@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-"""Plan, reserve and record start/end keyframes for camera shots under the Higgsfield image cap."""
+"""Plan, reserve and record start/end keyframes for camera shots under the Higgsfield or Gemini image cap."""
 import argparse
 import json
 from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "studio-producer/scripts"))
+import gemini  # noqa: E402
 import media  # noqa: E402
 from prompting import ASPECT, environment, media_refs, refs_for, subject  # noqa: E402
 from studio import (ContractError, load, require, validate_bible, validate_lock, validate_project,  # noqa: E402
                     validate_shots, write)
 
 DEFAULT_MODEL = "nano_banana_pro"
+DEFAULT_MODELS = {"higgsfield": DEFAULT_MODEL, "gemini": gemini.IMAGE_MODEL}
 FRAMES = ("start", "end")
 
 
@@ -43,7 +45,8 @@ def prompt_for(shot, frame, bible, lock, model, canvas):
     return " ".join(parts)
 
 
-def plan(root, canvas, model=DEFAULT_MODEL, ends=False, only=None):
+def plan(root, canvas, model=None, ends=False, only=None, provider="higgsfield", image_size="2K"):
+    model = model or DEFAULT_MODELS[provider]
     project, lock, bible, shots = inputs(root)
     require(canvas in {f["id"] for f in project["formats"]}, f"{canvas} is not a project canvas")
     requests = []
@@ -52,9 +55,15 @@ def plan(root, canvas, model=DEFAULT_MODEL, ends=False, only=None):
             continue
         for frame in FRAMES if ends else FRAMES[:1]:
             refs = refs_for(shot, bible)
-            requests.append({"shot": shot["id"], "frame": frame, "canvas": canvas, "model": model,
-                             "aspect_ratio": ASPECT[canvas], "prompt": prompt_for(shot, frame, bible, lock, model, canvas),
-                             "medias": media_refs(refs, model)})
+            prompt = prompt_for(shot, frame, bible, lock, model, canvas)
+            if provider == "gemini":
+                # Gemini has no element ids: reference images go in as inputs and the prompt names them.
+                images = [item["asset"] for item in media_refs(refs, model)]
+                request = gemini.image_request(model, prompt, ASPECT[canvas], image_size, images)
+                require(not gemini.problems(request), "; ".join(gemini.problems(request)))
+            else:
+                request = {"model": model, "aspect_ratio": ASPECT[canvas], "prompt": prompt, "medias": media_refs(refs, model)}
+            requests.append({"shot": shot["id"], "frame": frame, "canvas": canvas, **request})
     folder = Path(root) / "keyframes"
     folder.mkdir(exist_ok=True)
     (folder / f"requests-{canvas}.json").write_text(json.dumps({"requests": requests}, indent=2, ensure_ascii=False) + "\n")
@@ -81,13 +90,26 @@ def record(root, canvas, shot_id, frame, entry_id, source, job_id=None):
     return destination
 
 
+def generate(root, canvas, shot_id, frame, estimate=None):
+    """Run a planned Gemini keyframe under the gemini-image cap and record it."""
+    request = find_request(root, canvas, shot_id, frame)
+    require(request.get("provider") == "gemini", f"The {frame} keyframe for {shot_id} is planned for Higgsfield; "
+                                                "use reserve → generate_image → record")
+    entry, path, response_id = media.generate_gemini(root, "gemini-api image:keyframe", request, estimate)
+    destination = record(root, canvas, shot_id, frame, entry["id"], path, response_id)
+    return {"keyframe": destination, "entry": entry["id"], "estimate_usd": entry["estimate"],
+            **({"warning": entry["warning"]} if entry.get("warning") else {})}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     draft = sub.add_parser("plan", help="Write keyframe requests for camera shots")
     draft.add_argument("root")
     draft.add_argument("--canvas", required=True)
-    draft.add_argument("--model", default=DEFAULT_MODEL)
+    draft.add_argument("--provider", choices=sorted(DEFAULT_MODELS), default="higgsfield")
+    draft.add_argument("--model", help=f"Default {DEFAULT_MODEL} (higgsfield) or {gemini.IMAGE_MODEL} (gemini)")
+    draft.add_argument("--image-size", default="2K", help="Gemini only: 512, 1K, 2K or 4K")
     draft.add_argument("--ends", action="store_true", help="Also plan end frames (for start/end-frame video models)")
     draft.add_argument("--shot", action="append", help="Limit to shots (repeatable)")
     hold = sub.add_parser("reserve", help="Check the image cap and record one keyframe job before the MCP call")
@@ -96,6 +118,17 @@ def main(argv=None):
     hold.add_argument("--shot", required=True)
     hold.add_argument("--frame", choices=FRAMES, default="start")
     hold.add_argument("--estimate", required=True, type=float, help="Credits from get_cost")
+    look = sub.add_parser("preview", help="Gemini: show the exact CLI command, estimate and offline --dry-run")
+    look.add_argument("root")
+    look.add_argument("--canvas", required=True)
+    look.add_argument("--shot", required=True)
+    look.add_argument("--frame", choices=FRAMES, default="start")
+    run = sub.add_parser("generate", help="Gemini: reserve under the image cap, run gemini-api image and record")
+    run.add_argument("root")
+    run.add_argument("--canvas", required=True)
+    run.add_argument("--shot", required=True)
+    run.add_argument("--frame", choices=FRAMES, default="start")
+    run.add_argument("--estimate", type=float, help="USD; needed only when no published price covers the model/size")
     done = sub.add_parser("record", help="Store a returned keyframe")
     done.add_argument("root")
     done.add_argument("--canvas", required=True)
@@ -112,11 +145,17 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.command == "plan":
-            requests = plan(args.root, args.canvas, args.model, args.ends, args.shot)
+            requests = plan(args.root, args.canvas, args.model, args.ends, args.shot, args.provider, args.image_size)
             print(json.dumps({"requests": len(requests), "file": f"keyframes/requests-{args.canvas}.json"}))
         elif args.command == "reserve":
             request = find_request(args.root, args.canvas, args.shot, args.frame)
             print(json.dumps(media.reserve(args.root, "generate_image:keyframe", request, args.estimate), indent=2))
+        elif args.command == "preview":
+            request = find_request(args.root, args.canvas, args.shot, args.frame)
+            require(request.get("provider") == "gemini", "preview runs the gemini-api dry-run; this request is for Higgsfield")
+            print(json.dumps(gemini.preview(args.root, request), indent=2, ensure_ascii=False))
+        elif args.command == "generate":
+            print(json.dumps(generate(args.root, args.canvas, args.shot, args.frame, args.estimate), indent=2))
         elif args.command == "record":
             print(json.dumps({"keyframe": record(args.root, args.canvas, args.shot, args.frame, args.entry, args.file, args.job_id)}))
         else:

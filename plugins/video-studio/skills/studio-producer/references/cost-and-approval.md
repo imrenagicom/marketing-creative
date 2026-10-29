@@ -7,8 +7,10 @@ Policy decided 2026-10-27. Paid calls are explicit, recorded and recoverable.
 | ElevenLabs (speech, dialogue, alignment, voice design, sound, music) | Per-project credit cap, approved once | `ledger.json` cap `elevenlabs` |
 | Higgsfield images (keyframes, stills, background removal, outpaint) | Per-project image cap, approved once | cap `higgsfield-image` |
 | Higgsfield video, reframe, upscale | Every request, bound to a fingerprint of the exact request | ledger entry per request |
+| Gemini API images (`gemini-api image`: references, keyframes) | Per-project cap in USD, approved once | cap `gemini-image` |
+| Gemini API video (`gemini-api video`) | Every request, bound to a fingerprint of the exact request | ledger entry per request (`gemini-video`) |
 
-The explainer recipe uses ElevenLabs only. Higgsfield rows are recorded here so later skills share one policy.
+The explainer recipe uses ElevenLabs only. Higgsfield and Gemini rows are recorded here so later skills share one policy. Gemini estimates come from the dated price table in [gemini-api.md](gemini-api.md); when it has no rate for a model or resolution, look up the current one and state the date.
 
 ## Proposing a cap
 
@@ -28,9 +30,9 @@ Record the approved cap with `ledger.py cap … --basis "<what you showed>"`. Re
 
 A warning at 80% of a cap is reported to the user with the remaining work estimate.
 
-## Running a per-request call (Higgsfield video, reframe, upscale)
+## Running a per-request call (Higgsfield video, reframe, upscale; Gemini video)
 
-1. Compile the exact request (model, prompt, media and roles, duration, aspect ratio) and get the provider's estimate (`get_cost: true`).
+1. Compile the exact request (model, prompt, media and roles, duration, aspect ratio) and get the provider's estimate (`get_cost: true` for Higgsfield; `takes.py preview` for Gemini).
 2. Show the user that request and estimate. Wait for a clear yes for *this* request.
 3. Record it: `ledger.py approve <project> --provider higgsfield-video --operation generate_video --request <request.json> --estimate <credits>`. The approval stores the request fingerprint.
 4. Submit only the identical request; the take helper consumes the approval and refuses if anything changed. A changed prompt, reference, duration or model needs a new approval.

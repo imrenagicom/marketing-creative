@@ -25,3 +25,5 @@
 ## Models
 
 `nano_banana_pro` honours element placeholders and is the default for identity-critical frames. `gpt_image_2_5` is the Higgsfield default for general generation and text. `minimax_h3` is listed for 2K keyframes. Read on 2026-10-27 from the MCP tool descriptions; check the current catalog (`models_explore` when available) for aspect ratios and media roles before relying on them.
+
+Through the Gemini API CLI, `gemini-nano-banana-2.1` is the CLI default and cheapest at 2K. `gemini-3-pro-image` costs more per image. Neither has elements, so attach the clearest bible image per subject and keep every subject's preserve list in the prompt. Compare a few keyframes from each provider on the four pillars before choosing one for a film; the price table does not say which will hold identity better. Limits and prices: [gemini-api.md](../../studio-producer/references/gemini-api.md).

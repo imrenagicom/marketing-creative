@@ -16,8 +16,9 @@ import uuid
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from studio import ContractError, load, now, require, write  # noqa: E402
 
-CAPPED_PROVIDERS = {"elevenlabs", "higgsfield-image"}
-PER_REQUEST_PROVIDERS = {"higgsfield-video", "higgsfield-reframe", "higgsfield-upscale"}
+CAPPED_PROVIDERS = {"elevenlabs", "higgsfield-image", "gemini-image"}
+PER_REQUEST_PROVIDERS = {"higgsfield-video", "higgsfield-reframe", "higgsfield-upscale", "gemini-video"}
+UNITS = {"gemini-image": "USD", "gemini-video": "USD"}  # everything else is the provider's credits
 WARN_AT = 0.8
 COUNTED = {"submitted", "succeeded", "unknown"}
 STATUSES = {"planned", "approved", "submitted", "succeeded", "failed", "unknown", "withdrawn"}
@@ -48,7 +49,8 @@ def check(ledger, provider, estimate):
     require(estimate >= 0, "estimate must be non-negative")
     cap = ledger["caps"].get(provider)
     used = spent(ledger, provider)
-    decision = {"provider": provider, "estimate": estimate, "spent": used, "cap": cap and cap["credits"]}
+    decision = {"provider": provider, "estimate": estimate, "spent": used, "cap": cap and cap["credits"],
+                "unit": UNITS.get(provider, "credits")}
     if not cap:
         return {**decision, "allowed": False, "reason": f"No approved {provider} cap; propose one and ask the user"}
     after = used + estimate
@@ -144,7 +146,7 @@ def main(argv=None):
     cap = sub.add_parser("cap", help="Record a cap the user approved in chat")
     cap.add_argument("root")
     cap.add_argument("--provider", required=True, choices=sorted(CAPPED_PROVIDERS))
-    cap.add_argument("--credits", required=True, type=float)
+    cap.add_argument("--credits", required=True, type=float, help="Provider credits, or USD for gemini-*")
     cap.add_argument("--basis", required=True, help="How the estimate was made, as shown to the user")
     test = sub.add_parser("check", help="Would a call of this estimate fit under the cap?")
     test.add_argument("root")
