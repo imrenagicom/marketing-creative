@@ -2,15 +2,13 @@
 
 ## Purpose and layout
 
-Marketing Performance, Marketing Images, Video Studio and the deprecated
-Marketing Creative are shared Codex, Claude Code and Google Antigravity skill
-plugins. They all serve one purpose: producing a marketing campaign. Read
+Marketing Performance, Marketing Images and Video Studio are shared Codex,
+Claude Code and Google Antigravity skill plugins. They all serve one purpose: producing a marketing campaign. Read
 README.md for the workflow, configuration and validation commands, then
 read the relevant skill entry point and its linked references before editing.
 
-- `plugins/marketing-performance/skills/`, `plugins/marketing-images/skills/`,
-  `plugins/video-studio/skills/` and `plugins/marketing-creative/skills/` own
-  skill instructions, UI metadata,
+- `plugins/marketing-performance/skills/`, `plugins/marketing-images/skills/`
+  and `plugins/video-studio/skills/` own skill instructions, UI metadata,
   references, executable helpers and example assets. Install and package each
   complete tree because skills within a plugin share resources.
 - Each plugin's `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json` and
@@ -22,8 +20,9 @@ read the relevant skill entry point and its linked references before editing.
 - `tests/` contains offline regressions. `docs/skill-evaluation.md` covers
   behavioral scenarios; `docs/validation.md` records actual validation and
   its limits. Preserve the distinction between historical and new checks.
-- `third-party/` inside the plugin contains required upstream license notices.
-  Keep notices and attribution when adapting upstream material.
+- No plugin currently bundles third-party material. When adapting upstream
+  material, add its license notice under that plugin's `third-party/`, keep the
+  attribution, and allow the notice explicitly in `scripts/validate_package.py`.
 
 ## One campaign
 
@@ -36,11 +35,11 @@ Revision pointers, UTMs and reports stay with campaign-manager. No creative
 skill publishes or edits `campaign.json`, `ad.json` or `post.json`. Keep new
 skills and changes consistent with this.
 
-## Marketing Creative is deprecated
+## Removed plugin
 
-Do not add features to `plugins/marketing-creative/`. Fix only what existing
-projects need to resume, and build new work in Video Studio or Marketing Images.
-Its skills keep `allow_implicit_invocation: false` and name their replacement.
+The former Marketing Creative plugin was removed after v0.13.0. Its image skills
+live on in Marketing Images, and Video Studio replaces its video workflow. Do not
+reintroduce its skills; extend the current plugins instead.
 
 ## Skill and tool changes
 
@@ -76,12 +75,10 @@ images, per-request approval for Higgsfield video, reframe and upscale. Gemini A
 images run under a per-project USD cap. Every Gemini API video request needs its
 own approval, and ai-video-generator stays explicitly opt-in.
 
-Keep marketing-veo-video and marketing-omni-video explicitly opt-in. The user
-requires approval of their prepared paid requests, including provider/model,
-prompt/media, settings and current estimate; general production permission
-does not enable them. Preserve their invocation policy and approval fingerprint
-checks. motion-video-producer owns mixed-media assembly and final QA, with
-project-local custom generators for Three.js/HTML scenes when needed.
+Keep paid video generation explicitly opt-in. The user approves each prepared
+request, including provider/model, prompt/media, settings and current estimate;
+general production permission does not enable it. Preserve ai-video-generator's
+invocation policy and the approval fingerprint checks.
 
 ## Credentials and generated files
 
@@ -114,16 +111,13 @@ changes, build archives outside the repository and validate the Claude and
 Antigravity plugins and marketplace when the CLIs are available:
 
 ```sh
-python scripts/build_plugin.py --output /tmp/marketing-creative-plugin.zip
 python scripts/build_plugin.py --plugin marketing-images --output /tmp/marketing-images-plugin.zip
 python scripts/build_plugin.py --plugin marketing-performance --output /tmp/marketing-performance-plugin.zip
 python scripts/build_plugin.py --plugin video-studio --output /tmp/video-studio-plugin.zip
-claude plugin validate ./plugins/marketing-creative
 claude plugin validate ./plugins/marketing-images
 claude plugin validate ./plugins/marketing-performance
 claude plugin validate ./plugins/video-studio
 claude plugin validate ./.claude-plugin/marketplace.json
-agy plugin validate ./plugins/marketing-creative
 agy plugin validate ./plugins/marketing-images
 agy plugin validate ./plugins/marketing-performance
 agy plugin validate ./plugins/video-studio

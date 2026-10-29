@@ -211,3 +211,25 @@ Not performed:
 - visual review of boards or tiles
 - a handoff into a real campaign workspace
 - installing the new plugin from a published release
+
+## Marketing Creative plugin removed (2026-10-29)
+
+At the user's request, the deprecated `plugins/marketing-creative/` tree was deleted. That covers its eleven skills, manifests and the Bang Motion and Hyperframe Pro notices. No remaining plugin bundles that adapted material. Its marketplace entries, release version files, release asset and CI build went with it, as did the tests that only exercised its scripts: `test_production.py`, `test_voice_audio.py`, `test_asset_assembly.py` and `test_generated_video.py`. Before deleting the notices I searched the other plugins and the Video Studio design doc and found no use of Bang Motion, Hyperframe Pro or adapted text.
+
+- `test_production.py`'s package checks moved to `tests/test_package.py`, now run against Video Studio.
+- `build_plugin.py` requires `--plugin`.
+- `prepare_release.py` takes `--output-dir` and builds `<plugin>-plugin.zip` for each remaining plugin.
+- The validator rejects any `third-party/` folder until a notice is allowed deliberately.
+- Before removal, `main` (release 0.13.0) was merged and every manifest set to 0.13.0.
+
+Checks run:
+
+- **Unit tests:** the full offline suite passed, 128 tests with Pillow, none skipped. The drop from 208 is the four removed test files.
+- **JavaScript release tests:** `npm test` passed, 11 tests.
+- **Package and skill checks:** `validate_package.py` (132 package files), `git diff --check`, and `quick_validate.py` for `marketing-copywriter` passed.
+- **Archives and client validators:** the three archives built (15, 26 and 91 files). `claude plugin validate` and `agy plugin validate` passed for each plugin, and `claude plugin validate` passed for the marketplace.
+
+Not performed:
+
+- installing from a published release
+- migrating any existing Marketing Creative project; they remain readable in Git history up to v0.13.0
