@@ -186,3 +186,28 @@ Added the `gemini-api` CLI as an alternative image and video provider. `continui
 The full offline suite passed: 204 tests, 44 skipped. The skips are existing Pillow-dependent image tests in other plugins, and no Video Studio test was skipped. The new tests use a mocked `gemini-api` binary. `quick_validate.py` passed for the four changed skills. Package validation, `claude plugin validate` (plugin and marketplace) and `agy plugin validate` passed, and the video-studio archive was built.
 
 Not performed: building or running the real `gemini-api` binary (so its `--dry-run` did not check the generated commands, including the `generation_config.video_config.task` body key), any live Gemini generation, and any visual review of Gemini images or footage. The 1080p and 4k Omni rates are not published, so no estimate is given for them.
+
+## Marketing Images plugin, Video Studio boards and campaign handoff, Marketing Creative deprecation (2026-10-29)
+
+- **Marketing Images:** `marketing-image-board` and `marketing-image-producer` moved unchanged (`git mv`) into a new `marketing-images` plugin. The image plan example is renamed `image-plan.example.json` so it never collides with campaign-manager's `campaign.json`.
+- **Video Studio boards:** `boards.py` runs one `gemini-api image` call under the `gemini-image` cap and crops the sheet with FFmpeg into versioned preview tiles. It is used by `keyframes.py board*` and `bible.py board*`.
+- **Campaign link and handoff:** `campaign.py link` and `campaign.py handoff` tie a project to campaign-manager's workspace. A handoff files a QC-passed render into `<ad-or-post>/assets/approved/vNNN/video/`.
+- **Campaign-aware guidance:** every plugin now reads the campaign brief and files approved work into the campaign workspace.
+- **Marketing Creative:** deprecated. Every skill names its replacement and sets `allow_implicit_invocation: false`.
+- **Veo:** not added. Google shut down Veo 3.1 Preview in the Gemini API on 2026-10-22 ([Veo guide](https://ai.google.dev/gemini-api/docs/veo) and [deprecations](https://ai.google.dev/gemini-api/docs/deprecations), read 2026-10-29), and the [pricing page](https://ai.google.dev/gemini-api/docs/pricing) (updated 2026-10-28) no longer lists Veo. The existing `marketing-veo-video` helper is flagged as no longer running.
+
+Checks run:
+
+- **Unit tests:** the full offline suite passed, 208 tests in a `uv` environment with Pillow, none skipped. This includes the image tests that the previous entry skipped. New tests cover board layout, keyframe and bible boards with a mocked CLI and a real FFmpeg-generated sheet, and campaign link/handoff with real renders and final QC.
+- **JavaScript release tests:** `npm test` passed, 11 tests.
+- **Package and skill checks:** `validate_package.py`, `git diff --check`, and skill-creator `quick_validate.py` passed for every changed skill (2 image, 5 Video Studio, 2 Performance and all 11 Marketing Creative skills).
+- **Archives and client validators:** all four archives were built outside the repository (Marketing Creative 67 files, Marketing Images 15, Marketing Performance 26, Video Studio 91). `claude plugin validate` and `agy plugin validate` passed for each plugin, and `claude plugin validate` passed for the marketplace.
+
+Not performed:
+
+- any live Gemini board or image generation
+- running the real `gemini-api` binary's `--dry-run` on board requests
+- checking whether Nano Banana actually follows the requested grid; the crop assumes it does, and `board-split --inset` or a new board is the recovery
+- visual review of boards or tiles
+- a handoff into a real campaign workspace
+- installing the new plugin from a published release
