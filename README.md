@@ -47,8 +47,8 @@ Start video work with [`marketing-video`](plugins/marketing-creative/skills/mark
 | `editor` | Compositions or selected footage clips → versioned renders with a ducked sound mix, SRT/VTT captions and loudness-finished deliveries |
 | `qc-reviewer` | Generated take → dailies against the continuity pillars; render version → technical checks, a frame per shot and the human checks still required |
 | `reference-analyst` | Reference video → cuts, pacing, frames, audio stats and a techniques-vs-style report |
-| `continuity-bible` | Direction lock → characters, locations with motivated light, props, locks, reference images (Higgsfield or Gemini API) and Higgsfield elements |
-| `keyframe-generator` | Camera shots and bible → start/end frames under a per-project Higgsfield or Gemini image cap |
+| `continuity-bible` | Direction lock → characters, locations with motivated light, props, locks, reference images (Higgsfield or Gemini API), look-option contact-sheet boards and Higgsfield elements |
+| `keyframe-generator` | Camera shots and bible → optional one-call contact-sheet board of a sequence, then start/end frames under a per-project Higgsfield or Gemini image cap |
 | `ai-video-generator` | Timed shots, bible and keyframes → Higgsfield or Gemini API takes approved per exact request, split into shot clips; single-shot retakes (opt-in) |
 | `sound-designer` | Shot sounds and audio policy → ElevenLabs sound effects, ambience beds and optional music placed on the timeline |
 

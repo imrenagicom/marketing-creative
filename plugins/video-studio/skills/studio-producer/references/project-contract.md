@@ -13,8 +13,10 @@ Every Video Studio skill reads and writes the same JSON files inside one project
   voice/words.json        voice-director (selected take's word timings)
   bible/bible.json        continuity-bible (footage recipes)
   bible/images/           continuity-bible (reference images)
+  bible/boards/<ref>/     continuity-bible (look-option boards and preview tiles)
   shots/shots.json        shot-designer
   keyframes/              keyframe-generator
+  keyframes/boards/       keyframe-generator (contact-sheet boards: board.json, board.png, tiles-vN/)
   takes/takes.json        ai-video-generator
   takes/<take>/           ai-video-generator (raw take, split shot clips)
   sound/cues.json         sound-designer

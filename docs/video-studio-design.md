@@ -90,7 +90,7 @@ proportions), not sexualised detail.
 | Skill | Owns |
 | --- | --- |
 | `voice-director` | Voice casting/design, TTS and dialogue with audio tags, speech-to-speech performance transfer, pronunciation, word timestamps. Runs before video generation. |
-| `keyframe-generator` | Start/end frames and stills per shot from bible references with lighting baked in. |
+| `keyframe-generator` | Start/end frames and stills per shot from bible references with lighting baked in; an optional Gemini contact-sheet board previews up to 12 shots in one call, and its cropped tiles stay previews. |
 | `ai-video-generator` | Prompt compiler (shots + bible + voice → provider prompt) and paid video takes. Opt-in; per-request approval. |
 | `motion-designer` | Code-driven animation (Remotion/HTML/Three.js/Lottie): kinetic keywords synced to timestamps, callouts, simplified UI cards, depth layering, transitions that mask cuts. |
 | `sound-designer` | Diegetic-first sound, explicit music policy, SFX and ambience, acoustics (interior/exterior, distance), time-stretch for slow-motion beats, beat-aligned music. |
