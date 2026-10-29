@@ -20,7 +20,7 @@
     {
       "name": "video-studio",
       "source": "./plugins/video-studio",
-      "description": "Explainers and cinematic short films: direction options, native English or Indonesian scripts, ElevenLabs narration and sound, continuity bibles, approved Higgsfield takes with dailies, HyperFrames compositions, assembly, delivery and QC"
+      "description": "Explainers and cinematic short films: direction options, native English or Indonesian scripts, ElevenLabs narration and sound, continuity bibles, approved Higgsfield or Gemini API takes with dailies, HyperFrames compositions, assembly, delivery and QC"
     }
   ]
 }

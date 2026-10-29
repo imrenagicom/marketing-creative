@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Compile, approve, submit, ingest and split Higgsfield video takes for a Video Studio film (stdlib + ffmpeg).
+"""Compile, approve, submit, ingest and split Higgsfield or Gemini video takes for a Video Studio film (stdlib + ffmpeg).
 
-The agent makes the MCP calls. This helper owns the exact request, its
+For Higgsfield the agent makes the MCP calls; for Gemini this helper runs the
+`gemini-api` CLI itself. Either way it owns the exact request, its
 fingerprinted approval, the job record and the split of each take into shot
 clips, so nothing paid is sent that the user did not approve.
 """
@@ -17,6 +18,7 @@ HERE = Path(__file__).resolve()
 sys.path.insert(0, str(HERE.parents[2] / "studio-producer/scripts"))
 sys.path.insert(0, str(HERE.parents[2] / "reference-analyst/scripts"))
 sys.path.insert(0, str(HERE.parents[2] / "qc-reviewer/scripts"))
+import gemini  # noqa: E402
 import ledger  # noqa: E402
 from analyze import cuts, probe  # noqa: E402
 import qc  # noqa: E402
@@ -26,6 +28,8 @@ from studio import (ContractError, load, now, require, validate_bible, validate_
 
 PROVIDER = "higgsfield-video"
 DEFAULT_MODEL = "seedance_2_5"
+DEFAULT_MODELS = {"higgsfield": DEFAULT_MODEL, "gemini": gemini.VIDEO_MODEL}
+LEDGER_PROVIDERS = {"higgsfield": PROVIDER, "gemini": "gemini-video"}
 SPLIT_TOLERANCE = 0.6
 
 
@@ -94,13 +98,26 @@ def compile_prompt(members, lock, bible, script, model, canvas, duration):
     return "\n".join(out)
 
 
-def request_for(members, lock, bible, script, model, canvas, anchors=None):
+def request_for(members, lock, bible, script, model, canvas, anchors=None, provider="higgsfield", resolution="720p"):
     duration = math.ceil(round(members[-1]["end"] - members[0]["start"], 3))
     refs = []
     for shot in members:
         refs.extend(ref for ref in refs_for(shot, bible) if ref not in refs)
     medias = media_refs(refs, model)
     start = (anchors or {}).get("start") or (members[0].get("keyframes", {}).get(canvas) or {}).get("start")
+    if provider == "gemini":
+        prompt = compile_prompt(members, lock, bible, script, model, canvas, duration)
+        if anchors:
+            prompt += "\n\nCONTINUITY: the first input image is the previous shot's last frame; continue seamlessly from it" + \
+                      (" and end on the second input image, the next shot's first frame." if anchors.get("end") else ".")
+        elif start:
+            prompt += "\n\nThe input image is the approved first frame; begin exactly on it."
+        request = gemini.video_request(model, prompt, duration, ASPECT[canvas], resolution, start=start,
+                                       end=(anchors or {}).get("end"), references=[m["asset"] for m in medias])
+        found = gemini.problems(request)
+        require(not found, f"{'+'.join(s['id'] for s in members)} cannot go to Gemini: {'; '.join(found)}. "
+                           "Regroup the shots into 3–10s takes, or use Higgsfield for this canvas")
+        return request
     if start:
         medias.insert(0, {"role": "start_image", "asset": start})
     if (anchors or {}).get("end"):
@@ -123,7 +140,8 @@ def take_id(takes, base):
     return f"{base}-v{version}"
 
 
-def plan(root, canvas, model=DEFAULT_MODEL, only=None):
+def plan(root, canvas, model=None, only=None, provider="higgsfield", resolution="720p"):
+    model = model or DEFAULT_MODELS[provider]
     project, lock, bible, shots, script, takes = inputs(root)
     require(canvas in {f["id"] for f in project["formats"]}, f"{canvas} is not a project canvas")
     if model not in ELEMENT_MODELS and any(ref.get("higgsfield_element_id") for ref in bible["references"]):
@@ -145,15 +163,17 @@ def plan(root, canvas, model=DEFAULT_MODEL, only=None):
             continue
         base = f"{key}-{canvas}"
         drafts = [t for t in takes["takes"] if t["id"].startswith(base) and t["status"] == "draft"]
-        request = request_for(members, lock, bible, script, model, canvas)
+        request = request_for(members, lock, bible, script, model, canvas, provider=provider, resolution=resolution)
         if drafts:
             take = drafts[-1]
         else:
             take = {"id": take_id(takes, base), "canvas": canvas, "shots": [s["id"] for s in members]}
             takes["takes"].append(take)
-        take.update({"status": "draft", "provider": "higgsfield", "model": model, "duration": request["duration"],
+        take.update({"status": "draft", "provider": provider, "model": model, "duration": request["duration"],
                      "aspect_ratio": request["aspect_ratio"], "request": request,
                      "request_sha256": ledger.request_sha256(request), "approval": None, "planned_at": now()})
+        if provider == "gemini":
+            take["estimate_usd"] = gemini.estimate(request)
         planned.append(take["id"])
     validate_takes(takes, shots, project)
     write(root, "takes", takes)
@@ -166,12 +186,17 @@ def get_take(takes, take_id):
     return take
 
 
+def provider_of(take):
+    return take.get("provider", "higgsfield")
+
+
 def approve(root, take_id, estimate):
     """Record the user's approval of this take's exact request (only after a clear yes in chat)."""
     project, _, _, shots, _, takes = inputs(root)
     take = get_take(takes, take_id)
     require(take["status"] == "draft", f"{take_id} is {take['status']}; plan a new take instead of re-approving")
-    entry = ledger.approve(root, PROVIDER, "generate_video", take["request"], estimate, note=take_id)
+    operation = "gemini-api video" if provider_of(take) == "gemini" else "generate_video"
+    entry = ledger.approve(root, LEDGER_PROVIDERS[provider_of(take)], operation, take["request"], estimate, note=take_id)
     take["status"] = "approved"
     take["approval"] = {"fingerprint": take["request_sha256"], "ledger_entry": entry["id"], "estimate": estimate,
                         "approved_at": now()}
@@ -180,17 +205,50 @@ def approve(root, take_id, estimate):
 
 
 def submit(root, take_id):
-    """Consume the approval right before the MCP call; refuses if the request changed since approval."""
+    """Consume the approval right before the provider call; refuses if the request changed since approval.
+
+    Higgsfield: the agent calls generate_video next. Gemini: this runs the one
+    `gemini-api video --async` call and records the interaction id at once.
+    """
     _, _, _, shots, _, takes = inputs(root)
     take = get_take(takes, take_id)
     require(take["status"] == "approved", f"{take_id} is {take['status']}, not approved")
     require(ledger.request_sha256(take["request"]) == take["approval"]["fingerprint"],
             "The request changed after approval; plan it again and ask the user")
-    ledger.consume_approval(root, PROVIDER, take["request"])
+    if provider_of(take) == "gemini":
+        missing = [asset for asset in take["request"]["inputs"] if not (Path(root) / asset).is_file()]
+        require(not missing, f"Missing inputs: {', '.join(missing)}")
+    ledger.consume_approval(root, LEDGER_PROVIDERS[provider_of(take)], take["request"])
     take["status"] = "submitted"
     take["submitted_at"] = now()
     write(root, "takes", takes)
-    return take["request"]
+    if provider_of(take) != "gemini":
+        return take["request"]
+    try:
+        interaction, status = gemini.submit_video(root, take["request"])
+    except gemini.GeminiError as error:
+        fail(root, take_id, uncertain=error.uncertain)
+        raise ContractError(f"{error} ({take_id} marked {'unknown — check before any retry' if error.uncertain else 'failed'})") \
+            from error
+    job(root, take_id, interaction)
+    return {"take": take_id, "interaction_id": interaction, "status": status}
+
+
+def fetch(root, take_id):
+    """Gemini: wait for the recorded interaction, download its video and ingest it. Polling never regenerates."""
+    _, _, _, _, _, takes = inputs(root)
+    take = get_take(takes, take_id)
+    require(provider_of(take) == "gemini", f"{take_id} is a Higgsfield take; download it and run ingest")
+    require(take.get("job_id"), f"{take_id} has no interaction id; check the provider before doing anything else")
+    folder = Path(root) / "takes" / take_id / "incoming"
+    try:
+        path = gemini.fetch_video(take["job_id"], folder)
+    except gemini.GeminiError as error:
+        raise ContractError(f"{error}. The take stays {take['status']}; fetch again later or inspect it with "
+                            f"`gemini-api agent status {take['job_id']}`") from error
+    result = ingest(root, take_id, path)
+    shutil.rmtree(folder, ignore_errors=True)
+    return result
 
 
 def job(root, take_id, job_id):
@@ -306,8 +364,9 @@ def frame_at(video, seconds, target):
     return target
 
 
-def retake(root, canvas, shot_id, model=DEFAULT_MODEL, with_end=False):
+def retake(root, canvas, shot_id, model=None, with_end=False, provider="higgsfield", resolution="720p"):
     """Plan a single-shot retake anchored on the neighbouring shots' selected clips."""
+    model = model or DEFAULT_MODELS[provider]
     project, lock, bible, shots, script, takes = inputs(root)
     order = [s["id"] for s in shots["shots"]]
     require(shot_id in order, f"No shot {shot_id}")
@@ -324,8 +383,8 @@ def retake(root, canvas, shot_id, model=DEFAULT_MODEL, with_end=False):
         clip = Path(root) / by_take[chosen[order[index + 1]]]["clips"][order[index + 1]]
         anchors["end"] = str(frame_at(clip, 0, Path(root) / "takes" / new_id / "anchors/end.png").relative_to(root))
     shot = shots["shots"][index]
-    request = request_for([shot], lock, bible, script, model, canvas, anchors or None)
-    takes["takes"].append({"id": new_id, "canvas": canvas, "shots": [shot_id], "status": "draft", "provider": "higgsfield",
+    request = request_for([shot], lock, bible, script, model, canvas, anchors or None, provider, resolution)
+    takes["takes"].append({"id": new_id, "canvas": canvas, "shots": [shot_id], "status": "draft", "provider": provider,
                            "model": model, "duration": request["duration"], "aspect_ratio": request["aspect_ratio"],
                            "request": request, "request_sha256": ledger.request_sha256(request), "approval": None,
                            "retake_of": chosen.get(shot_id), "planned_at": now()})
@@ -340,16 +399,22 @@ def main(argv=None):
     draft = sub.add_parser("plan", help="Compile take requests for a canvas")
     draft.add_argument("root")
     draft.add_argument("--canvas", required=True)
-    draft.add_argument("--model", default=DEFAULT_MODEL)
+    draft.add_argument("--provider", choices=sorted(DEFAULT_MODELS), default="higgsfield")
+    draft.add_argument("--model", help=f"Default {DEFAULT_MODEL} (higgsfield) or {gemini.VIDEO_MODEL} (gemini)")
+    draft.add_argument("--resolution", default="720p", help="Gemini only: 360p, 720p, 1080p or 4k")
     draft.add_argument("--take", action="append", help="Limit to take groups (shot `take` ids)")
     show = sub.add_parser("show", help="Print a take's exact request")
     show.add_argument("root")
     show.add_argument("--take", required=True)
+    look = sub.add_parser("preview", help="Gemini: show the exact CLI command, estimate and offline --dry-run")
+    look.add_argument("root")
+    look.add_argument("--take", required=True)
     allow = sub.add_parser("approve", help="Record the user's approval of a take's exact request")
     allow.add_argument("root")
     allow.add_argument("--take", required=True)
-    allow.add_argument("--estimate", required=True, type=float, help="Credits from get_cost for this exact request")
-    send = sub.add_parser("submit", help="Consume the approval right before calling generate_video")
+    allow.add_argument("--estimate", required=True, type=float,
+                       help="Credits from get_cost (Higgsfield) or the USD estimate shown to the user (Gemini)")
+    send = sub.add_parser("submit", help="Consume the approval right before the call (runs gemini-api for Gemini takes)")
     send.add_argument("root")
     send.add_argument("--take", required=True)
     record = sub.add_parser("job", help="Record the returned job id")
@@ -360,6 +425,9 @@ def main(argv=None):
     lost.add_argument("root")
     lost.add_argument("--take", required=True)
     lost.add_argument("--uncertain", action="store_true")
+    wait = sub.add_parser("fetch", help="Gemini: wait for the interaction, download and ingest the take")
+    wait.add_argument("root")
+    wait.add_argument("--take", required=True)
     take_in = sub.add_parser("ingest", help="Store the downloaded take and split it into shot clips")
     take_in.add_argument("root")
     take_in.add_argument("--take", required=True)
@@ -377,14 +445,20 @@ def main(argv=None):
     again.add_argument("root")
     again.add_argument("--canvas", required=True)
     again.add_argument("--shot", required=True)
-    again.add_argument("--model", default=DEFAULT_MODEL)
+    again.add_argument("--provider", choices=sorted(DEFAULT_MODELS), default="higgsfield")
+    again.add_argument("--model")
+    again.add_argument("--resolution", default="720p")
     again.add_argument("--with-end", action="store_true", help="Also anchor the end on the next shot (model must support end frames)")
     args = parser.parse_args(argv)
     try:
         if args.command == "plan":
-            result = plan(args.root, args.canvas, args.model, args.take)
+            result = plan(args.root, args.canvas, args.model, args.take, args.provider, args.resolution)
         elif args.command == "show":
             result = get_take(inputs(args.root)[5], args.take)["request"]
+        elif args.command == "preview":
+            take = get_take(inputs(args.root)[5], args.take)
+            require(provider_of(take) == "gemini", "preview runs the gemini-api dry-run; this take is for Higgsfield")
+            result = gemini.preview(args.root, take["request"])
         elif args.command == "approve":
             result = approve(args.root, args.take, args.estimate)
         elif args.command == "submit":
@@ -393,6 +467,9 @@ def main(argv=None):
             result = {"take": args.take, "job_id": job(args.root, args.take, args.job_id)["job_id"]}
         elif args.command == "fail":
             result = {"take": args.take, "status": fail(args.root, args.take, args.uncertain)["status"]}
+        elif args.command == "fetch":
+            take = fetch(args.root, args.take)
+            result = {"take": args.take, "status": take["status"], "clips": take.get("clips"), "split": take.get("split")}
         elif args.command == "ingest":
             take = ingest(args.root, args.take, args.file)
             result = {"take": args.take, "status": take["status"], "clips": take.get("clips"), "split": take.get("split")}
@@ -403,7 +480,8 @@ def main(argv=None):
         elif args.command == "select":
             result = select(args.root, args.take, args.shot, args.skip_dailies)
         else:
-            result = {"planned": retake(args.root, args.canvas, args.shot, args.model, args.with_end)}
+            result = {"planned": retake(args.root, args.canvas, args.shot, args.model, args.with_end, args.provider,
+                                        args.resolution)}
         print(json.dumps(result, indent=2, ensure_ascii=False))
     except (ContractError, subprocess.CalledProcessError) as error:
         print(f"takes: {error}", file=sys.stderr)

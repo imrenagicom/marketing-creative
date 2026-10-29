@@ -108,6 +108,7 @@ IDs are short slugs (`B1`, `L03`, `S04`) and never change once downstream files 
 | `shots[]` | consecutive shots in screen order |
 | `status` | `draft`, `approved`, `submitted`, `succeeded`, `needs-split`, `failed`, `unknown`, `rejected` |
 | `approval` | `{fingerprint, ledger_entry, estimate}`; required before submission |
+| `provider` | `higgsfield` (request `{model, prompt, duration, aspect_ratio, medias[]}`; the agent calls the MCP) or `gemini` (request `{model, prompt, duration, aspect_ratio, resolution, task, inputs[]}`; `takes.py` runs `gemini-api`, `job_id` is the interaction id and `estimate_usd` the dated estimate) |
 | `selected` | top level `{canvas: {shot: take_id}}` — the clip used for each shot; a single-shot retake can replace one shot of a longer take |
 
 ## sound/cues.json — `video-studio/sound@1`
@@ -120,4 +121,4 @@ Visual tokens for compositions: `colors` (`background`, `surface`, `text`, `acce
 
 ## ledger.json — `video-studio/ledger@1`
 
-`caps{provider: {credits, approved_by, approved_at, basis}}` and `entries[]` with `{id, provider, operation, estimate, actual, status, request_sha256, outputs[], at}`. Status is `planned`, `submitted`, `succeeded`, `failed` or `unknown`.
+`caps{provider: {credits, approved_by, approved_at, basis}}` and `entries[]` with `{id, provider, operation, estimate, actual, status, request_sha256, outputs[], at}`. Status is `planned`, `submitted`, `succeeded`, `failed` or `unknown`. Providers: capped `elevenlabs`, `higgsfield-image` (credits) and `gemini-image` (USD); per-request `higgsfield-video`, `higgsfield-reframe`, `higgsfield-upscale` (credits) and `gemini-video` (USD).

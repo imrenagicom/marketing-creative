@@ -1,7 +1,7 @@
-"""Reserve, complete and recover capped Higgsfield image jobs (stdlib only).
+"""Reserve, complete and recover capped image jobs (Higgsfield or Gemini; stdlib only).
 
-The agent calls the Higgsfield MCP itself; these helpers make sure the cap is
-checked and the call is recorded before submission, and that the returned file
+The agent calls the Higgsfield MCP itself (Gemini runs through gemini.py); these
+helpers make sure the cap is checked and the call is recorded before submission, and that the returned file
 lands in the project with its provenance.
 """
 import hashlib
@@ -9,20 +9,49 @@ import json
 from pathlib import Path
 import shutil
 
+import gemini
 import ledger
 from studio import ContractError, now, require
 
 PROVIDER = "higgsfield-image"
 
 
+def provider_of(request):
+    return "gemini-image" if request.get("provider") == "gemini" else PROVIDER
+
+
 def reserve(root, operation, request, estimate):
-    """Check the image cap and record the job before the MCP call; returns the ledger entry."""
-    decision = ledger.check(ledger.read(root), PROVIDER, estimate)
+    """Check the image cap and record the job before the provider call; returns the ledger entry."""
+    provider = provider_of(request)
+    decision = ledger.check(ledger.read(root), provider, estimate)
     require(decision["allowed"], decision.get("reason", ""))
-    entry = ledger.record(root, PROVIDER, operation, estimate, request)
+    entry = ledger.record(root, provider, operation, estimate, request)
     if decision.get("warning"):
         entry["warning"] = decision["warning"]
     return entry
+
+
+def generate_gemini(root, operation, request, estimate=None):
+    """Reserve under the gemini-image cap, run the CLI once, and return (entry, file, response id).
+
+    A refusal before generation is marked failed; a timeout or unclear exit stays
+    unknown and counted, and is never resubmitted automatically.
+    """
+    found = gemini.problems(request)
+    require(not found, "; ".join(found))
+    estimate = gemini.estimate(request) if estimate is None else estimate
+    require(estimate is not None, f"No published price for {request['model']} at {request['image_size']}; "
+                                  "pass --estimate with the figure you showed the user")
+    missing = [asset for asset in request["inputs"] if not (Path(root) / asset).is_file()]
+    require(not missing, f"Missing reference images: {', '.join(missing)}")
+    entry = reserve(root, operation, request, estimate)
+    try:
+        path, response_id = gemini.generate_image(root, request, Path(root) / ".gemini-incoming" / entry["id"])
+    except gemini.GeminiError as error:
+        fail(root, entry["id"], uncertain=error.uncertain)
+        raise ContractError(f"{error} (ledger entry {entry['id']} marked "
+                            f"{'unknown — check before retrying' if error.uncertain else 'failed'})") from error
+    return entry, path, response_id
 
 
 def complete(root, entry_id, source, destination, job_id=None, actual=None):
@@ -37,6 +66,9 @@ def complete(root, entry_id, source, destination, job_id=None, actual=None):
                   "recorded_at": now()}
     target.with_suffix(target.suffix + ".json").write_text(json.dumps(provenance, indent=2) + "\n")
     ledger.update(root, entry_id, status="succeeded", actual=actual, outputs=[destination], job_id=job_id)
+    incoming = Path(root).resolve() / ".gemini-incoming"
+    if source.resolve().is_relative_to(incoming):
+        shutil.rmtree(source.parent, ignore_errors=True)
     return provenance
 
 

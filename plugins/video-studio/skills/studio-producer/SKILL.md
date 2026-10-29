@@ -43,6 +43,7 @@ For films and story-led ads made from AI footage, use `--recipe cinematic` and f
 Read [cost-and-approval.md](references/cost-and-approval.md) before any paid call is planned. In short:
 
 - **Higgsfield images** (keyframes, references) run under their own per-project cap (`--provider higgsfield-image`). **Higgsfield video, reframe and upscale** need approval of each exact request (`ledger.py approve`), never a cap.
+- **Gemini API CLI** (`gemini-api`, an alternative image and video provider for films; see [gemini-api.md](references/gemini-api.md)): images run under a per-project cap **in USD** (`--provider gemini-image`), and every video request needs its own approval, like Higgsfield video.
 - **ElevenLabs** runs under a per-project credit cap the user approves once. Propose the cap with its basis (script characters × allowed takes, plus any sound/music seconds), wait for a clear yes, then record it:
 
   ```sh

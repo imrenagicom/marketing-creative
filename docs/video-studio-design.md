@@ -234,6 +234,20 @@ docs) when implementing; record the verification date and source.
 | editor | `reframe` (fallback only; variants are composed independently), `upscale_video` |
 | cost ledger | `get_cost: true` preflight; on transport timeout keep the job ID and do not resubmit |
 
+### Gemini API CLI (image and video)
+
+An alternative provider added 2026-10-29 through the `gemini-api` CLI
+([reference](../plugins/video-studio/skills/studio-producer/references/gemini-api.md)).
+The helpers (`studio-producer/scripts/gemini.py`) derive the command from the
+stored, fingerprinted request and run it themselves: `gemini-api image` for
+bible references and keyframes under a USD `gemini-image` cap, and
+`gemini-api video --async` for takes under per-request `gemini-video`
+approval, recording the interaction id before polling with `--resume`.
+Previews use the CLI's offline `--dry-run`. There are no elements, so bible
+images go in as inputs, and a start keyframe binds as the first input frame.
+Native video is 16:9 and 9:16 only, 3–10 s per generation; other canvases stay on
+Higgsfield or a labelled, approved reframe.
+
 ### Audio bridge
 
 ElevenLabs produces the voice stem and timestamps; the stem is uploaded to
@@ -265,6 +279,8 @@ does not return timestamps.
   approval.
 - **Higgsfield reframe and upscale: per-request.** They process video and
   cost about as much as video generation.
+- **Gemini API: the same split.** Images run under a per-project `gemini-image`
+  cap in USD; every `gemini-api video` request is approved by fingerprint.
 - General production permission never enables paid generation.
 
 ## Credentials and outputs
@@ -272,6 +288,8 @@ does not return timestamps.
 - The ElevenLabs CLI keeps its key in the OS keychain via `elevenlabs auth`;
   the README must say so. Never print or commit keys.
 - Higgsfield access is via the user's connected MCP server.
+- The `gemini-api` CLI reads an exported `GEMINI_API_KEY` or its own keychain
+  entry (`gemini-api configure`); helpers never read or print it.
 - Generated media, runs and private references stay outside the plugin source,
   in versioned run directories.
 

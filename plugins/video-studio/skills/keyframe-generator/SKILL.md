@@ -1,13 +1,13 @@
 ---
 name: keyframe-generator
-description: Generate start (and optional end) keyframes for each camera shot of a Video Studio film from the continuity bible, under the project's Higgsfield image cap, and register them as anchors for AI video takes. Use whenever a cinematic project has an approved bible and shot list and needs first frames, start/end frames, style frames or a visual preview of shots before paid video generation, or when a shot's keyframe drifted and needs a new version.
+description: Generate start (and optional end) keyframes for each camera shot of a Video Studio film from the continuity bible, through Higgsfield or the Gemini API CLI under the project's image cap, and register them as anchors for AI video takes. Use whenever a cinematic project has an approved bible and shot list and needs first frames, start/end frames, style frames or a visual preview of shots before paid video generation, or when a shot's keyframe drifted and needs a new version.
 ---
 
 # Keyframe Generator
 
 A good first frame is the cheapest place to fix composition, identity and light before paying for video. Keyframes become `start_image` (and sometimes end) anchors for takes, and the user's approval of them is approval of the film's look.
 
-Read [keyframe-craft.md](references/keyframe-craft.md).
+Read [keyframe-craft.md](references/keyframe-craft.md). For the Gemini provider, also read [gemini-api.md](../studio-producer/references/gemini-api.md).
 
 ## Plan
 
@@ -19,7 +19,9 @@ Writes `keyframes/requests-<canvas>.json`: one request per camera shot (and end 
 
 Plan each canvas separately; a 9:16 keyframe is composed for vertical, not cropped from 16:9.
 
-## Generate under the image cap
+Choose the provider per project, or per canvas, with the user. `--provider gemini` (default model `gemini-nano-banana-2.1`, `--image-size 2K`) plans `gemini-api image` requests. Gemini has no elements, so bible images are attached as inputs and the prompt names each subject with its preserve list.
+
+## Generate under the image cap (Higgsfield)
 
 For each request:
 
@@ -28,6 +30,12 @@ For each request:
 3. Call `generate_image` with the exact request, download the result.
 4. `keyframes.py record <project> --canvas 16x9 --shot S01 --frame start --entry <ledger id> --file <path> --job-id <id>` — stores `keyframes/<canvas>/S01-start-v<N>.png` with provenance and links it from the shot.
 5. Refused: `keyframes.py fail --entry <id>`. Timeout or lost response: `--uncertain`, check the job by id, never resubmit automatically.
+
+## Generate under the image cap (Gemini)
+
+1. `keyframes.py preview <project> --canvas 16x9 --shot S01` prints the exact command, the USD estimate and the CLI's offline `--dry-run`. Fix any reported problems or missing inputs first.
+2. `keyframes.py generate <project> --canvas 16x9 --shot S01 [--frame start]` checks the `gemini-image` cap (USD), records the entry, runs the CLI once and stores the keyframe as above. When no published price covers the model and size, it refuses until you pass `--estimate` with the figure you showed the user.
+3. A validation or authentication refusal is recorded as `failed`. A timeout or unclear failure stays `unknown` and counted. Tell the user, and do not run `generate` for that frame again until they decide.
 
 Prefer a couple of variants (`count`) for the opening and hero shots only; one per ordinary shot keeps the cap healthy.
 

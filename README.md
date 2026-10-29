@@ -47,12 +47,12 @@ Start video work with [`marketing-video`](plugins/marketing-creative/skills/mark
 | `editor` | Compositions or selected footage clips → versioned renders with a ducked sound mix, SRT/VTT captions and loudness-finished deliveries |
 | `qc-reviewer` | Generated take → dailies against the continuity pillars; render version → technical checks, a frame per shot and the human checks still required |
 | `reference-analyst` | Reference video → cuts, pacing, frames, audio stats and a techniques-vs-style report |
-| `continuity-bible` | Direction lock → characters, locations with motivated light, props, locks, reference images and Higgsfield elements |
-| `keyframe-generator` | Camera shots and bible → start/end frames under a per-project Higgsfield image cap |
-| `ai-video-generator` | Timed shots, bible and keyframes → Higgsfield takes approved per exact request, split into shot clips; single-shot retakes (opt-in) |
+| `continuity-bible` | Direction lock → characters, locations with motivated light, props, locks, reference images (Higgsfield or Gemini API) and Higgsfield elements |
+| `keyframe-generator` | Camera shots and bible → start/end frames under a per-project Higgsfield or Gemini image cap |
+| `ai-video-generator` | Timed shots, bible and keyframes → Higgsfield or Gemini API takes approved per exact request, split into shot clips; single-shot retakes (opt-in) |
 | `sound-designer` | Shot sounds and audio policy → ElevenLabs sound effects, ambience beds and optional music placed on the timeline |
 
-Explainers are narration-first: word timestamps time every shot. Films are continuity-first: the bible and shot plan come before any generation. ElevenLabs calls and Higgsfield images run under per-project caps you approve once (`ledger.py`); every Higgsfield video, reframe or upscale request needs your approval of that exact request. Requirements: Python 3.10+, FFmpeg/FFprobe, Node.js 22+ for HyperFrames rendering, the `elevenlabs` CLI signed in with `elevenlabs auth login` (keychain) or `ELEVENLABS_API_KEY`, and a connected Higgsfield MCP server for films. Start with `$studio-producer` (Claude: `/video-studio:studio-producer`).
+Explainers are narration-first: word timestamps time every shot. Films are continuity-first: the bible and shot plan come before any generation. ElevenLabs calls and Higgsfield or Gemini images run under per-project caps you approve once (`ledger.py`); every Higgsfield video, reframe or upscale request and every Gemini video request needs your approval of that exact request. Requirements: Python 3.10+, FFmpeg/FFprobe, Node.js 22+ for HyperFrames rendering, the `elevenlabs` CLI signed in with `elevenlabs auth login` (keychain) or `ELEVENLABS_API_KEY`, and for films either a connected Higgsfield MCP server or the [`gemini-api` CLI](https://github.com/google-gemini/gemini-api-cli) on `PATH` with an exported `GEMINI_API_KEY` (or `gemini-api configure`). Gemini video is generated natively only in 16:9 and 9:16, 3–10 s per take; see the [Gemini reference](plugins/video-studio/skills/studio-producer/references/gemini-api.md). Start with `$studio-producer` (Claude: `/video-studio:studio-producer`).
 
 ## Install
 

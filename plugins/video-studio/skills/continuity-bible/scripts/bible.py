@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Check the continuity bible, derive negative constraints, and track reference images and Higgsfield elements."""
+"""Check the continuity bible, derive negative constraints, and track reference images (Higgsfield or Gemini) and Higgsfield elements."""
 import argparse
 import json
 from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "studio-producer/scripts"))
+import gemini  # noqa: E402
 import media  # noqa: E402
 from studio import ContractError, load, require, validate_bible, validate_lock, write  # noqa: E402
 
@@ -69,7 +70,7 @@ def derive(root):
     return bible["negatives"]
 
 
-def sheet_requests(root, model):
+def sheet_requests(root, model, provider="higgsfield", image_size="2K"):
     """Image requests for missing reference images (run them under the image cap)."""
     _, bible = inputs(root)
     look = bible["capture"]["look"]
@@ -81,8 +82,11 @@ def sheet_requests(root, model):
                                             lights=", ".join(ref.get("light_sources", [])) or "soft daylight")
         if ref["role"] in {"environment", "style"}:
             prompt += f" Look: {look}."
-        requests.append({"ref": ref["id"], "model": model, "prompt": prompt,
-                         "aspect_ratio": "16:9" if ref["role"] in {"environment", "style"} else "3:2"})
+        aspect = "16:9" if ref["role"] in {"environment", "style"} else "3:2"
+        if provider == "gemini":
+            requests.append({"ref": ref["id"], **gemini.image_request(model, prompt, aspect, image_size, [])})
+        else:
+            requests.append({"ref": ref["id"], "model": model, "prompt": prompt, "aspect_ratio": aspect})
     path = Path(root) / "bible/image-requests.json"
     path.write_text(json.dumps({"requests": requests}, indent=2, ensure_ascii=False) + "\n")
     return requests
@@ -98,6 +102,22 @@ def add_image(root, ref_id, entry_id, source, job_id=None):
     ref.setdefault("images", []).append(destination)
     write(root, "bible", bible)
     return destination
+
+
+def find_request(root, ref_id):
+    requests = json.loads((Path(root) / "bible/image-requests.json").read_text())["requests"]
+    request = next((r for r in requests if r["ref"] == ref_id), None)
+    require(request is not None, f"No image request for {ref_id}; run `bible.py sheets` first")
+    return request
+
+
+def generate(root, ref_id, estimate=None):
+    """Run a Gemini sheet request under the gemini-image cap and add the image to the reference."""
+    request = find_request(root, ref_id)
+    require(request.get("provider") == "gemini", f"The {ref_id} request is for Higgsfield; use reserve → generate_image → add-image")
+    entry, path, response_id = media.generate_gemini(root, "gemini-api image:reference", request, estimate)
+    return {"image": add_image(root, ref_id, entry["id"], path, response_id), "entry": entry["id"],
+            "estimate_usd": entry["estimate"], **({"warning": entry["warning"]} if entry.get("warning") else {})}
 
 
 def link(root, ref_id, element_id):
@@ -117,7 +137,16 @@ def main(argv=None):
         sub.add_parser(name).add_argument("root")
     sheets = sub.add_parser("sheets", help="Write image requests for references without images")
     sheets.add_argument("root")
-    sheets.add_argument("--model", default="gpt_image_2_5")
+    sheets.add_argument("--provider", choices=["gemini", "higgsfield"], default="higgsfield")
+    sheets.add_argument("--model", help=f"Default gpt_image_2_5 (higgsfield) or {gemini.IMAGE_MODEL} (gemini)")
+    sheets.add_argument("--image-size", default="2K", help="Gemini only: 512, 1K, 2K or 4K")
+    run = sub.add_parser("generate", help="Gemini: run a sheet request under the image cap and add the image")
+    run.add_argument("root")
+    run.add_argument("--ref", required=True)
+    run.add_argument("--estimate", type=float, help="USD; needed only when no published price covers the model/size")
+    look = sub.add_parser("preview", help="Gemini: show the exact CLI command, estimate and offline --dry-run")
+    look.add_argument("root")
+    look.add_argument("--ref", required=True)
     reserve = sub.add_parser("reserve", help="Check the image cap and record one reference-image job before the MCP call")
     reserve.add_argument("root")
     reserve.add_argument("--ref", required=True)
@@ -143,11 +172,16 @@ def main(argv=None):
         elif args.command == "negatives":
             print(json.dumps(derive(args.root), indent=2, ensure_ascii=False))
         elif args.command == "sheets":
-            print(json.dumps(sheet_requests(args.root, args.model), indent=2, ensure_ascii=False))
+            model = args.model or (gemini.IMAGE_MODEL if args.provider == "gemini" else "gpt_image_2_5")
+            print(json.dumps(sheet_requests(args.root, model, args.provider, args.image_size), indent=2, ensure_ascii=False))
+        elif args.command == "generate":
+            print(json.dumps(generate(args.root, args.ref, args.estimate), indent=2))
+        elif args.command == "preview":
+            request = find_request(args.root, args.ref)
+            require(request.get("provider") == "gemini", "preview runs the gemini-api dry-run; this request is for Higgsfield")
+            print(json.dumps(gemini.preview(args.root, request), indent=2, ensure_ascii=False))
         elif args.command == "reserve":
-            requests = json.loads((Path(args.root) / "bible/image-requests.json").read_text())["requests"]
-            request = next((r for r in requests if r["ref"] == args.ref), None)
-            require(request is not None, f"No image request for {args.ref}; run `bible.py sheets` first")
+            request = find_request(args.root, args.ref)
             print(json.dumps(media.reserve(args.root, "generate_image:reference", request, args.estimate), indent=2))
         elif args.command == "fail":
             print(json.dumps(media.fail(args.root, args.entry, args.uncertain), indent=2))
