@@ -553,6 +553,8 @@ class MotionDesignerTests(ProjectFixture):
 
 EDIT = SKILLS / "editor/scripts/edit.py"
 QC = SKILLS / "qc-reviewer/scripts/qc.py"
+CAMPAIGN = SKILLS / "studio-producer/scripts/campaign.py"
+STUDIO = SKILLS / "studio-producer/scripts/studio.py"
 sys.path.insert(0, str(EDIT.parent))
 import edit  # noqa: E402
 
@@ -641,6 +643,36 @@ class EditorAndQcTests(ProjectFixture):
         statuses = {(c["canvas"], c["check"]): c["status"] for c in broken["checks"]}
         self.assertEqual(statuses[("9x16", "dimensions")], "fail")
         self.assertEqual(statuses[("all", "captions")], "warn")
+
+    def test_campaign_link_and_handoff_file_approved_video_without_overwriting(self):
+        campaign = Path(self.temp.name) / "marketing/campaigns/2026-10-29-launch"
+        ad = "meta-ads/campaigns/launch/adsets/broad/ads/demo-video"
+        (campaign / ad).mkdir(parents=True)
+        (campaign / "campaign.json").write_text(json.dumps({"schema_version": 1, "campaign_id": "2026-10-29-launch",
+                                                            "defaults": {}, "links": []}))
+        missing = self.run_script(CAMPAIGN, "link", self.root, "--campaign", campaign, "--deliverable", "instagram/posts/none")
+        self.assertIn("No ad or post directory", missing.stderr)
+        linked = self.run_script(CAMPAIGN, "link", self.root, "--campaign", campaign, "--deliverable", ad)
+        self.assertEqual(linked.returncode, 0, linked.stderr)
+        status = json.loads(self.run_script(STUDIO, "validate", self.root).stdout)["campaign"]
+        self.assertEqual((status["id"], status["found"], status["brief"], status["deliverables"]),
+                         ("2026-10-29-launch", True, False, [ad]))
+        early = self.run_script(CAMPAIGN, "handoff", self.root, "--deliverable", ad, "--note", "approved in chat")
+        self.assertIn("No final QC report", early.stderr)
+        for step in (("render",), ("captions",), ("finish",)):
+            self.assertEqual(self.run_script(EDIT, *step, self.root).returncode, 0)
+        self.assertEqual(self.run_script(QC, "final", self.root).returncode, 0)
+        other = self.run_script(CAMPAIGN, "handoff", self.root, "--deliverable", "twitter/posts/x", "--note", "ok")
+        self.assertIn("not one of this video's campaign deliverables", other.stderr)
+        for revision in ("v001", "v002"):
+            done = self.run_script(CAMPAIGN, "handoff", self.root, "--deliverable", ad, "--note", "User approved v1 in chat")
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(done.stdout)["approved"], f"{ad}/assets/approved/{revision}")
+        record = json.loads((campaign / ad / "assets/approved/v001/assets.json").read_text())
+        self.assertEqual((record["campaign_id"], record["render"], record["source"]), ("2026-10-29-launch", "v1", "video-studio"))
+        video = campaign / ad / "assets/approved/v001" / record["assets"][0]["file"]
+        self.assertTrue(video.is_file())
+        self.assertEqual(len(record["assets"][0]["sha256"]), 64)
 
     def test_burn_in_requires_captions_and_render_requires_builds(self):
         self.assertEqual(self.run_script(EDIT, "render", self.root, "--canvas", "1x1").returncode, 1)
@@ -1010,7 +1042,10 @@ out = args[args.index("--out") + 1] if "--out" in args else None
 if args[0] == "image":
     os.makedirs(out, exist_ok=True)
     path = os.path.join(out, "gemini-image-1.png")
-    open(path, "wb").write(b"\\x89PNG\\r\\n\\x1a\\nfake")
+    if os.environ.get("FAKE_IMAGE"):
+        shutil.copy(os.environ["FAKE_IMAGE"], path)
+    else:
+        open(path, "wb").write(b"\\x89PNG\\r\\n\\x1a\\nfake")
     print(json.dumps({{"kind": "image", "path": path, "status": "completed", "response_id": "resp-img"}}))
 elif "--resume" in args:
     os.makedirs(out, exist_ok=True)
@@ -1030,7 +1065,7 @@ class GeminiFixture(CinematicFixture):
         fake.write_text(FAKE_GEMINI_CLI.format(python=sys.executable))
         fake.chmod(0o755)
         self.log = Path(self.temp.name) / "gemini.log"
-        keys = ("VIDEO_STUDIO_GEMINI_BIN", "FAKE_LOG", "FAKE_FAIL", "FAKE_VIDEO")
+        keys = ("VIDEO_STUDIO_GEMINI_BIN", "FAKE_LOG", "FAKE_FAIL", "FAKE_VIDEO", "FAKE_IMAGE")
         saved = {k: os.environ.get(k) for k in keys}
         os.environ.update({"VIDEO_STUDIO_GEMINI_BIN": str(fake), "FAKE_LOG": str(self.log)})
         os.environ.pop("FAKE_FAIL", None)
@@ -1111,6 +1146,79 @@ class GeminiKeyframeTests(GeminiFixture):
         self.assertEqual(made["image"], "bible/images/rooftop-v1.png")
         self.assertEqual(self.read("bible")["references"][1]["images"], ["bible/images/rooftop-v1.png"])
         self.assertNotIn("-i", self.calls()[-1])
+
+
+sys.path.insert(0, str(SKILLS / "studio-producer/scripts"))
+import boards  # noqa: E402
+
+
+class BoardLayoutTests(unittest.TestCase):
+    def test_layout_keeps_cells_near_their_canvas_ratio(self):
+        self.assertEqual(boards.layout(9, "16:9"), (3, 3, "16:9"))
+        self.assertEqual(boards.layout(4, "9:16"), (2, 2, "9:16"))
+        self.assertEqual(boards.layout(4, "16:9", (1, 4)), (1, 4, "21:9"))
+        with self.assertRaises(studio.ContractError):
+            boards.layout(13, "16:9")
+        with self.assertRaises(studio.ContractError):
+            boards.layout(5, "16:9", (2, 2))
+
+
+@unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "ffmpeg needed to split boards")
+class GeminiBoardTests(GeminiFixture):
+    def setUp(self):
+        super().setUp()
+        import os
+        bible = self.read("bible")
+        bible["references"][0]["images"] = ["bible/images/courier.png"]
+        self.put("bible", bible)
+        (self.root / "bible/images").mkdir(parents=True, exist_ok=True)
+        (self.root / "bible/images/courier.png").write_bytes(b"\x89PNG\r\n\x1a\nref")
+        sheet = Path(self.temp.name) / "sheet.png"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc=s=1920x1080", "-frames:v", "1",
+                        str(sheet)], check=True)
+        os.environ["FAKE_IMAGE"] = str(sheet)
+
+    def test_keyframe_board_is_one_capped_call_split_into_unregistered_previews(self):
+        planned = self.ok(KEYFRAMES, "board", self.root, "--canvas", "16x9")
+        self.assertEqual((planned["board"], planned["grid"], planned["sheet_aspect"]),
+                         ("keyframes/boards/16x9/board-v1", "2x2", "16:9"))
+        self.assertEqual(planned["cells"], ["S01-start", "S02-start", "S03-start", "S04-start"])
+        board = json.loads((self.root / planned["board"] / "board.json").read_text())
+        self.assertIn("bible/images/courier.png", board["request"]["inputs"])
+        self.assertIn("Frame 4 (row 2, column 2)", board["request"]["prompt"])
+        self.ok(KEYFRAMES, "board-preview", self.root, "--board", planned["board"])
+        self.assertEqual(ledger.read(self.root)["entries"], [])
+        refused = self.run_script(KEYFRAMES, "board-generate", self.root, "--board", planned["board"])
+        self.assertIn("No approved gemini-image cap", refused.stderr)
+        ledger.set_cap(self.root, "gemini-image", 1.0, "one board plus finals")
+        made = self.ok(KEYFRAMES, "board-generate", self.root, "--board", planned["board"])
+        self.assertEqual((made["tiles"], made["tile_size"]), (f"{planned['board']}/tiles-v1", [960, 540]))
+        for cell in planned["cells"]:
+            self.assertTrue((self.root / made["tiles"] / f"{cell}.png").is_file())
+        self.assertEqual(len([c for c in self.calls() if "--dry-run" not in c]), 1)
+        self.assertEqual([e["status"] for e in ledger.read(self.root)["entries"]], ["succeeded"])
+        self.assertNotIn("keyframes", json.dumps(self.read("shots")["shots"]))
+        again = self.run_script(KEYFRAMES, "board-generate", self.root, "--board", planned["board"])
+        self.assertIn("already sent", again.stderr)
+        resplit = self.ok(KEYFRAMES, "board-split", self.root, "--board", planned["board"], "--inset", "10")
+        self.assertEqual((resplit["tiles"], resplit["tile_size"]), (f"{planned['board']}/tiles-v2", [940, 520]))
+        self.ok(KEYFRAMES, "plan", self.root, "--canvas", "16x9", "--provider", "gemini", "--tiles", made["tiles"])
+        request = json.loads((self.root / "keyframes/requests-16x9.json").read_text())["requests"][0]
+        self.assertEqual(request["inputs"][-1], f"{made['tiles']}/S01-start.png")
+        self.assertIn(boards.TILE_NOTE, request["prompt"])
+
+    def test_bible_board_offers_look_options_and_feeds_the_chosen_tile_to_its_sheet(self):
+        planned = self.ok(BIBLE, "board", self.root, "--ref", "rooftop", "--variant", "dawn haze",
+                          "--variant", "neon night", "--variant", "overcast noon")
+        self.assertEqual(planned["cells"], ["rooftop-1", "rooftop-2", "rooftop-3"])
+        ledger.set_cap(self.root, "gemini-image", 1.0, "basis")
+        made = self.ok(BIBLE, "board-generate", self.root, "--board", planned["board"])
+        chosen = f"{made['tiles']}/rooftop-2.png"
+        self.assertEqual(self.read("bible")["references"][1].get("images", []), [])
+        requests = self.ok(BIBLE, "sheets", self.root, "--provider", "gemini", "--tile", f"rooftop={chosen}")
+        rooftop = next(r for r in requests if r["ref"] == "rooftop")
+        self.assertEqual(rooftop["inputs"], [chosen])
+        self.assertEqual(self.run_script(BIBLE, "board", self.root, "--ref", "rooftop", "--variant", "one").returncode, 1)
 
 
 class GeminiTakeTests(GeminiFixture):

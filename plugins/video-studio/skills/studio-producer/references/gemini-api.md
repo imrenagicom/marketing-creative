@@ -12,7 +12,7 @@ Install a release binary (or `go install github.com/google-gemini/gemini-api-cli
 
 | Use | Command derived from the request | Notes |
 | --- | --- | --- |
-| Reference image, keyframe | `gemini-api image "<prompt>" --body '{model, response_format{type:image, aspect_ratio, image_size}}' -i <ref>… --out <dir> --output-format json` | Synchronous; returns `{path, response_id}` |
+| Reference image, keyframe, board ([boards.md](boards.md)) | `gemini-api image "<prompt>" --body '{model, response_format{type:image, aspect_ratio, image_size}}' -i <ref>… --out <dir> --output-format json` | Synchronous; returns `{path, response_id}` |
 | Video take | `gemini-api video "<prompt>" --body '{model, response_format{type:video, aspect_ratio, resolution, duration}, generation_config.video_config.task}' -i <frame>… --async --output-format json` | Returns the interaction id at once; recorded before anything else |
 | Download a take | `gemini-api video --resume <id> --out <dir> --output-format json` | Polls the existing interaction; never generates again |
 | Preview | the same command plus `--dry-run` | Offline: validates and prints the redacted request; no key, no network |
@@ -27,6 +27,8 @@ Exit codes: `0` success, `2` invalid usage, `3` authentication — both mean not
 | Video | `gemini-omni-1.1-flash` (CLI default), `gemini-omni-flash-preview` | **16:9 and 9:16 only**; 360p, 720p (default), 1080p and 4k (the last two upscaled); 3–10 s per generation |
 
 There are no Higgsfield-style elements. Identity comes from reference images passed with `-i` and named in the prompt. For video, the input order is the binding: with a start frame the task is `image_to_video` (first image = first frame, optional second = last frame) and bible references are not attached, so they cannot be mistaken for an end frame; without a start frame, reference images go in as `reference_to_video`; with neither, `text_to_video`.
+
+**Veo is not available here.** Google shut down Veo 3.1 Preview in the Gemini API on 2026-10-22 and names `gemini-omni-1.1-flash` as the replacement ([deprecations](https://ai.google.dev/gemini-api/docs/deprecations), checked 2026-10-29). The GA Veo models run only on Google Cloud's Gemini Enterprise Agent Platform, which Video Studio does not integrate. Use Omni here or a Higgsfield model.
 
 4:5 and 1:1 takes cannot be generated natively. Use Higgsfield for those canvases, or a labelled, separately approved reframe. A take longer than 10 s must be regrouped into shorter takes. Prompt timecodes are directions, not guaranteed cut points: the split check still applies.
 

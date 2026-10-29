@@ -46,6 +46,16 @@ Under `<YYYY-MM-DD>-<campaign-name>/`, organize campaign documents/plans, perfor
 
 Create only the platform (`meta-ads/`, `instagram/`, `linkedin/`, `twitter/`), `reports/`, campaign/adset/ad/post, copy and asset directories that the current workflow actually uses or that the user asks to scaffold. Never overwrite prior `vNNN` directories in `copy/approved/`, `assets/approved/`, `tracking/`, or existing `reports/<datetime>.md` files.
 
+## Produce the campaign's creatives with the companion plugins
+
+Every plugin in this suite serves this campaign workspace. Creative production happens inside each ad's or post's `assets/development/`, and approved results land in its next `assets/approved/vNNN/`:
+
+- **Images** (image ads, carousel slides, social posts): `$marketing-image-board` for one low-cost contact sheet of concepts, then `$marketing-image-producer` for the selected finals (marketing-images plugin). Plans, boards and runs go under `assets/development/images/`.
+- **Video** (explainers, ads, reels, short films): `$studio-producer` (video-studio plugin). It creates its project under `assets/development/video/<YYYY-MM-DD>-<slug>/`, links it to this campaign and its deliverables, and after QC and the user's approval files the encoded ratios into `assets/approved/vNNN/video/` with `assets.json`.
+- **Copy and alt text:** [marketing-copywriter](../marketing-copywriter/SKILL.md).
+
+Give those skills the campaign directory and the ad or post paths. The brief, approved claims and copy, CTA and required ratios come from `docs/MARKETING_BRIEF.md` and the `ad.json`/`post.json` specs. After a handoff, update `approved_assets_revision`, `creative_id` and `utm_content` here. Production skills never edit `campaign.json`, `ad.json` or `post.json` and never publish.
+
 ## Define and apply the UTM convention
 
 Read [utm-conventions.md](references/utm-conventions.md). Reuse the workspace taxonomy and exact existing values. When there is none, propose and document a compact convention, then apply it consistently. Separate stable campaign/link/creative IDs from display names; record who owns unresolved decisions.

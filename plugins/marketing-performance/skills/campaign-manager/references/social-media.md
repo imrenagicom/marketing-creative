@@ -32,7 +32,7 @@ Each social media platform folder organizes individual posts, reels, stories, ca
           development/
             storyboard/                  # concepts, reel/carousel scripts, visual direction, beat sheets
             images/                      # references, contact sheets, cropped tiles, slide renders
-            video/                       # reel/story video projects, Veo/Omni runs, draft renders/QA
+            video/                       # reel/story Video Studio projects and Gemini/Higgsfield runs, draft renders/QA
             audio/                       # voiceover takes, alignment, music/SFX
           approved/
             v001/                        # approved deliverable revision ready to publish

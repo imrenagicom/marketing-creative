@@ -1,4 +1,0 @@
-interface:
-  display_name: "Motion Storyboard"
-  short_description: "Plan visual beats, cues and per-ratio framing"
-  default_prompt: "Use $motion-storyboard to storyboard my script with semantic cues and ratio adaptations."

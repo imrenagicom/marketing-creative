@@ -1,6 +1,0 @@
-interface:
-  display_name: "Marketing Omni Video"
-  short_description: "Generate and edit approved Omni Flash video clips"
-  default_prompt: "Use $marketing-omni-video to prepare an Omni Flash marketing clip or edit and submit only after I approve paid generation."
-policy:
-  allow_implicit_invocation: false

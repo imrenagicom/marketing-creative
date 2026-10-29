@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""Synchronize release metadata and build the allowlisted plugin archive."""
+"""Synchronize release metadata and build every allowlisted plugin archive."""
 import argparse
 import json
 from pathlib import Path
 import re
 
 from build_plugin import build
+from validate_package import PLUGINS
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION_FILES = (
     "package.json",
     "package-lock.json",
-    "plugins/marketing-creative/.codex-plugin/plugin.json",
-    "plugins/marketing-creative/.claude-plugin/plugin.json",
-    "plugins/marketing-creative/plugin.json",
+    "plugins/marketing-images/.codex-plugin/plugin.json",
+    "plugins/marketing-images/.claude-plugin/plugin.json",
+    "plugins/marketing-images/plugin.json",
     "plugins/marketing-performance/.codex-plugin/plugin.json",
     "plugins/marketing-performance/.claude-plugin/plugin.json",
     "plugins/marketing-performance/plugin.json",
@@ -43,13 +44,10 @@ def update_versions(root, version):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("version")
-    parser.add_argument("--output", required=True)
+    parser.add_argument("--output-dir", required=True, help="Receives <plugin>-plugin.zip for every plugin")
     args = parser.parse_args()
-    if Path(args.output).resolve().is_relative_to(ROOT):
+    if Path(args.output_dir).resolve().is_relative_to(ROOT):
         parser.error("Release archives must be outside the repository")
-    if Path(args.output).name in {"marketing-performance-plugin.zip", "video-studio-plugin.zip"}:
-        parser.error("The creative, performance and video studio archive paths must differ")
     update_versions(ROOT, args.version)
-    build(args.output)
-    build(Path(args.output).with_name("marketing-performance-plugin.zip"), "marketing-performance")
-    build(Path(args.output).with_name("video-studio-plugin.zip"), "video-studio")
+    for name in PLUGINS:
+        build(Path(args.output_dir) / f"{name}-plugin.zip", name)

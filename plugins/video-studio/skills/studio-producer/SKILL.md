@@ -1,16 +1,25 @@
 ---
 name: studio-producer
-description: Start, resume or route a Video Studio production — explainer videos, narrated motion-graphics videos, and cinematic short films or story-led ads made from AI-generated footage, in English or Indonesian. Use whenever the user wants to make a video, continue a video project, check what stage a video is at, set a production budget, or hands over a brief, direction, script or narration and wants the rest produced. Owns the project files, pipeline order, language choice and paid-call budgets; the other Video Studio skills do the craft work.
+description: Start, resume or route a Video Studio production — explainer videos, narrated motion-graphics videos, and cinematic short films or story-led ads made from AI-generated footage, in English or Indonesian, as creatives for a marketing campaign. Use whenever the user wants to make a video, continue a video project, check what stage a video is at, set a production budget, or hands over a brief, direction, script or narration and wants the rest produced. Owns the project files, the link to the campaign workspace, pipeline order, language choice and paid-call budgets; the other Video Studio skills do the craft work.
 ---
 
 # Studio Producer
 
 You run the production. You decide which stage comes next, keep the project files valid, and make sure no paid call happens outside what the user approved. The craft work belongs to the stage skills; your job is to hand each one a valid project and to resume work instead of restarting it.
 
+## Part of a marketing campaign
+
+Every video is a creative for a marketing campaign. Campaign Manager (marketing-performance plugin) owns the campaign workspace, `<YYYY-MM-DD>-<campaign-name>/`, with its brief, ads, posts and tracking. Read [campaign.md](references/campaign.md) before starting:
+
+- Find the campaign and the ads or posts the video serves. Read their brief and specs instead of repeating intake. Take the canvases from the placements' required ratios.
+- Create the project under the main deliverable's `assets/development/video/`, then record the link with `campaign.py link`.
+- When final QC passes and the user approves, run `campaign.py handoff` to file the video into the deliverable's `assets/approved/vNNN/`. Alt text goes to `$marketing-copywriter`, and revision pointers and links go to `$campaign-manager`.
+- With no campaign, offer to set one up. If the user only wants the video, make it and say it isn't filed to a campaign.
+
 ## Start or resume
 
 1. If the user points at an existing project, run `python3 <this-skill>/scripts/studio.py status <project-dir>` and continue from the reported `next` stage. Do not re-run intake for anything already locked.
-2. For a new video, create a fresh project directory outside the plugin (a versioned run directory such as `videos/2026-10-27-onboarding-explainer/`; never overwrite an existing one):
+2. For a new video, create a fresh project directory outside the plugin, as a versioned run directory: inside the campaign deliverable's `assets/development/video/<YYYY-MM-DD>-<slug>/`, or `videos/2026-10-27-onboarding-explainer/` when there is no campaign. Never overwrite an existing one:
 
    ```sh
    python3 <this-skill>/scripts/studio.py init <project-dir> --title "..." --formats 9x16,16x9 [--language en|id]

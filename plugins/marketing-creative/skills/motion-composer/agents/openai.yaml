@@ -1,4 +1,0 @@
-interface:
-  display_name: "Motion Composer"
-  short_description: "Build seekable video layouts in four standard ratios"
-  default_prompt: "Use $motion-composer to build my storyboard as a HyperFrames composition for the requested ratios."

@@ -139,6 +139,14 @@ def validate_project(project):
         require(isinstance(item.get("width"), int) and isinstance(item.get("height"), int)
                 and item["width"] > 0 and item["height"] > 0, f"Format {item['id']} needs integer width/height")
     require(project.get("fps") in {24, 25, 30, 60}, "project.fps must be 24, 25, 30 or 60")
+    campaign = project.get("campaign")
+    if campaign is not None:
+        require(isinstance(campaign, dict) and text(campaign.get("dir")) and text(campaign.get("id")),
+                "project.campaign needs the campaign directory (dir) and campaign_id (id)")
+        deliverables = campaign.get("deliverables", [])
+        require(isinstance(deliverables, list) and all(text(d) and not Path(d).is_absolute() and ".." not in Path(d).parts
+                                                      for d in deliverables),
+                "project.campaign.deliverables are ad or post paths relative to the campaign directory")
 
 
 def validate_lock(lock):
@@ -346,6 +354,14 @@ def validate(root):
         report["next"]["blocked"] = "Choose the video language (en or id) before scripting"
     if report["next"] is None:
         report["next"] = dict(NEXT_AFTER[recipe])
+    campaign = project.get("campaign")
+    if campaign:
+        folder = (root / campaign["dir"]).resolve()
+        report["campaign"] = {"id": campaign["id"], "dir": campaign["dir"], "found": (folder / "campaign.json").is_file(),
+                              "brief": (folder / "docs/MARKETING_BRIEF.md").is_file(),
+                              "deliverables": campaign.get("deliverables", [])}
+    else:
+        report["campaign"] = None
     return report
 
 

@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ROOT / "plugins/marketing-creative/skills"
+SKILLS = ROOT / "plugins/marketing-images/skills"
 
 
 def module(name,path):
@@ -69,9 +69,9 @@ class MarketingImageTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root=Path(self.temp.name)
         (self.root/"source.png").write_bytes(png())
-        example=G.read(SKILLS/"marketing-image-board/assets/campaign.example.json")
+        example=G.read(SKILLS/"marketing-image-board/assets/image-plan.example.json")
         example["reference"]="source.png"
-        self.plan=self.root/"campaign.json"
+        self.plan=self.root/"image-plan.json"
         G.save(self.plan,example)
 
     def prepared(self,mode="final",selected=None):

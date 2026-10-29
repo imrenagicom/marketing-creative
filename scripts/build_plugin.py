@@ -7,7 +7,7 @@ import zipfile
 from validate_package import ROOT, PLUGINS, validate
 
 
-def build(output, plugin_name="marketing-creative"):
+def build(output, plugin_name):
     files = validate(plugin_name)
     plugin = ROOT / "plugins" / plugin_name
     output = Path(output).resolve()
@@ -26,6 +26,6 @@ def build(output, plugin_name="marketing-creative"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True, help="Destination ZIP (for example /tmp/plugin.zip)")
-    parser.add_argument("--plugin", choices=PLUGINS, default="marketing-creative")
+    parser.add_argument("--plugin", choices=PLUGINS, required=True)
     args = parser.parse_args()
     build(args.output, args.plugin)

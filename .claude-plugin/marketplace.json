@@ -4,23 +4,23 @@
     "name": "Imre Nagi"
   },
   "metadata": {
-    "description": "Campaign planning, copywriting and UTM operations alongside image production, a complete marketing video workflow and an explainer video studio"
+    "description": "One marketing campaign suite: campaign planning, copywriting, analytics and UTM operations, with campaign images and campaign video production working inside the same campaign workspace"
   },
   "plugins": [
     {
-      "name": "marketing-creative",
-      "source": "./plugins/marketing-creative",
-      "description": "Thirteen creative skills with a video workflow entry point, beat planning, narration finishing, images and opt-in Veo/Omni clips"
+      "name": "marketing-images",
+      "source": "./plugins/marketing-images",
+      "description": "Campaign image concepts in one cropped contact sheet, then selected Nano Banana finals individually or through the discounted Gemini Batch API"
     },
     {
       "name": "marketing-performance",
       "source": "./plugins/marketing-performance",
-      "description": "Marketing briefs, channel-ready copy, Google Analytics 4 funnel analysis and campaign operations with documented UTM links and performance reports"
+      "description": "The campaign workspace the creative plugins work in: marketing briefs, channel-ready copy, Google Analytics 4 funnel analysis and campaign operations with documented UTM links and performance reports"
     },
     {
       "name": "video-studio",
       "source": "./plugins/video-studio",
-      "description": "Explainers and cinematic short films: direction options, native English or Indonesian scripts, ElevenLabs narration and sound, continuity bibles, approved Higgsfield or Gemini API takes with dailies, HyperFrames compositions, assembly, delivery and QC"
+      "description": "Campaign explainers and cinematic short films: direction from the brief, native English or Indonesian scripts, ElevenLabs narration and sound, continuity bibles, contact-sheet boards, approved Higgsfield or Gemini API takes with dailies, HyperFrames compositions, assembly, QC and handoff into the campaign's approved assets"
     }
   ]
 }

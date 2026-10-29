@@ -7,7 +7,7 @@ Policy decided 2026-10-27. Paid calls are explicit, recorded and recoverable.
 | ElevenLabs (speech, dialogue, alignment, voice design, sound, music) | Per-project credit cap, approved once | `ledger.json` cap `elevenlabs` |
 | Higgsfield images (keyframes, stills, background removal, outpaint) | Per-project image cap, approved once | cap `higgsfield-image` |
 | Higgsfield video, reframe, upscale | Every request, bound to a fingerprint of the exact request | ledger entry per request |
-| Gemini API images (`gemini-api image`: references, keyframes) | Per-project cap in USD, approved once | cap `gemini-image` |
+| Gemini API images (`gemini-api image`: references, keyframes, contact-sheet boards) | Per-project cap in USD, approved once | cap `gemini-image` |
 | Gemini API video (`gemini-api video`) | Every request, bound to a fingerprint of the exact request | ledger entry per request (`gemini-video`) |
 
 The explainer recipe uses ElevenLabs only. Higgsfield and Gemini rows are recorded here so later skills share one policy. Gemini estimates come from the dated price table in [gemini-api.md](gemini-api.md); when it has no rate for a model or resolution, look up the current one and state the date.

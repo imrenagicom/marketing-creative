@@ -1,4 +1,0 @@
-interface:
-  display_name: "Motion Art Director"
-  short_description: "Define brand visuals, camera and motion language"
-  default_prompt: "Use $motion-art-director to define the visual direction for my selected video concept."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Motion Video QA"
-  short_description: "Check timing, frames, audio and every export ratio"
-  default_prompt: "Use $motion-video-qa to validate my video project and inspect every requested output variant."

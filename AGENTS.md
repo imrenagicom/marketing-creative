@@ -2,11 +2,12 @@
 
 ## Purpose and layout
 
-Marketing Creative, Marketing Performance and Video Studio are shared Codex, Claude Code and Google Antigravity skill plugins. Read
+Marketing Performance, Marketing Images and Video Studio are shared Codex,
+Claude Code and Google Antigravity skill plugins. They all serve one purpose: producing a marketing campaign. Read
 README.md for the workflow, configuration and validation commands, then
 read the relevant skill entry point and its linked references before editing.
 
-- `plugins/marketing-creative/skills/`, `plugins/marketing-performance/skills/`
+- `plugins/marketing-performance/skills/`, `plugins/marketing-images/skills/`
   and `plugins/video-studio/skills/` own skill instructions, UI metadata,
   references, executable helpers and example assets. Install and package each
   complete tree because skills within a plugin share resources.
@@ -19,8 +20,26 @@ read the relevant skill entry point and its linked references before editing.
 - `tests/` contains offline regressions. `docs/skill-evaluation.md` covers
   behavioral scenarios; `docs/validation.md` records actual validation and
   its limits. Preserve the distinction between historical and new checks.
-- `third-party/` inside the plugin contains required upstream license notices.
-  Keep notices and attribution when adapting upstream material.
+- No plugin currently bundles third-party material. When adapting upstream
+  material, add its license notice under that plugin's `third-party/`, keep the
+  attribution, and allow the notice explicitly in `scripts/validate_package.py`.
+
+## One campaign
+
+campaign-manager's `<YYYY-MM-DD>-<campaign-name>/` workspace is the home of every
+creative. Creative skills read its brief, approved claims, CTA and required
+ratios instead of restarting intake. They work in an ad's or post's
+`assets/development/` and file approved results into the next unused
+`assets/approved/vNNN/` with `assets.json`. Alt text goes to marketing-copywriter.
+Revision pointers, UTMs and reports stay with campaign-manager. No creative
+skill publishes or edits `campaign.json`, `ad.json` or `post.json`. Keep new
+skills and changes consistent with this.
+
+## Removed plugin
+
+The former Marketing Creative plugin was removed after v0.13.0. Its image skills
+live on in Marketing Images, and Video Studio replaces its video workflow. Do not
+reintroduce its skills; extend the current plugins instead.
 
 ## Skill and tool changes
 
@@ -52,14 +71,14 @@ Video Studio is designed in `docs/video-studio-design.md`. Keep its JSON
 project contract (`studio-producer/scripts/studio.py`) the single source of
 truth for every stage, keep narration-first timing, and keep paid calls behind
 the ledger: per-project caps the user approves for ElevenLabs and Higgsfield
-images, per-request approval for Higgsfield video, reframe and upscale.
+images, per-request approval for Higgsfield video, reframe and upscale. Gemini API
+images run under a per-project USD cap. Every Gemini API video request needs its
+own approval, and ai-video-generator stays explicitly opt-in.
 
-Keep marketing-veo-video and marketing-omni-video explicitly opt-in. The user
-requires approval of their prepared paid requests, including provider/model,
-prompt/media, settings and current estimate; general production permission
-does not enable them. Preserve their invocation policy and approval fingerprint
-checks. motion-video-producer owns mixed-media assembly and final QA, with
-project-local custom generators for Three.js/HTML scenes when needed.
+Keep paid video generation explicitly opt-in. The user approves each prepared
+request, including provider/model, prompt/media, settings and current estimate;
+general production permission does not enable it. Preserve ai-video-generator's
+invocation policy and the approval fingerprint checks.
 
 ## Credentials and generated files
 
@@ -76,8 +95,8 @@ user material. Expand the package allowlist narrowly when adding a new resource.
 
 ## Validation
 
-Use Python 3.10+ with Pillow installed from the image producer's
-`scripts/requirements.txt` in a virtual environment, plus Node.js for the video
+Use Python 3.10+ with Pillow installed from Marketing Images'
+`marketing-image-producer/scripts/requirements.txt` in a virtual environment, plus Node.js for the video
 composition tests. Run the relevant checks before committing an increment:
 
 ```sh
@@ -92,14 +111,14 @@ changes, build archives outside the repository and validate the Claude and
 Antigravity plugins and marketplace when the CLIs are available:
 
 ```sh
-python scripts/build_plugin.py --output /tmp/marketing-creative-plugin.zip
+python scripts/build_plugin.py --plugin marketing-images --output /tmp/marketing-images-plugin.zip
 python scripts/build_plugin.py --plugin marketing-performance --output /tmp/marketing-performance-plugin.zip
 python scripts/build_plugin.py --plugin video-studio --output /tmp/video-studio-plugin.zip
-claude plugin validate ./plugins/marketing-creative
+claude plugin validate ./plugins/marketing-images
 claude plugin validate ./plugins/marketing-performance
 claude plugin validate ./plugins/video-studio
 claude plugin validate ./.claude-plugin/marketplace.json
-agy plugin validate ./plugins/marketing-creative
+agy plugin validate ./plugins/marketing-images
 agy plugin validate ./plugins/marketing-performance
 agy plugin validate ./plugins/video-studio
 ```

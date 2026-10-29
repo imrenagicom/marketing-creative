@@ -1,0 +1,39 @@
+{
+  "name": "marketing-images",
+  "version": "0.13.0",
+  "description": "Campaign images for ads, social posts and carousels: brief-led concept contact sheets cropped into stable-ID previews, then selected finals with Nano Banana individually or through Gemini's discounted Batch API.",
+  "author": {
+    "name": "Imre Nagi"
+  },
+  "homepage": "https://github.com/imrenagicom/marketing-creative",
+  "repository": "https://github.com/imrenagicom/marketing-creative",
+  "keywords": [
+    "marketing",
+    "advertising",
+    "campaign",
+    "image-generation",
+    "instagram",
+    "carousel",
+    "contact-sheet",
+    "gemini",
+    "nano-banana",
+    "batch-api"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Marketing Images",
+    "shortDescription": "Explore and produce campaign images with Gemini",
+    "longDescription": "Turn a campaign brief and optional product, brand or character references into one low-cost contact sheet of distinct image concepts, crop it into previews with stable concept IDs, then regenerate only the selected concepts as full-resolution Nano Banana images, individually or through Gemini's discounted Batch API, ready to file as the campaign's approved ad and post assets.",
+    "developerName": "Imre Nagi",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use marketing-image-board to explore image concepts for this campaign brief in one contact sheet.",
+      "Use marketing-image-producer to generate my selected board tiles as final 4K campaign images.",
+      "Use marketing-image-producer to batch the approved carousel slides for this Instagram post."
+    ]
+  }
+}

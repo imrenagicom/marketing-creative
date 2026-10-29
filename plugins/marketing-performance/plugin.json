@@ -3,7 +3,7 @@
   "name": "marketing-performance",
   "displayName": "Marketing Performance",
   "version": "0.13.0",
-  "description": "Marketing briefs, copywriting, campaign operations, Google Analytics 4 funnel analysis and documented UTM planning in the current workspace.",
+  "description": "The campaign workspace every creative plugin works in: marketing briefs, copywriting, campaign operations, Google Analytics 4 funnel analysis and documented UTM planning in the current workspace.",
   "suggestedPrompts": [
     "Use marketing-brief to turn our product facts and goal into a campaign brief.",
     "Use campaign-manager to set up a dated campaign workspace with Meta Ads, social media, UTM links and performance reports.",

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Motion Video Producer"
-  short_description: "Orchestrate mixed media into marketing videos"
-  default_prompt: "Use $motion-video-producer to combine my images, clips, animation and audio into the selected marketing video in the requested ratios."

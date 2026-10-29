@@ -1,14 +1,14 @@
 {
   "name": "marketing-creative",
   "interface": {
-    "displayName": "Marketing Creative, Performance and Video Studio"
+    "displayName": "Marketing Campaign Suite"
   },
   "plugins": [
     {
-      "name": "marketing-creative",
+      "name": "marketing-images",
       "source": {
         "source": "local",
-        "path": "./plugins/marketing-creative"
+        "path": "./plugins/marketing-images"
       },
       "policy": {
         "installation": "AVAILABLE",

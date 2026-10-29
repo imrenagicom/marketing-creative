@@ -1,0 +1,22 @@
+{
+  "name": "marketing-images",
+  "version": "0.13.0",
+  "description": "Campaign images for ads, social posts and carousels: brief-led concept contact sheets cropped into stable-ID previews, then selected finals with Nano Banana individually or through Gemini's discounted Batch API.",
+  "author": {
+    "name": "Imre Nagi"
+  },
+  "homepage": "https://github.com/imrenagicom/marketing-creative",
+  "repository": "https://github.com/imrenagicom/marketing-creative",
+  "keywords": [
+    "marketing",
+    "advertising",
+    "campaign",
+    "image-generation",
+    "instagram",
+    "carousel",
+    "contact-sheet",
+    "gemini",
+    "nano-banana",
+    "batch-api"
+  ]
+}

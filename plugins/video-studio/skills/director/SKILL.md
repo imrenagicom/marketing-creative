@@ -11,7 +11,7 @@ Generic direction is the main failure here: "a cinematic, engaging explainer" gi
 
 ## Inputs
 
-Read `project.json` (recipe, canvases, language if chosen) and whatever the user supplied: idea, brief, product facts, references. Ask only for what you cannot infer — usually goal, audience and the one thing the viewer should do or remember. If a reference video was analysed, borrow its techniques, never its look.
+Read `project.json` (recipe, canvases, language if chosen) and whatever the user supplied: idea, brief, product facts, references. Every video serves a marketing campaign. When `project.json` links one, read its `docs/MARKETING_BRIEF.md`, creative plans and the deliverables' `ad.json`/`post.json` first. The objective, audience, offer, approved claims and CTA come from there ([campaign.md](../studio-producer/references/campaign.md)). Ask only for what you cannot infer — usually goal, audience and the one thing the viewer should do or remember. If a reference video was analysed, borrow its techniques, never its look.
 
 ## Draft the options
 

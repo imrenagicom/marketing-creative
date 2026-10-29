@@ -1,7 +1,7 @@
 {
   "name": "video-studio",
   "version": "0.13.0",
-  "description": "Explainer and cinematic video production in English or Indonesian: direction options, native scripts, ElevenLabs narration and sound, continuity bibles, Higgsfield or Gemini API keyframes and approved video takes, HyperFrames compositions, assembly, delivery and QC.",
+  "description": "Campaign videos — explainers and cinematic short films in English or Indonesian: direction options from the campaign brief, native scripts, ElevenLabs narration and sound, continuity bibles, contact-sheet boards, Higgsfield or Gemini API keyframes and approved video takes, HyperFrames compositions, assembly, QC and handoff into the campaign's approved assets.",
   "author": {
     "name": "Imre Nagi"
   },

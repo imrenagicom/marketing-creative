@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ad Video Director"
-  short_description: "Script a selected concept for video production"
-  default_prompt: "Use $ad-video-director to turn my marketing brief and selected concept into an executable video script."

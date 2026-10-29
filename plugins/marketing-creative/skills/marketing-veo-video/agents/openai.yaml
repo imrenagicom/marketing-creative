@@ -1,6 +1,0 @@
-interface:
-  display_name: "Marketing Veo Video"
-  short_description: "Generate approved marketing clips with Google Veo"
-  default_prompt: "Use $marketing-veo-video to prepare a Veo marketing clip request and submit it only after I approve paid generation."
-policy:
-  allow_implicit_invocation: false

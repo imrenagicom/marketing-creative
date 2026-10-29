@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Check the continuity bible, derive negative constraints, and track reference images (Higgsfield or Gemini) and Higgsfield elements."""
+"""Check the continuity bible, derive negative constraints, and track reference images (Higgsfield or Gemini) and Higgsfield elements;
+preview look options for one reference on a Gemini contact-sheet board."""
 import argparse
 import json
 from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "studio-producer/scripts"))
+import boards  # noqa: E402
 import gemini  # noqa: E402
 import media  # noqa: E402
 from studio import ContractError, load, require, validate_bible, validate_lock, write  # noqa: E402
@@ -70,26 +72,56 @@ def derive(root):
     return bible["negatives"]
 
 
-def sheet_requests(root, model, provider="higgsfield", image_size="2K"):
-    """Image requests for missing reference images (run them under the image cap)."""
+def sheet_prompt(ref, look):
+    prompt = SHEETS[ref["role"]].format(name=ref["name"], description=ref["description"],
+                                        lights=", ".join(ref.get("light_sources", [])) or "soft daylight")
+    if ref["role"] in {"environment", "style"}:
+        prompt += f" Look: {look}."
+    return prompt, "16:9" if ref["role"] in {"environment", "style"} else "3:2"
+
+
+def sheet_requests(root, model, provider="higgsfield", image_size="2K", tiles=None):
+    """Image requests for missing reference images (run them under the image cap).
+
+    tiles maps a reference id to a chosen board tile, attached to its Gemini request as a look reference.
+    """
     _, bible = inputs(root)
+    tiles = tiles or {}
+    require(not tiles or provider == "gemini", "Board tiles attach only to Gemini sheet requests")
     look = bible["capture"]["look"]
     requests = []
     for ref in bible["references"]:
         if ref.get("images"):
             continue
-        prompt = SHEETS[ref["role"]].format(name=ref["name"], description=ref["description"],
-                                            lights=", ".join(ref.get("light_sources", [])) or "soft daylight")
-        if ref["role"] in {"environment", "style"}:
-            prompt += f" Look: {look}."
-        aspect = "16:9" if ref["role"] in {"environment", "style"} else "3:2"
+        prompt, aspect = sheet_prompt(ref, look)
         if provider == "gemini":
-            requests.append({"ref": ref["id"], **gemini.image_request(model, prompt, aspect, image_size, [])})
+            chosen = [tiles[ref["id"]]] if ref["id"] in tiles else []
+            require(all((Path(root) / tile).is_file() for tile in chosen), f"No board tile at {chosen}")
+            if chosen:
+                prompt = (f"{prompt} The attached board tile is the look option the user chose; match its design, "
+                          "then render the full sheet cleanly at full resolution.")
+            requests.append({"ref": ref["id"], **gemini.image_request(model, prompt, aspect, image_size, chosen)})
         else:
             requests.append({"ref": ref["id"], "model": model, "prompt": prompt, "aspect_ratio": aspect})
     path = Path(root) / "bible/image-requests.json"
     path.write_text(json.dumps({"requests": requests}, indent=2, ensure_ascii=False) + "\n")
     return requests
+
+
+def board(root, ref_id, variants, grid=None, model=None, image_size="2K"):
+    """Plan one contact sheet of look options for a reference that has no approved image yet."""
+    _, bible = inputs(root)
+    ref = next((item for item in bible["references"] if item["id"] == ref_id), None)
+    require(ref is not None, f"No bible reference {ref_id}")
+    require(len(variants) >= 2, "Give at least two --variant options; a board compares choices")
+    prompt, aspect = sheet_prompt(ref, bible["capture"]["look"])
+    cells = [{"id": f"{ref_id}-{index + 1}", "prompt": f"{prompt} Option: {text}"} for index, text in enumerate(variants)]
+    preamble = (f"Every frame shows a different design option for the same {ref['role']}, {ref['name']}. Keep these "
+                f"features in every option: {', '.join(ref['preserve'])}.")
+    relative, planned = boards.plan(root, f"bible/boards/{ref_id}", cells, aspect, preamble, ref.get("images", []),
+                                    grid, model, image_size)
+    return {"board": relative, "cells": [c["id"] for c in planned["cells"]], "grid": f"{planned['rows']}x{planned['columns']}",
+            "estimate_usd": planned["estimate_usd"]}
 
 
 def add_image(root, ref_id, entry_id, source, job_id=None):
@@ -140,6 +172,25 @@ def main(argv=None):
     sheets.add_argument("--provider", choices=["gemini", "higgsfield"], default="higgsfield")
     sheets.add_argument("--model", help=f"Default gpt_image_2_5 (higgsfield) or {gemini.IMAGE_MODEL} (gemini)")
     sheets.add_argument("--image-size", default="2K", help="Gemini only: 512, 1K, 2K or 4K")
+    sheets.add_argument("--tile", action="append", default=[], metavar="REF=PATH",
+                        help="Gemini only: attach the chosen board tile to that reference's request (repeatable)")
+    options = sub.add_parser("board", help="Gemini: plan one contact sheet of look options for a reference")
+    options.add_argument("root")
+    options.add_argument("--ref", required=True)
+    options.add_argument("--variant", action="append", required=True, help="One design option per cell (2–12)")
+    options.add_argument("--grid", help="ROWSxCOLUMNS; default packs cells close to the sheet ratio")
+    options.add_argument("--model", help=f"Default {gemini.IMAGE_MODEL}")
+    options.add_argument("--image-size", default="2K", help="512, 1K, 2K or 4K for the whole sheet")
+    for name, text in (("board-preview", "Gemini: the board's exact CLI command, estimate and offline --dry-run"),
+                       ("board-generate", "Gemini: one board call under the image cap, then split it into preview tiles"),
+                       ("board-split", "Re-split a returned board, for example with an inset to clear gutters")):
+        part = sub.add_parser(name, help=text)
+        part.add_argument("root")
+        part.add_argument("--board", required=True, help="Board folder, e.g. bible/boards/courier/board-v1")
+        if name == "board-generate":
+            part.add_argument("--estimate", type=float, help="USD; needed only when no published price covers it")
+        if name == "board-split":
+            part.add_argument("--inset", type=int, default=0, help="Pixels trimmed from every tile edge")
     run = sub.add_parser("generate", help="Gemini: run a sheet request under the image cap and add the image")
     run.add_argument("root")
     run.add_argument("--ref", required=True)
@@ -173,7 +224,20 @@ def main(argv=None):
             print(json.dumps(derive(args.root), indent=2, ensure_ascii=False))
         elif args.command == "sheets":
             model = args.model or (gemini.IMAGE_MODEL if args.provider == "gemini" else "gpt_image_2_5")
-            print(json.dumps(sheet_requests(args.root, model, args.provider, args.image_size), indent=2, ensure_ascii=False))
+            tiles = dict(item.split("=", 1) for item in args.tile if "=" in item)
+            require(len(tiles) == len(args.tile), "Use --tile REF=PATH")
+            print(json.dumps(sheet_requests(args.root, model, args.provider, args.image_size, tiles), indent=2,
+                             ensure_ascii=False))
+        elif args.command == "board":
+            print(json.dumps(board(args.root, args.ref, args.variant, boards.parse_grid(args.grid), args.model,
+                                   args.image_size), indent=2))
+        elif args.command == "board-preview":
+            print(json.dumps(gemini.preview(args.root, boards.read(args.root, args.board)["request"]), indent=2,
+                             ensure_ascii=False))
+        elif args.command == "board-generate":
+            print(json.dumps(boards.generate(args.root, args.board, args.estimate), indent=2))
+        elif args.command == "board-split":
+            print(json.dumps(boards.split(args.root, args.board, args.inset), indent=2))
         elif args.command == "generate":
             print(json.dumps(generate(args.root, args.ref, args.estimate), indent=2))
         elif args.command == "preview":

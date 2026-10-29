@@ -1,6 +1,6 @@
 ---
 name: keyframe-generator
-description: Generate start (and optional end) keyframes for each camera shot of a Video Studio film from the continuity bible, through Higgsfield or the Gemini API CLI under the project's image cap, and register them as anchors for AI video takes. Use whenever a cinematic project has an approved bible and shot list and needs first frames, start/end frames, style frames or a visual preview of shots before paid video generation, or when a shot's keyframe drifted and needs a new version.
+description: Generate start (and optional end) keyframes for each camera shot of a Video Studio film from the continuity bible, through Higgsfield or the Gemini API CLI under the project's image cap, and register them as anchors for AI video takes; preview many shots first on one low-cost Gemini contact-sheet board. Use whenever a cinematic project has an approved bible and shot list and needs first frames, start/end frames, style frames or a visual preview of shots before paid video generation, or a storyboard-style board of a whole sequence, or when a shot's keyframe drifted and needs a new version.
 ---
 
 # Keyframe Generator
@@ -8,6 +8,10 @@ description: Generate start (and optional end) keyframes for each camera shot of
 A good first frame is the cheapest place to fix composition, identity and light before paying for video. Keyframes become `start_image` (and sometimes end) anchors for takes, and the user's approval of them is approval of the film's look.
 
 Read [keyframe-craft.md](references/keyframe-craft.md). For the Gemini provider, also read [gemini-api.md](../studio-producer/references/gemini-api.md).
+
+## Preview a sequence on one board (optional)
+
+Before paying for one keyframe per shot, `keyframes.py board <project> --canvas 16x9` puts up to 12 camera shots on one Gemini contact sheet. `board-preview` shows the command and estimate, `board-generate` runs one capped call and crops the sheet into `tiles-v1/<shot>-start.png`, and `board-split --inset` re-crops it. Read [boards.md](../studio-producer/references/boards.md). Review the whole sheet with the user in shot order. Tiles are previews only: never register them as keyframes, then plan finals with `--tiles <tiles folder>` so each chosen tile is attached as a composition reference.
 
 ## Plan
 

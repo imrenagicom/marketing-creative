@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Plan, reserve and record start/end keyframes for camera shots under the Higgsfield or Gemini image cap."""
+"""Plan, reserve and record start/end keyframes for camera shots under the Higgsfield or Gemini image cap,
+or preview many shots at once on one Gemini contact-sheet board."""
 import argparse
 import json
 from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "studio-producer/scripts"))
+import boards  # noqa: E402
 import gemini  # noqa: E402
 import media  # noqa: E402
 from prompting import ASPECT, environment, media_refs, refs_for, subject  # noqa: E402
@@ -45,8 +47,9 @@ def prompt_for(shot, frame, bible, lock, model, canvas):
     return " ".join(parts)
 
 
-def plan(root, canvas, model=None, ends=False, only=None, provider="higgsfield", image_size="2K"):
+def plan(root, canvas, model=None, ends=False, only=None, provider="higgsfield", image_size="2K", tiles=None):
     model = model or DEFAULT_MODELS[provider]
+    require(not tiles or provider == "gemini", "Board tiles attach only to Gemini keyframe requests")
     project, lock, bible, shots = inputs(root)
     require(canvas in {f["id"] for f in project["formats"]}, f"{canvas} is not a project canvas")
     requests = []
@@ -59,6 +62,10 @@ def plan(root, canvas, model=None, ends=False, only=None, provider="higgsfield",
             if provider == "gemini":
                 # Gemini has no element ids: reference images go in as inputs and the prompt names them.
                 images = [item["asset"] for item in media_refs(refs, model)]
+                tile = f"{tiles}/{shot['id']}-{frame}.png" if tiles else None
+                if tile and (Path(root) / tile).is_file():
+                    images.append(tile)
+                    prompt = f"{prompt} {boards.TILE_NOTE}"
                 request = gemini.image_request(model, prompt, ASPECT[canvas], image_size, images)
                 require(not gemini.problems(request), "; ".join(gemini.problems(request)))
             else:
@@ -68,6 +75,26 @@ def plan(root, canvas, model=None, ends=False, only=None, provider="higgsfield",
     folder.mkdir(exist_ok=True)
     (folder / f"requests-{canvas}.json").write_text(json.dumps({"requests": requests}, indent=2, ensure_ascii=False) + "\n")
     return requests
+
+
+def board(root, canvas, only=None, frame="start", grid=None, model=None, image_size="2K"):
+    """Plan one contact sheet previewing the chosen camera shots' keyframes in a single Gemini call."""
+    project, lock, bible, shots = inputs(root)
+    require(canvas in {f["id"] for f in project["formats"]}, f"{canvas} is not a project canvas")
+    model = model or gemini.IMAGE_MODEL
+    chosen = [s for s in shots["shots"] if s["kind"] == "camera" and (not only or s["id"] in only)]
+    require(chosen, "No camera shots to put on a board")
+    cells, images = [], []
+    for shot in chosen:
+        refs = refs_for(shot, bible)
+        images += [item["asset"] for item in media_refs(refs, model)]
+        cells.append({"id": f"{shot['id']}-{frame}", "prompt": prompt_for(shot, frame, bible, lock, model, canvas)})
+    preamble = ("These frames are consecutive shots of one film: keep every character, outfit, prop and location "
+                f"identical between frames, as shown in the attached references. Look: {bible['capture']['look']}.")
+    relative, planned = boards.plan(root, f"keyframes/boards/{canvas}", cells, ASPECT[canvas], preamble, images,
+                                    grid, model, image_size)
+    return {"board": relative, "cells": [c["id"] for c in planned["cells"]], "grid": f"{planned['rows']}x{planned['columns']}",
+            "sheet_aspect": planned["sheet_aspect"], "estimate_usd": planned["estimate_usd"]}
 
 
 def find_request(root, canvas, shot, frame):
@@ -112,6 +139,25 @@ def main(argv=None):
     draft.add_argument("--image-size", default="2K", help="Gemini only: 512, 1K, 2K or 4K")
     draft.add_argument("--ends", action="store_true", help="Also plan end frames (for start/end-frame video models)")
     draft.add_argument("--shot", action="append", help="Limit to shots (repeatable)")
+    draft.add_argument("--tiles", help="Gemini only: a board tiles-vN folder; a selected <shot>-<frame>.png is attached")
+    sheet = sub.add_parser("board", help="Gemini: plan one contact sheet previewing many shots' keyframes")
+    sheet.add_argument("root")
+    sheet.add_argument("--canvas", required=True)
+    sheet.add_argument("--shot", action="append", help="Limit to shots (repeatable); at most 12 per board")
+    sheet.add_argument("--frame", choices=FRAMES, default="start")
+    sheet.add_argument("--grid", help="ROWSxCOLUMNS; default packs cells close to the canvas ratio")
+    sheet.add_argument("--model", help=f"Default {gemini.IMAGE_MODEL}")
+    sheet.add_argument("--image-size", default="2K", help="512, 1K, 2K or 4K for the whole sheet")
+    for name, text in (("board-preview", "Gemini: the board's exact CLI command, estimate and offline --dry-run"),
+                       ("board-generate", "Gemini: one board call under the image cap, then split it into preview tiles"),
+                       ("board-split", "Re-split a returned board, for example with an inset to clear gutters")):
+        part = sub.add_parser(name, help=text)
+        part.add_argument("root")
+        part.add_argument("--board", required=True, help="Board folder, e.g. keyframes/boards/16x9/board-v1")
+        if name == "board-generate":
+            part.add_argument("--estimate", type=float, help="USD; needed only when no published price covers it")
+        if name == "board-split":
+            part.add_argument("--inset", type=int, default=0, help="Pixels trimmed from every tile edge")
     hold = sub.add_parser("reserve", help="Check the image cap and record one keyframe job before the MCP call")
     hold.add_argument("root")
     hold.add_argument("--canvas", required=True)
@@ -145,8 +191,19 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.command == "plan":
-            requests = plan(args.root, args.canvas, args.model, args.ends, args.shot, args.provider, args.image_size)
+            requests = plan(args.root, args.canvas, args.model, args.ends, args.shot, args.provider, args.image_size,
+                            args.tiles)
             print(json.dumps({"requests": len(requests), "file": f"keyframes/requests-{args.canvas}.json"}))
+        elif args.command == "board":
+            print(json.dumps(board(args.root, args.canvas, args.shot, args.frame, boards.parse_grid(args.grid),
+                                   args.model, args.image_size), indent=2))
+        elif args.command == "board-preview":
+            print(json.dumps(gemini.preview(args.root, boards.read(args.root, args.board)["request"]), indent=2,
+                             ensure_ascii=False))
+        elif args.command == "board-generate":
+            print(json.dumps(boards.generate(args.root, args.board, args.estimate), indent=2))
+        elif args.command == "board-split":
+            print(json.dumps(boards.split(args.root, args.board, args.inset), indent=2))
         elif args.command == "reserve":
             request = find_request(args.root, args.canvas, args.shot, args.frame)
             print(json.dumps(media.reserve(args.root, "generate_image:keyframe", request, args.estimate), indent=2))

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Creative Ideation"
-  short_description: "Explore distinct concepts from a marketing brief"
-  default_prompt: "Use $creative-ideation to develop distinct creative ideas from my marketing brief."
