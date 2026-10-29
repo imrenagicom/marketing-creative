@@ -1,3 +1,13 @@
+## [0.13.0](https://github.com/imrenagicom/marketing-creative/compare/v0.12.0...v0.13.0) (2026-10-29)
+
+### Features
+
+* **video-studio:** add gemini-api cli as image and video provider ([481700d](https://github.com/imrenagicom/marketing-creative/commit/481700d0f8fade228c68a2470a328b80bd9924b1))
+
+### Skills and documentation
+
+* **validation:** record gemini-api provider checks ([52b9d99](https://github.com/imrenagicom/marketing-creative/commit/52b9d99da2480fd3f4ec3d8770736b387455e1cc))
+
 ## [0.12.0](https://github.com/imrenagicom/marketing-creative/compare/v0.11.0...v0.12.0) (2026-10-28)
 
 ### Features
