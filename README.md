@@ -1,6 +1,6 @@
-# Marketing Creative and Performance
+# Marketing Campaign Suite
 
-Four independently installable plugins cover campaign planning, copywriting, analytics and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Images owns `marketing-image-board` and `marketing-image-producer` for campaign images; Marketing Creative owns eleven skills for ideas, scripts and videos; Video Studio is a from-scratch video studio for explainers and cinematic short films with thirteen stage skills ([design](docs/video-studio-design.md)). Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
+Four independently installable plugins cover campaign planning, copywriting, analytics and creative production. Marketing Performance owns `marketing-brief`, `marketing-copywriter`, `campaign-manager` and `google-analytics-analyst`; Marketing Images owns `marketing-image-board` and `marketing-image-producer` for campaign images; Video Studio makes the campaign's explainers and cinematic short films with thirteen stage skills ([design](docs/video-studio-design.md)). Marketing Creative (eleven older video skills) is **deprecated**: use it only to resume existing projects. Codex, Claude Code and Google Antigravity use the same source. Production supports **16:9, 9:16, 4:5 and 1:1** as independently composed and reviewed variants.
 
 ## One campaign, every plugin
 
@@ -11,6 +11,23 @@ The plugins serve one purpose: producing a marketing campaign. `campaign-manager
 - `marketing-copywriter` writes the copy and alt text. `campaign-manager` updates revision pointers and UTMs and writes performance reports.
 
 Every creative skill reads the campaign brief, approved claims, CTA and required ratios instead of repeating intake. None of them publishes or edits the campaign's `campaign.json`, `ad.json` or `post.json`.
+
+## Marketing Creative is deprecated
+
+Video Studio and Marketing Images replace Marketing Creative. Its skills stay installed and usable so existing Marketing Creative projects can be resumed, revised and exported. Each skill's description names its replacement, and none of them is invoked implicitly any more. `marketing-veo-video` no longer runs, because Google shut down Veo 3.1 Preview in the Gemini API on 2026-10-22 ([deprecations](https://ai.google.dev/gemini-api/docs/deprecations)).
+
+| Marketing Creative | Use instead |
+| --- | --- |
+| `marketing-video`, `motion-video-producer` | `studio-producer` (+ `editor`) |
+| `creative-ideation`, `ad-video-director`, `motion-art-director` | `director`, `scriptwriter`; `marketing-image-board` for image concepts |
+| `motion-storyboard` | `shot-designer` |
+| `motion-voice` | `voice-director` |
+| `motion-composer` | `motion-designer` |
+| `motion-video-qa` | `qc-reviewer` |
+| `marketing-omni-video` | `ai-video-generator --provider gemini` |
+| `marketing-veo-video` | `ai-video-generator` with Gemini Omni or a Higgsfield model |
+
+The table below still lists the deprecated skills for existing projects.
 
 ## Skills and handoffs
 
@@ -270,7 +287,9 @@ Batch uses the actual asynchronous Gemini Batch API, with automatic inline/JSONL
 
 See the [image workflow](plugins/marketing-images/skills/marketing-image-producer/references/image-workflow.md), [board guidance](plugins/marketing-images/skills/marketing-image-board/references/board-workflow.md) and [API source register](plugins/marketing-images/skills/marketing-image-producer/references/gemini-api.md) for plan fields, errors, output manifests and model/API verification.
 
-### Optional Veo video generation
+### Optional Veo video generation (deprecated; no longer runs)
+
+Google shut down Veo 3.1 Preview in the Gemini API on 2026-10-22, so the requests below fail. They are kept for the record of existing projects. Use Video Studio's `ai-video-generator` for new footage.
 
 `marketing-veo-video` is opt-in and requires explicit approval for the exact paid request. General production authorization does not enable it. Prepare a config from the [Veo example](plugins/marketing-creative/skills/marketing-veo-video/assets/veo.example.json), verify current pricing, update its `costEstimate`, and present the prompt/media, model, mode, duration, resolution and estimate before submission.
 
@@ -287,7 +306,9 @@ Use the same exported `GEMINI_API_KEY` and Python environment described above; F
 
 Provider footage can be a standalone asset or an input to the existing motion-video-producer. Veo natively generates 16:9 or 9:16; final square/portrait-feed delivery is composed and reviewed separately. No live video generation is required for tests or package validation.
 
-### Optional Omni Flash video generation and editing
+### Optional Omni Flash video generation and editing (deprecated skill)
+
+For new work, use Video Studio's `ai-video-generator --provider gemini`. This section remains for existing Marketing Creative projects.
 
 `marketing-omni-video` has the same opt-in approval gate and exported `GEMINI_API_KEY`. The default model is `gemini-omni-1.1-flash`. Start with the [Omni example](plugins/marketing-creative/skills/marketing-omni-video/assets/omni.example.json), replace its fictional content and illustrative quote, then prepare the exact request for approval:
 

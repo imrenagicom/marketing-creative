@@ -1,9 +1,11 @@
 ---
 name: motion-art-director
-description: Define a brand-grounded visual system, camera language, typography, transitions and image treatment for a selected video concept. Use for visual direction and revisions to a video's look or movement.
+description: Deprecated Marketing Creative skill for a video's visual system and motion language. For new work use the visual plan in Video Studio's director and the style tokens in motion-designer (video-studio plugin). Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Motion Art Director
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use the visual plan in Video Studio's `$director` and the style tokens in `$motion-designer` (video-studio plugin). Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Read the marketing brief, selected creative brief, brand material and requested placements. Preserve the selected persuasive idea; alternative campaign concepts belong to creative-ideation.
 

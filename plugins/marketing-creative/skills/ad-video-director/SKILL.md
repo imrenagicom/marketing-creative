@@ -1,9 +1,11 @@
 ---
 name: ad-video-director
-description: Turn a selected creative concept and marketing brief into an executable advertising video script, exact copy, shot direction, and production handoff. Use for scripting or revising the chosen idea.
+description: Deprecated Marketing Creative skill for an executable ad video script and production handoff. For new work use Video Studio's director and scriptwriter (video-studio plugin). Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Ad Video Director
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use Video Studio's `$director` and `$scriptwriter` (video-studio plugin). Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Develop the selected concept into a video someone can shoot or animate. Preserve the strategic objective, evidence, chosen idea and authorization already supplied.
 

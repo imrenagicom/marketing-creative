@@ -1,9 +1,11 @@
 ---
 name: marketing-video
-description: Create or revise a marketing video or explainer from a topic, brief, selected concept, script or existing media. Use as the video workflow entry point to route scripting, voice, beat planning, composition and delivery; focused stage skills remain directly usable.
+description: Deprecated Marketing Creative skill for a marketing video or explainer from a brief, concept, script or existing media. For new work use studio-producer (video-studio plugin), which runs the whole pipeline inside the campaign workspace. Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Marketing Video
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use `$studio-producer` (video-studio plugin), which runs the whole pipeline inside the campaign workspace. Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Turn the requested starting material into the requested video deliverable. First identify whether this is a new video, a revision, planning only or an export of an existing project. Reuse established decisions and artifacts; a supplied script, concept, recording or composition enters at the missing stage. An inspection or caption-only edit does not restart production.
 

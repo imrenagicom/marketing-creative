@@ -1,9 +1,11 @@
 ---
 name: marketing-veo-video
-description: Prepare explicitly approved Google Veo marketing videos or ad clips from text, images, reference assets, first/last frames or previous Veo clips. Use only when the user selects Veo and approves paid generation.
+description: Deprecated Marketing Creative skill for explicitly approved Google Veo marketing clips. For new work use ai-video-generator (video-studio plugin) with Gemini Omni or a Higgsfield model. Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Marketing Veo Video
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use `$ai-video-generator` (video-studio plugin) with Gemini Omni or a Higgsfield model. Google shut down Veo 3.1 Preview in the Gemini API on 2026-10-22, so this skill's requests no longer run. Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Generate a standalone marketing asset or a clip for [motion-video-producer](../motion-video-producer/SKILL.md), which owns the finished timeline and mixed-media assembly. This skill is opt-in because provider generation adds cost. A general request to produce an ad or invoking this skill to inspect/plan is not approval to spend.
 

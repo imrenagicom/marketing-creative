@@ -10,7 +10,7 @@
     {
       "name": "marketing-creative",
       "source": "./plugins/marketing-creative",
-      "description": "Thirteen creative skills with a video workflow entry point, beat planning, narration finishing, images and opt-in Veo/Omni clips"
+      "description": "Deprecated: replaced by Video Studio and Marketing Images; kept to resume existing Marketing Creative video projects"
     },
     {
       "name": "marketing-images",

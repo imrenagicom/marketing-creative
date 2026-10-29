@@ -1,9 +1,11 @@
 ---
 name: motion-storyboard
-description: Convert a selected script and visual direction into actionable visual beats, semantic timing cues, framing, continuity, and per-ratio layout decisions before composition.
+description: Deprecated Marketing Creative skill for visual beats, timing cues and per-ratio framing. For new work use shot-designer (video-studio plugin). Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Motion Storyboard
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use `$shot-designer` (video-studio plugin). Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Read the script, selected creative brief, visual direction, assets and placement profiles. Decide what each beat shows before coding. A sentence, a visual beat, a camera move and a scene change are different units.
 

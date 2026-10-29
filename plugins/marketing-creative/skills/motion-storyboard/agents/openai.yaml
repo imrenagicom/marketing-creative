@@ -1,4 +1,6 @@
 interface:
   display_name: "Motion Storyboard"
-  short_description: "Plan visual beats, cues and per-ratio framing"
-  default_prompt: "Use $motion-storyboard to storyboard my script with semantic cues and ratio adaptations."
+  short_description: "Deprecated — Plan visual beats, cues and per-ratio framing"
+  default_prompt: "Use $motion-storyboard to resume or revise my existing Marketing Creative project; for new work point me to its Video Studio or Marketing Images replacement."
+policy:
+  allow_implicit_invocation: false

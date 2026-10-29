@@ -1,4 +1,6 @@
 interface:
   display_name: "Motion Video QA"
-  short_description: "Check timing, frames, audio and every export ratio"
-  default_prompt: "Use $motion-video-qa to validate my video project and inspect every requested output variant."
+  short_description: "Deprecated — Check timing, frames, audio and every export ratio"
+  default_prompt: "Use $motion-video-qa to resume or revise my existing Marketing Creative project; for new work point me to its Video Studio or Marketing Images replacement."
+policy:
+  allow_implicit_invocation: false

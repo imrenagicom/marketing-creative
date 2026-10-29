@@ -1,6 +1,6 @@
 interface:
   display_name: "Marketing Omni Video"
-  short_description: "Generate and edit approved Omni Flash video clips"
-  default_prompt: "Use $marketing-omni-video to prepare an Omni Flash marketing clip or edit and submit only after I approve paid generation."
+  short_description: "Deprecated — Generate and edit approved Omni Flash video clips"
+  default_prompt: "Use $marketing-omni-video to resume or revise my existing Marketing Creative project; for new work point me to its Video Studio or Marketing Images replacement."
 policy:
   allow_implicit_invocation: false

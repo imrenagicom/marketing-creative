@@ -1,9 +1,11 @@
 ---
 name: motion-voice
-description: Generate or import aligned narration, normalize loudness, trim pauses by cue-based classes, or replace a phrase while preserving and retiming the take. Use for voice preparation and audio revisions.
+description: Deprecated Marketing Creative skill for aligned narration, loudness and pause or phrase revisions. For new work use voice-director (video-studio plugin). Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Motion Voice
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use `$voice-director` (video-studio plugin). Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Narration is the timing source for narrated videos. Use one continuous take for newly generated narration where practical; preserve supplied recordings and intentional splices. Do not force voice onto silent or music-led work.
 

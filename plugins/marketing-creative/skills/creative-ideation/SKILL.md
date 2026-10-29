@@ -1,9 +1,11 @@
 ---
 name: creative-ideation
-description: Generate distinct creative concepts from a marketing brief, or develop a supplied concept into a creative brief. Use before scripting and production to choose the persuasive idea.
+description: Deprecated Marketing Creative skill for creative concepts from a marketing brief. For new work use Video Studio's director for video directions, or marketing-image-board (marketing-images plugin) for image concepts. Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Creative Ideation
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use Video Studio's `$director` for video directions, or `$marketing-image-board` (marketing-images plugin) for image concepts. Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Read `MARKETING_BRIEF.md` or its supplied equivalent. If it is incomplete, infer noncritical details explicitly and use `$marketing-brief` (optional marketing-performance plugin; use the supplied brief or establish the necessary strategic facts directly if unavailable) only for strategic gaps that affect the concepts. Do not repeat answered intake.
 

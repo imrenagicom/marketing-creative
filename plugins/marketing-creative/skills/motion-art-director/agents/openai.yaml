@@ -1,4 +1,6 @@
 interface:
   display_name: "Motion Art Director"
-  short_description: "Define brand visuals, camera and motion language"
-  default_prompt: "Use $motion-art-director to define the visual direction for my selected video concept."
+  short_description: "Deprecated — Define brand visuals, camera and motion language"
+  default_prompt: "Use $motion-art-director to resume or revise my existing Marketing Creative project; for new work point me to its Video Studio or Marketing Images replacement."
+policy:
+  allow_implicit_invocation: false

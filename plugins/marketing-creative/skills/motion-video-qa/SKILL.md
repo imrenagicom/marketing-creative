@@ -1,9 +1,11 @@
 ---
 name: motion-video-qa
-description: Validate video project timing, assets and placement profiles, review frames and audio, and verify every requested ratio's encoded export before delivery.
+description: Deprecated Marketing Creative skill for video project, frame and export checks. For new work use qc-reviewer (video-studio plugin). Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Motion Video QA
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use `$qc-reviewer` (video-studio plugin). Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Read [checks.md](references/checks.md). Check the actual project's source, generated outputs and requested deliverables. A passing script proves only the checks it ran; it does not prove engagement, ad performance, full visual correctness or successful installation.
 

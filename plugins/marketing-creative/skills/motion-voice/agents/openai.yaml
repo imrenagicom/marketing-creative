@@ -1,4 +1,6 @@
 interface:
   display_name: "Motion Voice"
-  short_description: "Align voice, normalize loudness and shape pauses"
-  default_prompt: "Use $motion-voice to prepare aligned narration with consistent loudness and deliberate pauses, or revise a spoken line."
+  short_description: "Deprecated — Align voice, normalize loudness and shape pauses"
+  default_prompt: "Use $motion-voice to resume or revise my existing Marketing Creative project; for new work point me to its Video Studio or Marketing Images replacement."
+policy:
+  allow_implicit_invocation: false

@@ -1,9 +1,11 @@
 ---
 name: motion-composer
-description: Build or revise a seekable HyperFrames video composition from a storyboard, aligned timing and visual direction, adapting layouts for 16:9, 9:16, 4:5 and 1:1 outputs.
+description: Deprecated Marketing Creative skill for HyperFrames compositions for each ratio. For new work use motion-designer (video-studio plugin). Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Motion Composer
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use `$motion-designer` (video-studio plugin). Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Read the approved/supplied briefs, script, style, storyboard, asset manifest and placement profiles. Read [runtime.md](references/runtime.md) before writing composition HTML. HyperFrames owns timeline seeking, timed clip visibility, media playback and rendering. Load its current installed domain skills when available.
 

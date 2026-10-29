@@ -1,9 +1,11 @@
 ---
 name: motion-video-producer
-description: Orchestrate marketing videos and explainers from images, footage, approved generated clips, Three.js scenes, HTML components and audio, coordinating timing, composition, QA and requested export ratios.
+description: Deprecated Marketing Creative skill for mixed-media marketing video projects and exports. For new work use studio-producer with editor (video-studio plugin). Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Motion Video Producer
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use `$studio-producer` with `$editor` (video-studio plugin). Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Own the authorized deliverable and project state. Resume from existing artifacts before asking questions. For an inspection, edit, render or status request, perform that operation without restarting the full workflow.
 

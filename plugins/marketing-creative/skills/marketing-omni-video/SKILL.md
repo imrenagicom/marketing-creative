@@ -1,9 +1,11 @@
 ---
 name: marketing-omni-video
-description: Prepare explicitly approved Google Omni Flash marketing videos, reference-driven clips, conversational edits, extensions or upscaled assets. Use only when the user selects Omni and approves paid generation.
+description: Deprecated Marketing Creative skill for explicitly approved Omni Flash marketing clips, edits and extensions. For new work use ai-video-generator with --provider gemini (video-studio plugin). Use this only to resume or revise an existing Marketing Creative project.
 ---
 
 # Marketing Omni Video
+
+> **Deprecated.** Marketing Creative is being retired in favour of Video Studio and Marketing Images. For new work, use `$ai-video-generator` with `--provider gemini` (video-studio plugin). Use this skill only to resume or revise an existing Marketing Creative project, and keep that project's files intact.
 
 Generate a standalone marketing video or a clip for [motion-video-producer](../motion-video-producer/SKILL.md), which owns final assembly with images, footage, animation, typography and audio. This skill is opt-in because generation costs more than ordinary local composition. General production permission or a request to plan does not authorize paid Omni use.
 
