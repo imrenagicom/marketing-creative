@@ -29,6 +29,9 @@ MANUAL_PLACEMENT_KEYS = (
     "audience_network_positions",
     "threads_positions",
 )
+AUDIENCE_STATUSES = {"planned", "created", "retired"}
+AUDIENCE_KINDS = {"website", "ig_engagement", "page_engagement", "video_engagement", "lookalike"}
+AUDIENCE_TARGETING_KEYS = ("custom_audiences", "excluded_custom_audiences")
 POST_STATUSES = {"planned", "paused", "active", "published", "archived", "retired"}
 POST_FORMATS = {"single_image", "carousel", "video", "reel", "story", "text", "thread", "document", "article"}
 
@@ -155,8 +158,75 @@ def build_plan(plan):
     return {"campaign_id": campaign_id, "links": rows, "warnings": warnings}
 
 
-def validate_meta_tree(meta_root, plan_result):
+def validate_audience_record(path, slug):
+    """Validate one account-level audience record against its file name."""
+    label = f"audiences/meta-ads/{slug}.json"
+    record = read_json_file(path)
+    object_fields(record, {
+        "schema_version", "platform", "audience_slug", "name", "ad_account_id",
+        "kind", "roles", "retention_days", "status", "remote_audience_id",
+        "payload", "size_checks", "notes"
+    }, label)
+    require(type(record.get("schema_version")) is int and record["schema_version"] == 1,
+            f"{label}: schema_version must be 1")
+    require(record.get("platform") == "meta-ads", f"{label}: platform must be 'meta-ads'")
+    require(record.get("audience_slug") == slug, f"{label}: audience_slug must match file name")
+    name = text(record.get("name"), f"{label}.name")
+    text(record.get("ad_account_id"), f"{label}.ad_account_id")
+    require(re.fullmatch(r"act_[0-9]+", record["ad_account_id"]),
+            f"{label}.ad_account_id must look like act_<digits>")
+    require(record.get("kind") in AUDIENCE_KINDS, f"{label}: invalid kind")
+    require(record.get("status") in AUDIENCE_STATUSES, f"{label}: invalid status")
+    remote = record.get("remote_audience_id")
+    require(remote is None or (isinstance(remote, str) and remote.isdigit()),
+            f"{label}.remote_audience_id must be null or a numeric string")
+    require(record["status"] != "created" or remote is not None,
+            f"{label}: status 'created' requires remote_audience_id")
+    payload = record.get("payload")
+    require(isinstance(payload, dict) and bool(payload), f"{label}.payload must be a nonempty object")
+    require(payload.get("name") == name, f"{label}.payload.name must equal name")
+    for field in ("customer_file_source", "schema", "data"):
+        require(field not in payload, f"{label}.payload must not contain customer-file field {field}")
+    return record
+
+
+def load_audience(audiences_dir, slug, cache):
+    if slug not in cache:
+        require(audiences_dir is not None and Path(audiences_dir).is_dir(),
+                f"Audience '{slug}' is referenced but no audiences/meta-ads directory was found")
+        path = Path(audiences_dir) / f"{slug}.json"
+        require(path.is_file() and not path.is_symlink(), f"Audience record not found: audiences/meta-ads/{slug}.json")
+        cache[slug] = validate_audience_record(path, slug)
+    return cache[slug]
+
+
+def validate_audience_refs(targeting, label, audiences_dir, cache):
+    """Resolve targeting audience entries that name an account-level audience_slug."""
+    used = []
+    for key in AUDIENCE_TARGETING_KEYS:
+        entries = targeting.get(key)
+        if entries is None:
+            continue
+        require(isinstance(entries, list), f"{label}.targeting.{key} must be a list")
+        for i, entry in enumerate(entries):
+            entry_label = f"{label}.targeting.{key}[{i}]"
+            if not isinstance(entry, dict) or "audience_slug" not in entry:
+                continue
+            slug = identifier(entry["audience_slug"], f"{entry_label}.audience_slug")
+            record = load_audience(audiences_dir, slug, cache)
+            if entry.get("id") is not None:
+                require(str(entry["id"]) == record.get("remote_audience_id"),
+                        f"{entry_label}.id does not match audience '{slug}' remote_audience_id")
+            if entry.get("name") is not None:
+                require(entry["name"] == record["name"], f"{entry_label}.name does not match audience '{slug}' name")
+            require(record["status"] != "retired", f"{entry_label} references retired audience '{slug}'")
+            used.append(slug)
+    return used
+
+
+def validate_meta_tree(meta_root, plan_result, audiences_dir=None):
     meta_root = Path(meta_root)
+    audience_cache = {}
     campaigns_root = meta_root / "campaigns"
     require(campaigns_root.is_dir() and not campaigns_root.is_symlink(),
             "meta-ads/campaigns must be a real directory")
@@ -231,6 +301,7 @@ def validate_meta_tree(meta_root, plan_result):
             targeting = adset_spec.get("targeting")
             require(isinstance(targeting, dict) and bool(targeting),
                     f"{adset_label}.targeting must be a nonempty object")
+            audience_slugs = validate_audience_refs(targeting, adset_label, audiences_dir, audience_cache)
             placements = adset_spec.get("placements")
             require(isinstance(placements, (dict, list)) and bool(placements),
                     f"{adset_label}.placements must be a nonempty object or list")
@@ -308,6 +379,7 @@ def validate_meta_tree(meta_root, plan_result):
                     "budget_mode": budget_mode,
                     "optimization_goal": adset_spec["optimization_goal"],
                     "placements_mode": placements_mode,
+                    "audiences": audience_slugs,
                     "format": ad_spec["format"]
                 })
     for row in plan_result["links"]:
@@ -415,6 +487,8 @@ def main():
     parser.add_argument("--out", type=Path, help="New export revision directory")
     parser.add_argument("--meta-ads-dir", "--meta-dir", dest="meta_ads_dir", type=Path,
                         help="Optional meta-ads/ directory to validate against campaign.json")
+    parser.add_argument("--audiences-dir", type=Path,
+                        help="Account-level audiences/meta-ads/ directory (default: <campaigns root>/audiences/meta-ads)")
     parser.add_argument("--dry-run", action="store_true", help="Preview validated links without writes or network")
     args = parser.parse_args()
     if not args.dry_run and args.out is None:
@@ -424,7 +498,10 @@ def main():
         result = build_plan(json.loads(source.decode("utf-8"), object_pairs_hook=unique_keys))
         meta_dir = args.meta_ads_dir if args.meta_ads_dir is not None else (args.plan.parent / "meta-ads")
         if args.meta_ads_dir is not None or (meta_dir / "campaigns").exists():
-            result["meta_ads"] = validate_meta_tree(meta_dir, result)
+            audiences_dir = args.audiences_dir
+            if audiences_dir is None:
+                audiences_dir = args.plan.resolve().parent.parent / "audiences" / "meta-ads"
+            result["meta_ads"] = validate_meta_tree(meta_dir, result, audiences_dir)
         social_posts = []
         for social_platform in SOCIAL_PLATFORMS:
             social_root = args.plan.parent / social_platform

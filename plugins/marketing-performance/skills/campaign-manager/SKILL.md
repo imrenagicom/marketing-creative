@@ -44,6 +44,10 @@ Under `<YYYY-MM-DD>-<campaign-name>/`, organize campaign documents/plans, perfor
    - Instead of calling paid image/video generators again, copy the approved deliverable from the source `assets/approved/vNNN/` directory into the target ad's or post's `assets/approved/v001/` directory so each ad or social post keeps a complete, self-contained record, and note the source path and hash in its `MANIFEST.md` / `assets.json`.
    - When an ad or social post reuses/copies an approved asset from another directory, **it does not need an `assets/development/` directory**—omit `assets/development/` rather than creating empty or duplicate development folders, and ensure `copy/drafts/` and `copy/approved/vNNN/` still include accessibility alt text for the reused visual asset (reusing or adapting the alt text via [marketing-copywriter](../marketing-copywriter/SKILL.md)).
 
+5. **Account-level Meta custom audiences (`audiences/meta-ads/`):**
+   - Custom audiences belong to the ad account, not one campaign. Keep one record per audience in `<campaigns root>/audiences/meta-ads/<audience-slug>.json` (record fields plus the native `adsctl` payload) with a registry in `audiences/README.md`, and reference audiences from `adset.json` targeting by `audience_slug`.
+   - Name audiences `<Brand> | <Source> | <Rule> | <Window>d` (for example `TaskApp | Web | Purchase | 180d (exclude)`) with slug `<source>-<rule>-<window>d`. Follow [meta-audiences.md](references/meta-audiences.md) for the record schema, rule shapes, references and the approval-gated `adsctl meta audiences` workflow.
+
 Create only the platform (`meta-ads/`, `instagram/`, `linkedin/`, `twitter/`), `reports/`, campaign/adset/ad/post, copy and asset directories that the current workflow actually uses or that the user asks to scaffold. Never overwrite prior `vNNN` directories in `copy/approved/`, `assets/approved/`, `tracking/`, or existing `reports/<datetime>.md` files.
 
 ## Produce the campaign's creatives with the companion plugins

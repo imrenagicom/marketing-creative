@@ -352,6 +352,63 @@ class CampaignManagerTests(unittest.TestCase):
         self.assertNotEqual(bad.returncode, 0)
         self.assertIn("url_tags does not match", bad.stderr)
 
+    def test_adset_audience_slugs_resolve_to_account_level_records(self):
+        _, adset_dir, _ = self._write_valid_meta_tree()
+        audiences = self.root / "audiences" / "meta-ads"
+        audiences.mkdir(parents=True)
+        record = {
+            "schema_version": 1,
+            "platform": "meta-ads",
+            "audience_slug": "web-all-visitors-180d",
+            "name": "Example | Web | All visitors | 180d",
+            "ad_account_id": "act_123",
+            "kind": "website",
+            "roles": ["retargeting", "exclusion"],
+            "retention_days": 180,
+            "status": "planned",
+            "remote_audience_id": None,
+            "payload": {
+                "name": "Example | Web | All visitors | 180d",
+                "prefill": True,
+                "retention_days": 180,
+                "rule": {"inclusions": {"operator": "or", "rules": [
+                    {"event_sources": [{"id": "1855259662305866", "type": "pixel"}], "retention_seconds": 15552000}]}},
+            },
+        }
+        (audiences / "web-all-visitors-180d.json").write_text(json.dumps(record))
+        adset_spec = json.loads((adset_dir / "adset.json").read_text())
+        adset_spec["targeting"]["excluded_custom_audiences"] = [
+            {"audience_slug": "web-all-visitors-180d", "id": None, "name": record["name"]}]
+        (adset_dir / "adset.json").write_text(json.dumps(adset_spec))
+        ok = self.cli("--dry-run", "--audiences-dir", audiences)
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        self.assertEqual(json.loads(ok.stdout)["meta_ads"][0]["audiences"], ["web-all-visitors-180d"])
+
+        adset_spec["targeting"]["excluded_custom_audiences"][0]["id"] = "999"
+        (adset_dir / "adset.json").write_text(json.dumps(adset_spec))
+        mismatch = self.cli("--dry-run", "--audiences-dir", audiences)
+        self.assertNotEqual(mismatch.returncode, 0)
+        self.assertIn("does not match audience 'web-all-visitors-180d' remote_audience_id", mismatch.stderr)
+
+        record["status"] = "created"
+        record["remote_audience_id"] = "999"
+        record["payload"]["customer_file_source"] = "USER_PROVIDED_ONLY"
+        (audiences / "web-all-visitors-180d.json").write_text(json.dumps(record))
+        pii = self.cli("--dry-run", "--audiences-dir", audiences)
+        self.assertNotEqual(pii.returncode, 0)
+        self.assertIn("must not contain customer-file field", pii.stderr)
+
+        record["payload"].pop("customer_file_source")
+        record["payload"]["name"] = "Renamed"
+        (audiences / "web-all-visitors-180d.json").write_text(json.dumps(record))
+        renamed = self.cli("--dry-run", "--audiences-dir", audiences)
+        self.assertIn("payload.name must equal name", renamed.stderr)
+
+        adset_spec["targeting"]["excluded_custom_audiences"][0]["audience_slug"] = "missing-audience"
+        (adset_dir / "adset.json").write_text(json.dumps(adset_spec))
+        missing = self.cli("--dry-run", "--audiences-dir", audiences)
+        self.assertIn("Audience record not found: audiences/meta-ads/missing-audience.json", missing.stderr)
+
     def test_validates_social_media_campaign_trees_for_instagram_linkedin_and_twitter(self):
         linkedin_post, _, _ = self._write_valid_social_trees()
         result = self.cli("--dry-run")

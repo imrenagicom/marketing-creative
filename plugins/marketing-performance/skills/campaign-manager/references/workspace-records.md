@@ -6,6 +6,10 @@ Honor an existing campaign root and source of truth. The following layout under 
 marketing/campaigns/
   INDEX.md
   UTM_CONVENTIONS.md
+  audiences/                           # account-level Meta custom audiences shared across campaigns (see meta-audiences.md)
+    README.md                          # registry: slug, Meta name, kind, window, status, remote ID, size, used by
+    meta-ads/
+      <audience-slug>.json             # record + native adsctl payload
   <YYYY-MM-DD>-<campaign-name>/
     README.md                          # single campaign entrypoint & index linking to docs/, tracking/, and channels
     campaign.json                      # canonical campaign-wide link plan & platform mapping
