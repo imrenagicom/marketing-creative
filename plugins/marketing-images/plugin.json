@@ -2,7 +2,7 @@
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "marketing-images",
   "displayName": "Marketing Images",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Campaign images for ads, social posts and carousels: brief-led concept contact sheets cropped into stable-ID previews, then selected finals with Nano Banana individually or through Gemini's discounted Batch API.",
   "suggestedPrompts": [
     "Use marketing-image-board to explore image concepts for this campaign brief in one contact sheet.",

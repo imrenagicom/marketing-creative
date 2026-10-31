@@ -1,3 +1,9 @@
+## [0.15.0](https://github.com/imrenagicom/marketing-creative/compare/v0.14.0...v0.15.0) (2026-10-31)
+
+### Features
+
+* **campaign-manager:** manage account-level Meta custom audiences ([e89e5f0](https://github.com/imrenagicom/marketing-creative/commit/e89e5f03c6701ade497b139cd25e1b3fe2d9641a))
+
 ## [0.14.0](https://github.com/imrenagicom/marketing-creative/compare/v0.13.0...v0.14.0) (2026-10-29)
 
 ### Features
