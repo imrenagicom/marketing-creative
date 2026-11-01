@@ -5,6 +5,7 @@ import base64
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,6 +22,8 @@ FIREBASE_READONLY_SCOPE = (
 DEFAULT_TOKEN_URI = "https://oauth2.googleapis.com/token"
 GA4_BASE_URL = "https://analyticsdata.googleapis.com/v1beta"
 FIREBASE_BASE_URL = "https://firebase.googleapis.com/v1beta1"
+CONFIG_DIR = Path("~/.config/marketing-creative")
+DEFAULT_SERVICE_ACCOUNT_PATH = CONFIG_DIR / "ga4-analyzer.json"
 
 PRESETS = (
     "campaigns",
@@ -36,21 +39,51 @@ def _b64url(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
 
 
+def default_service_account_path() -> Path:
+    return DEFAULT_SERVICE_ACCOUNT_PATH.expanduser()
+
+
 def resolve_service_account_path(explicit_path: str | None = None) -> Path:
-    raw = (
-        explicit_path
-        or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-        or os.environ.get("GA4_SERVICE_ACCOUNT_FILE")
-    )
-    if not raw:
-        raise ValueError(
-            "Missing service account path: pass --service-account or set "
-            "GOOGLE_APPLICATION_CREDENTIALS / GA4_SERVICE_ACCOUNT_FILE"
-        )
-    path = Path(raw).expanduser().resolve()
+    path = Path(explicit_path).expanduser().resolve() if explicit_path else default_service_account_path()
     if not path.is_file():
-        raise ValueError(f"Service account file not found: {path}")
+        if explicit_path:
+            raise ValueError(f"Service account file not found: {path}")
+        raise ValueError(
+            f"GA4 service account key not found at {path}. Create a read-only GCP "
+            "service account JSON key, then install it with: "
+            "ga4_report.py credentials --install /path/to/key.json"
+        )
     return path
+
+
+def install_service_account(source: str, force: bool = False) -> Path:
+    src = Path(source).expanduser().resolve()
+    if not src.is_file():
+        raise ValueError(f"Service account file not found: {src}")
+    load_service_account(src)
+    dest = default_service_account_path()
+    if dest.exists() and not force:
+        raise ValueError(f"{dest} already exists; pass --force to replace it")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    os.chmod(dest.parent, 0o700)
+    tmp = dest.with_name(f".{dest.name}.tmp")
+    shutil.copyfile(src, tmp)
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, dest)
+    return dest
+
+
+def credentials_status() -> dict:
+    path = default_service_account_path()
+    status = {"path": str(path), "installed": path.is_file()}
+    if status["installed"]:
+        try:
+            status["client_email"] = load_service_account(path)["client_email"]
+            status["valid"] = True
+        except ValueError as exc:
+            status["valid"] = False
+            status["error"] = str(exc)
+    return status
 
 
 def load_service_account(path: Path) -> dict:
@@ -474,8 +507,16 @@ def run_cli(argv: list[str] | None = None) -> int:
         help="Discover GA4 Property ID, Account ID, and streams linked to a Firebase/GCP project",
     )
     discover_p.add_argument("--project", required=True, help="GCP / Firebase project ID")
-    discover_p.add_argument("--service-account", help="Optional path to service account JSON")
+    discover_p.add_argument("--service-account", help="Override the installed service account JSON path")
     discover_p.add_argument("--dry-run", action="store_true", help="Print request without calling API")
+
+    # credentials
+    cred_p = subparsers.add_parser(
+        "credentials",
+        help=f"Check or install the service account key at {DEFAULT_SERVICE_ACCOUNT_PATH}",
+    )
+    cred_p.add_argument("--install", metavar="PATH", help="Validate and copy this service account JSON")
+    cred_p.add_argument("--force", action="store_true", help="Replace an existing installed key")
 
     # metadata
     meta_p = subparsers.add_parser(
@@ -488,7 +529,7 @@ def run_cli(argv: list[str] | None = None) -> int:
         required=not bool(os.environ.get("GA4_PROPERTY_ID")),
         help="Numeric GA4 Property ID (or set GA4_PROPERTY_ID)",
     )
-    meta_p.add_argument("--service-account", help="Path to service account JSON")
+    meta_p.add_argument("--service-account", help="Override the installed service account JSON path")
     meta_p.add_argument("--custom-only", action="store_true", help="Return only custom dimensions/metrics")
     meta_p.add_argument("--dry-run", action="store_true", help="Print request without calling API")
 
@@ -509,7 +550,7 @@ def run_cli(argv: list[str] | None = None) -> int:
     preset_p.add_argument("--campaign", help="Optional exact sessionCampaignName (utm_campaign) filter")
     preset_p.add_argument("--ad-content", help="Optional exact sessionManualAdContent (utm_content) filter")
     preset_p.add_argument("--limit", type=int, default=250, help="Max rows (default 250)")
-    preset_p.add_argument("--service-account", help="Path to service account JSON")
+    preset_p.add_argument("--service-account", help="Override the installed service account JSON path")
     preset_p.add_argument("--dry-run", action="store_true", help="Preview request JSON without network call")
 
     # query
@@ -532,18 +573,27 @@ def run_cli(argv: list[str] | None = None) -> int:
     query_p.add_argument("--event-names", help="Optional comma-separated eventName filter")
     query_p.add_argument("--order-by-metric", help="Metric name to sort descending")
     query_p.add_argument("--limit", type=int, default=250, help="Max rows (default 250)")
-    query_p.add_argument("--service-account", help="Path to service account JSON")
+    query_p.add_argument("--service-account", help="Override the installed service account JSON path")
     query_p.add_argument("--dry-run", action="store_true", help="Preview request JSON without network call")
 
     args = parser.parse_args(argv)
 
     try:
+        if args.command == "credentials":
+            if args.install:
+                dest = install_service_account(args.install, force=args.force)
+                print(json.dumps({"ok": True, "installed": str(dest)}, indent=2))
+                return 0
+            status = credentials_status()
+            print(json.dumps({"ok": status["installed"] and status.get("valid", False), **status}, indent=2))
+            return 0 if status["installed"] and status.get("valid") else 1
+
         if args.command == "discover":
             url = f"{FIREBASE_BASE_URL}/projects/{args.project.strip()}/analyticsDetails"
             if args.dry_run:
                 print(json.dumps({"dry_run": True, "method": "GET", "url": url}, indent=2))
                 return 0
-            if args.service_account or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or os.environ.get("GA4_SERVICE_ACCOUNT_FILE"):
+            if args.service_account or default_service_account_path().is_file():
                 sa_path = resolve_service_account_path(args.service_account)
                 token = mint_service_account_token(load_service_account(sa_path), scope=FIREBASE_READONLY_SCOPE)
             else:

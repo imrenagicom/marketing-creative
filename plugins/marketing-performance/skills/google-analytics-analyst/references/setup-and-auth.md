@@ -20,6 +20,8 @@ Or use the bundled helper:
 python3 <skill-dir>/scripts/ga4_report.py discover --project "$GCP_PROJECT_ID"
 ```
 
+`discover` uses the installed key at `~/.config/marketing-creative/ga4-analyzer.json` when present (the service account needs Firebase read access on the project), and otherwise falls back to `gcloud auth print-access-token`.
+
 Example response structure:
 
 ```json
@@ -99,6 +101,10 @@ gcloud iam service-accounts list --project="$GCP_PROJECT_ID"
 gcloud iam service-accounts create ga4-analytics-reader \
   --display-name="GA4 Analytics Reader" \
   --project="$GCP_PROJECT_ID"
+
+# Download a JSON key outside any repository, then install it (Step 4):
+gcloud iam service-accounts keys create ~/Downloads/ga4-analytics-reader.json \
+  --iam-account="ga4-analytics-reader@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
 ```
 
 ### Step 3: Grant the Service Account "Viewer" Access in GA4 Property Access Management
@@ -119,30 +125,15 @@ Grant property access directly in Google Analytics:
 
 Support two clean operating modes depending on where the key resides:
 
-#### Option A: Local key file via `~/.config/marketing-creative/.env`
-Store the service account JSON outside the repository (for example `~/.config/gcloud/sa-ga4-reader.json` with `chmod 600`) and reference its path in `~/.config/marketing-creative/.env`:
+#### Option A: Local key at `~/.config/marketing-creative/ga4-analyzer.json` (default)
+`ga4_report.py` reads the service account key from `~/.config/marketing-creative/ga4-analyzer.json` with no environment variables. Download the JSON key for the service account (GCP Console → IAM & Admin → Service Accounts → Keys → Add key → JSON, or `gcloud iam service-accounts keys create`), then install it:
 
 ```sh
-mkdir -p "$HOME/.config/marketing-creative"
-chmod 700 "$HOME/.config/marketing-creative"
-chmod 600 "$HOME/.config/marketing-creative/.env"
+python3 <skill-dir>/scripts/ga4_report.py credentials --install ~/Downloads/<downloaded-key>.json
+python3 <skill-dir>/scripts/ga4_report.py credentials   # shows path, client_email and validity only
 ```
 
-In `~/.config/marketing-creative/.env`:
-
-```sh
-GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcloud/sa-ga4-reader.json"
-GA4_PROPERTY_ID="521389584"
-```
-
-Load it in the shell that runs `ga4_report.py`:
-
-```sh
-set -a
-. "$HOME/.config/marketing-creative/.env"
-set +a
-python3 <skill-dir>/scripts/ga4_report.py preset --property "$GA4_PROPERTY_ID" --preset campaigns
-```
+`--install` checks that the file is a `service_account` key with `client_email` and `private_key`, creates the directory with mode `0700`, writes the key with mode `0600`, and refuses to replace an existing key unless `--force` is given. Delete the downloaded copy afterwards. `GA4_PROPERTY_ID` may still be exported to avoid repeating `--property`.
 
 #### Option B: Remote execution via SSH when the Service Account lives on a backend server
 If the production service account JSON is stored on a remote application server (for example `/opt/app/shared/config/service-account.json`) and should not be copied to a laptop, pipe or run `ga4_report.py` directly over SSH:
@@ -163,7 +154,8 @@ ssh user@production-host "python3 - preset --property 521389584 --preset campaig
 
 | HTTP Status / Error Code | Root Cause | Fix |
 | --- | --- | --- |
-| `This app is blocked` in browser during `gcloud auth` | `gcloud`'s shared OAuth client is blocked from requesting `analytics.readonly` interactively | Stop using `gcloud auth application-default login` for GA4. Use a Service Account JSON key (`--service-account` / `GOOGLE_APPLICATION_CREDENTIALS`). |
+| `GA4 service account key not found at ~/.config/marketing-creative/ga4-analyzer.json` | No key installed at the default path | Create a key (Steps 1–3) and run `ga4_report.py credentials --install <path>`. |
+| `This app is blocked` in browser during `gcloud auth` | `gcloud`'s shared OAuth client is blocked from requesting `analytics.readonly` interactively | Stop using `gcloud auth application-default login` for GA4. Install a Service Account JSON key with `ga4_report.py credentials --install <path>`. |
 | `403 SERVICE_DISABLED` (`Google Analytics Data API has not been used in project ...`) | `analyticsdata.googleapis.com` is disabled on the GCP project that owns the service account | Run `gcloud services enable analyticsdata.googleapis.com --project=<PROJECT_ID>` and wait 30–60s. |
 | `403 PERMISSION_DENIED` (`User does not have sufficient permissions for this property`) | Service account exists in GCP IAM, but has not been added to the GA4 Property | Add `<service-account>@<project>.iam.gserviceaccount.com` as **Viewer** in GA4 Admin → **Property access management**. |
 | `400 INVALID_ARGUMENT` (`Field ... is not a valid dimension / metric`) | Custom dimension not registered in GA4, or incompatible dimension/metric scope | Run `ga4_report.py metadata --property <ID>` to inspect valid API names and scopes. |

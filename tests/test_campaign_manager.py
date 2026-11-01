@@ -527,6 +527,40 @@ class CampaignManagerTests(unittest.TestCase):
         self.assertEqual(formatted["rows"][0]["eventCount"], 32)
         self.assertAlmostEqual(formatted["rows"][0]["engagementRate"], 0.5965)
 
+    def test_ga4_service_account_defaults_to_config_path_and_installs_safely(self):
+        ga4_tool = ROOT / "plugins/marketing-performance/skills/google-analytics-analyst/scripts/ga4_report.py"
+        ga4_spec = importlib.util.spec_from_file_location("ga4_report_creds", ga4_tool)
+        ga4_mod = importlib.util.module_from_spec(ga4_spec)
+        ga4_spec.loader.exec_module(ga4_mod)
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp) / "config"
+            ga4_mod.DEFAULT_SERVICE_ACCOUNT_PATH = config / "ga4-analyzer.json"
+            with self.assertRaisesRegex(ValueError, "credentials --install"):
+                ga4_mod.resolve_service_account_path()
+            self.assertFalse(ga4_mod.credentials_status()["installed"])
+
+            bad = Path(tmp) / "bad.json"
+            bad.write_text(json.dumps({"type": "authorized_user"}))
+            with self.assertRaises(ValueError):
+                ga4_mod.install_service_account(str(bad))
+            self.assertFalse(ga4_mod.DEFAULT_SERVICE_ACCOUNT_PATH.exists())
+
+            key = Path(tmp) / "key.json"
+            key.write_text(json.dumps({"type": "service_account", "client_email": "r@p.iam.gserviceaccount.com",
+                                       "private_key": "synthetic"}))
+            dest = ga4_mod.install_service_account(str(key))
+            self.assertEqual(dest, config / "ga4-analyzer.json")
+            self.assertEqual(dest.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(config.stat().st_mode & 0o777, 0o700)
+            self.assertEqual(ga4_mod.resolve_service_account_path(), dest)
+            status = ga4_mod.credentials_status()
+            self.assertTrue(status["valid"])
+            self.assertNotIn("private_key", json.dumps(status))
+            with self.assertRaisesRegex(ValueError, "--force"):
+                ga4_mod.install_service_account(str(key))
+            ga4_mod.install_service_account(str(key), force=True)
+            self.assertEqual(ga4_mod.resolve_service_account_path(str(key)), key.resolve())
+
 
 if __name__ == "__main__":
     unittest.main()

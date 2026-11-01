@@ -28,7 +28,15 @@ python3 <skill-dir>/scripts/ga4_report.py discover --project "$GCP_PROJECT_ID"
      gcloud services enable analyticsdata.googleapis.com --project="$GCP_PROJECT_ID"
      ```
    - **Grant GA4 Property Viewer access to the Service Account:** Project-level IAM (`roles/viewer` or `roles/firebase.analyticsViewer`) does **not** automatically grant GA4 Data API read access when the GA4 account is managed under Google Analytics. Add the service account email (`<name>@<project-id>.iam.gserviceaccount.com`) as **Viewer** in **Google Analytics → Admin → Property → Property access management** (`https://analytics.google.com/analytics/web/#/a<ACCOUNT_ID>p<PROPERTY_ID>/admin/property/users`).
-   - **Supply the Service Account key securely:** Export `GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json` (or `GA4_SERVICE_ACCOUNT_FILE` in `~/.config/marketing-creative/.env`), or run the helper over SSH on a trusted host where the service account file already resides. Never print, log, or commit private keys or tokens.
+   - **Supply the Service Account key at the predefined path:** The helper reads the key from `~/.config/marketing-creative/ga4-analyzer.json` by default. Before any live query, check it:
+     ```sh
+     python3 <skill-dir>/scripts/ga4_report.py credentials
+     ```
+     If it reports `"installed": false` (or `"valid": false`), stop and ask the user to create a read-only service account JSON key (see [setup-and-auth.md](references/setup-and-auth.md) Steps 1–3) and share the local path to the downloaded file. Then validate and copy it into place (`0600`, directory `0700`) without reading or printing its contents:
+     ```sh
+     python3 <skill-dir>/scripts/ga4_report.py credentials --install /path/to/downloaded-key.json
+     ```
+     Replace an existing key only when the user asks (`--force`). Pass `--service-account <path>` only to override the default, for example when running over SSH on a trusted host that holds the key. Never print, log, or commit private keys or tokens.
 
 ## 2. Pull multi-layer GA4 diagnostic evidence
 
@@ -38,8 +46,7 @@ Use [ga4_report.py](scripts/ga4_report.py) (Python 3.10+, standard library + `op
 
 ```sh
 python3 <skill-dir>/scripts/ga4_report.py metadata \
-  --property "$GA4_PROPERTY_ID" \
-  --service-account "$GOOGLE_APPLICATION_CREDENTIALS"
+  --property "$GA4_PROPERTY_ID"
 ```
 
 ### Run standard campaign & funnel diagnostic presets
@@ -49,40 +56,35 @@ python3 <skill-dir>/scripts/ga4_report.py metadata \
 python3 <skill-dir>/scripts/ga4_report.py preset \
   --property "$GA4_PROPERTY_ID" \
   --preset campaigns \
-  --start-date 2026-10-16 --end-date today \
-  --service-account "$GOOGLE_APPLICATION_CREDENTIALS"
+  --start-date 2026-10-16 --end-date today
 
 # 2. Creative / Ad Content & Landing Variant Breakdown (utm_campaign x utm_content / sessionManualAdContent)
 python3 <skill-dir>/scripts/ga4_report.py preset \
   --property "$GA4_PROPERTY_ID" \
   --preset ad-content \
   --campaign "$UTM_CAMPAIGN" \
-  --start-date 2026-10-16 --end-date today \
-  --service-account "$GOOGLE_APPLICATION_CREDENTIALS"
+  --start-date 2026-10-16 --end-date today
 
 # 3. Post-Click Event Funnel by Ad Content (page_view -> activation -> access_gate -> login -> checkout -> purchase)
 python3 <skill-dir>/scripts/ga4_report.py preset \
   --property "$GA4_PROPERTY_ID" \
   --preset funnel \
   --campaign "$UTM_CAMPAIGN" \
-  --start-date 2026-10-16 --end-date today \
-  --service-account "$GOOGLE_APPLICATION_CREDENTIALS"
+  --start-date 2026-10-16 --end-date today
 
 # 4. Screen / Page Path Engagement Breakdown (unifiedScreenName & pagePath)
 python3 <skill-dir>/scripts/ga4_report.py preset \
   --property "$GA4_PROPERTY_ID" \
   --preset screens \
   --campaign "$UTM_CAMPAIGN" \
-  --start-date 2026-10-16 --end-date today \
-  --service-account "$GOOGLE_APPLICATION_CREDENTIALS"
+  --start-date 2026-10-16 --end-date today
 
 # 5. Daily Trajectory (date x sessionCampaignName x sessionManualAdContent)
 python3 <skill-dir>/scripts/ga4_report.py preset \
   --property "$GA4_PROPERTY_ID" \
   --preset daily \
   --campaign "$UTM_CAMPAIGN" \
-  --start-date 2026-10-16 --end-date today \
-  --service-account "$GOOGLE_APPLICATION_CREDENTIALS"
+  --start-date 2026-10-16 --end-date today
 ```
 
 For custom dimension/metric combinations or filters, use `query`:
@@ -92,8 +94,7 @@ python3 <skill-dir>/scripts/ga4_report.py query \
   --property "$GA4_PROPERTY_ID" \
   --dimensions sessionSourceMedium,sessionCampaignName,sessionManualAdContent,eventName \
   --metrics eventCount,totalUsers,sessions \
-  --start-date 2026-10-16 --end-date today \
-  --service-account "$GOOGLE_APPLICATION_CREDENTIALS"
+  --start-date 2026-10-16 --end-date today
 ```
 
 ## 3. Evaluate the 5-stage post-click funnel

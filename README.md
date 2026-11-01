@@ -169,7 +169,7 @@ Keep optional credentials outside this repository, in **`~/.config/marketing-cre
 | --- | --- | --- |
 | `ELEVENLABS_API_KEY` | the `elevenlabs` CLI used by Video Studio | Generating narration, sound effects or music. The CLI can instead use the key stored by `elevenlabs auth login` in the OS keychain |
 | `GEMINI_API_KEY` | Marketing Images' Gemini helper; the `gemini-api` CLI used by Video Studio | Image generation and batches, or explicitly approved video generation and job retrieval |
-| `GOOGLE_APPLICATION_CREDENTIALS` | `google-analytics-analyst/scripts/ga4_report.py` | Live GA4 Data API queries using a GCP Service Account JSON key |
+| `~/.config/marketing-creative/ga4-analyzer.json` (file, not a variable) | `google-analytics-analyst/scripts/ga4_report.py` | Live GA4 Data API queries. Install a read-only GCP service account key with `ga4_report.py credentials --install <path>` |
 
 No API key is required for briefs, scripts, local board splitting, supplied audio alignment, composition or local QC. Gemini image generation requires its key and API project access. Other external image/media connectors and HyperFrames manage their own authentication; this package does not currently read `FAL_KEY`, OpenAI keys, or HyperFrames credentials directly.
 
