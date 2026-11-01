@@ -1,3 +1,9 @@
+## [0.16.0](https://github.com/imrenagicom/marketing-creative/compare/v0.15.0...v0.16.0) (2026-11-01)
+
+### Features
+
+* **google-analytics-analyst:** read ga4 key from config path ([bc5f628](https://github.com/imrenagicom/marketing-creative/commit/bc5f628ec49eb470c57a3c2e2e54cccfb742be1e))
+
 ## [0.15.0](https://github.com/imrenagicom/marketing-creative/compare/v0.14.0...v0.15.0) (2026-10-31)
 
 ### Features
